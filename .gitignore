@@ -1,13 +1,38 @@
+# Obsidian workspace config (personal settings, not shared)
+.obsidian/
+
+# Raw source material (tracked via raw_manifest.yml instead)
 docs/raw/*
 !docs/raw/.gitkeep
 docs/raw_private/
+
+# Output / caches
 output/
 .cache/
+.vector/
+.qmd/
+
+# Databases / logs
 *.sqlite
 *.db
 *.jsonl
 *.log
 
-# local vector indexes or search caches
-.vector/
-.qmd/
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+.env
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# JetBrains IDEs
+.idea/
+
+# Node
+node_modules/
