@@ -9,18 +9,18 @@ sources: []
 
 # LangChain Code Map
 
-## Summary
+## 요약
 
-This page maps the LangChain repository structure. Use it as a navigation guide when reading source code.
+이 페이지는 LangChain 저장소 구조를 매핑한다. 소스 코드를 읽을 때 탐색 가이드로 사용한다.
 
-*Status: Draft stub. Needs source verification from actual repository.*
+*상태: 초안 스텁이다. 실제 저장소를 기준으로 한 소스 검증이 필요하다.*
 
-## Repository
+## 저장소
 
-- **Repo:** `https://github.com/langchain-ai/langchain`
-- **Commit:** UNKNOWN
+- **저장소:** `https://github.com/langchain-ai/langchain`
+- **커밋:** UNKNOWN
 
-## Major Packages / Directories
+## 주요 패키지 / 디렉터리
 
 ```
 langchain/                    # Main package
@@ -33,36 +33,36 @@ libs/
   langchain_community/
 ```
 
-*Needs source: Verify actual directory structure.*
+*소스 필요: 실제 디렉터리 구조를 확인해야 한다.*
 
-## Important Entry Points
+## 중요한 진입점
 
 - `langchain_core.runnables` — `Runnable`, `RunnableSequence`, `RunnableLambda`
 - `langchain.agents` — `create_react_agent`, `AgentExecutor`
 - `langchain_core.messages` — `HumanMessage`, `AIMessage`, `ToolMessage`
 - `langchain_core.tools` — `BaseTool`, `@tool`
 
-*Needs source.*
+*소스 필요.*
 
-## Source Files to Read
+## 읽어야 할 소스 파일
 
-- TBD: Start from `langchain.agents.create_react_agent` → [[LangChain create_agent flow]]
+- 추후 작성: `langchain.agents.create_react_agent`에서 시작 → [[LangChain create_agent flow]]
 
-## Tests to Read
+## 읽어야 할 테스트
 
-- TBD
+- 추후 작성
 
-## Unclear Areas
+## 불명확한 영역
 
-- How does LCEL (pipe `|`) compose runnables internally?
-- Where is the message type dispatch logic?
+- LCEL(파이프 `|`)은 내부적으로 runnable을 어떻게 조합하는가?
+- 메시지 타입 디스패치 로직은 어디에 있는가?
 
-## Related Pages
+## 관련 페이지
 
 - [[LangChain]]
 - [[LangChain create_agent flow]]
 - [[Tool Calling]]
 
-## Sources
+## 소스
 
-*None yet.*
+*아직 없음.*

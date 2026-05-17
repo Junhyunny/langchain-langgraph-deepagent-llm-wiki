@@ -10,27 +10,27 @@ sources: []
 
 # StateGraph
 
-## Summary
+## 요약
 
-`StateGraph` is the core abstraction in [[LangGraph]] for defining stateful agent graphs. It represents the agent as a directed graph of nodes (functions) and edges (transitions), operating on a shared typed state.
+`StateGraph`는 [[LangGraph]]에서 상태를 가진 agent 그래프를 정의하기 위한 핵심 추상화다. 공유된 타입 상태 위에서 동작하는 노드(함수)와 엣지(전이)로 agent를 방향 그래프로 표현한다.
 
-*Status: Draft stub. Needs source verification.*
+*상태: 초안 스텁이다. 소스 검증이 필요하다.*
 
-## Why It Matters
+## 중요한 이유
 
-`StateGraph` is the primary way to define complex agents in LangGraph. Understanding its compile and execution model is the foundation for understanding LangGraph internals.
+`StateGraph`는 LangGraph에서 복잡한 agent를 정의하는 기본 방식이다. 그 컴파일 및 실행 모델을 이해하는 것은 LangGraph 내부 구조를 이해하기 위한 토대다.
 
-## Key Concepts
+## 핵심 개념
 
-- **State schema** — typed dict or dataclass defining the shared state
-- **Node** — a Python function `(state) -> state_update`
-- **Edge** — unconditional transition from one node to another
-- **Conditional edge** — transition determined by a routing function
-- **`START` / `END`** — special built-in nodes
-- **`compile()`** — produces a `CompiledGraph` runnable
-- **`invoke()` / `stream()`** — run the compiled graph
+- **상태 스키마** — 공유 상태를 정의하는 typed dict 또는 dataclass
+- **노드** — Python 함수 `(state) -> state_update`
+- **엣지** — 한 노드에서 다른 노드로의 무조건 전이
+- **조건부 엣지** — 라우팅 함수가 결정하는 전이
+- **`START` / `END`** — 특별한 내장 노드
+- **`compile()`** — `CompiledGraph` runnable을 생성한다
+- **`invoke()` / `stream()`** — 컴파일된 그래프를 실행한다
 
-## Details
+## 상세
 
 ```python
 from langgraph.graph import StateGraph, START, END
@@ -49,25 +49,25 @@ compiled = graph.compile()
 result = compiled.invoke({"messages": [...]})
 ```
 
-*Needs source: Verify exact API.*
+*소스 필요: 정확한 API를 확인해야 한다.*
 
-## Source Code References
+## 소스 코드 참조
 
-- Repo: langgraph
-- Commit: UNKNOWN
-- Files: TBD
+- 저장소: langgraph
+- 커밋: UNKNOWN
+- 파일: 추후 작성
 
-## Tests
+## 테스트
 
-- Needs source.
+- 소스 필요.
 
-## Open Questions
+## 미해결 질문
 
-- How does `StateGraph.compile()` produce a `CompiledGraph` internally?
-- How are conditional edges evaluated at runtime?
-- How does the state update merge work (reducers)?
+- `StateGraph.compile()`은 내부적으로 `CompiledGraph`를 어떻게 생성하는가?
+- 조건부 엣지는 런타임에 어떻게 평가되는가?
+- 상태 업데이트 병합은 어떻게 동작하는가(reducer)?
 
-## Related Pages
+## 관련 페이지
 
 - [[LangGraph]]
 - [[Checkpointing]]
@@ -75,6 +75,6 @@ result = compiled.invoke({"messages": [...]})
 - [[LangGraph StateGraph compile invoke flow]]
 - [[LangGraph Code Map]]
 
-## Sources
+## 소스
 
-*None yet.*
+*아직 없음.*

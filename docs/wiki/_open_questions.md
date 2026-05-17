@@ -1,38 +1,38 @@
-# Open Questions
+# 미해결 질문
 
-Questions collected during study. Move to relevant pages or remove when resolved.
+학습 중 수집한 질문이다. 해결되면 관련 페이지로 옮기거나 삭제한다.
 
 ---
 
 ## LangChain
 
-- How does the agent executor decide when to stop tool calls?
-- What is the difference between `AgentExecutor` and `create_react_agent`?
-- Where is the message history managed internally?
+- agent executor는 언제 도구 호출을 멈출지 어떻게 결정하는가?
+- `AgentExecutor`와 `create_react_agent`의 차이는 무엇인가?
+- 메시지 히스토리는 내부적으로 어디에서 관리되는가?
 
 ## LangGraph
 
-- How does `StateGraph.compile()` produce a runnable?
-- How does checkpointing decide what to persist and what to discard?
-- How does `interrupt_before` / `interrupt_after` work at the graph level?
-- What is the difference between `MemorySaver` and a persistent checkpointer?
-- How does streaming work with `astream_events`?
+- `StateGraph.compile()`은 runnable을 내부적으로 어떻게 생성하는가?
+- 체크포인팅은 무엇을 저장하고 무엇을 버릴지 어떻게 결정하는가?
+- `interrupt_before` / `interrupt_after`는 그래프 수준에서 어떻게 동작하는가?
+- `MemorySaver`와 영속적 checkpointer의 차이는 무엇인가?
+- `astream_events`와 함께 스트리밍은 어떻게 동작하는가?
 
 ## Deep Agents
 
-- What is the exact role of `create_deep_agent` vs `create_react_agent` in LangChain?
-- How does Deep Agents handle subagent orchestration internally?
-- What is the call path when a subagent is invoked?
-- Where is the tool registry maintained?
+- LangChain에서 `create_deep_agent`는 `create_react_agent`와 비교해 정확히 어떤 역할을 하는가?
+- Deep Agents는 내부적으로 서브에이전트 오케스트레이션을 어떻게 처리하는가?
+- 서브에이전트가 호출될 때의 호출 경로는 무엇인가?
+- 도구 레지스트리는 어디에서 유지되는가?
 
-## Cross-Framework
+## 프레임워크 간 비교
 
-- How do the three frameworks compare in handling parallel tool calls?
-- Which framework has the best support for human-in-the-loop?
-- How does each framework handle context window limits?
-- Can checkpoints from one framework be ported to another?
+- 세 프레임워크는 병렬 도구 호출 처리에서 어떻게 비교되는가?
+- human-in-the-loop 지원이 가장 좋은 프레임워크는 무엇인가?
+- 각 프레임워크는 컨텍스트 윈도우 한계를 어떻게 처리하는가?
+- 한 프레임워크의 체크포인트를 다른 프레임워크로 이식할 수 있는가?
 
-## PR Opportunities
+## PR 기회
 
-- Are there any documented issues without tests in the three repos?
-- Are there missing edge case tests in the checkpointing implementation?
+- 세 저장소에 테스트 없는 문서화된 이슈가 존재하는가?
+- 체크포인팅 구현에 빠진 엣지 케이스 테스트가 있는가?

@@ -1,14 +1,14 @@
-# Wiki Index
+# 위키 인덱스
 
-## Frameworks
+## 프레임워크
 - [[LangChain]] → `frameworks/LangChain.md`
 - [[LangGraph]] → `frameworks/LangGraph.md`
 - [[Deep Agents]] → `frameworks/Deep Agents.md`
 
-## Comparisons
+## 비교
 - [[LangChain vs LangGraph vs Deep Agents]] → `comparisons/LangChain vs LangGraph vs Deep Agents.md`
 
-## Concepts
+## 개념
 - [[Tool Calling]] → `concepts/Tool Calling.md`
 - [[StateGraph]] → `concepts/StateGraph.md`
 - [[Checkpointing]] → `concepts/Checkpointing.md`
@@ -17,27 +17,27 @@
 - [[Memory]] → `concepts/Memory.md`
 - [[Evaluation]] → `concepts/Evaluation.md`
 
-## Codebase Maps
+## 코드베이스 맵
 - [[LangChain Code Map]] → `codebase/LangChain Code Map.md`
 - [[LangGraph Code Map]] → `codebase/LangGraph Code Map.md`
 - [[Deep Agents Code Map]] → `codebase/Deep Agents Code Map.md`
 
-## Execution Flows
+## 실행 흐름
 - [[LangChain create_agent flow]] → `flows/LangChain create_agent flow.md`
 - [[LangGraph StateGraph compile invoke flow]] → `flows/LangGraph StateGraph compile invoke flow.md`
 - [[Deep Agents create_deep_agent flow]] → `flows/Deep Agents create_deep_agent flow.md`
 
-## Experiments
-*(none yet)*
+## 실험
+*(아직 없음)*
 
-## Failures
-*(none yet)*
+## 실패 사례
+*(아직 없음)*
 
-## Decisions
-*(none yet)*
+## 의사결정
+*(아직 없음)*
 
-## Issues
-*(none yet)*
+## 이슈
+*(아직 없음)*
 
-## PR Candidates
-*(none yet)*
+## PR 후보
+*(아직 없음)*

@@ -9,13 +9,13 @@ sources: []
 
 # Deep Agents create_deep_agent flow
 
-## Summary
+## 요약
 
-This page traces the execution flow of `create_deep_agent()` in Deep Agents.
+이 페이지는 Deep Agents에서 `create_deep_agent()`의 실행 흐름을 추적한다.
 
-*Status: Draft stub. No source code has been read yet. Repository location is unverified. All content is hypothesis.*
+*상태: 초안 스텁이다. 아직 소스 코드를 읽지 않았다. 저장소 위치도 검증되지 않았다. 모든 내용은 가설이다.*
 
-## Entry Point
+## 진입점
 
 ```python
 # Hypothetical — needs source
@@ -29,40 +29,40 @@ agent = create_deep_agent(
 result = agent.invoke({"input": "..."})
 ```
 
-*Needs source: Actual API signature unknown.*
+*소스 필요: 실제 API 시그니처를 알 수 없다.*
 
-## Call Path (Hypothesis — Unverified)
+## 호출 경로(가설 — 미검증)
 
 1. `create_deep_agent(llm, tools, subagents, ...)`
-   - Builds orchestrator agent
-   - Registers subagents (possibly as tools)
-   - Constructs execution graph (LangGraph-based?)
+   - orchestrator agent를 구축한다
+   - 서브에이전트를 등록한다(도구일 가능성도 있음)
+   - 실행 그래프를 구성한다(LangGraph 기반인가?)
 
 2. `agent.invoke(input)`
-   - Orchestrator receives input
-   - Plans task decomposition
-   - Delegates subtasks to subagents
-   - Collects and aggregates results
-   - Returns final output
+   - orchestrator가 입력을 받는다
+   - 작업 분해를 계획한다
+   - 하위 작업을 서브에이전트에 위임한다
+   - 결과를 수집하고 집계한다
+   - 최종 출력을 반환한다
 
-## Files to Read
+## 읽어야 할 파일
 
-- TBD: Need to locate the actual repository first
+- 추후 작성: 먼저 실제 저장소를 찾아야 한다
 
-## Tests Found
+## 찾은 테스트
 
-- TBD
+- 추후 작성
 
-## Open Questions
+## 미해결 질문
 
-- What is the actual repository URL?
-- What is the function signature of `create_deep_agent`?
-- Does it use LangGraph internally?
-- How are subagents represented (as tools? as nodes? as separate graphs)?
-- How is context passed to subagents?
-- How are results aggregated?
+- 실제 저장소 URL은 무엇인가?
+- `create_deep_agent`의 함수 시그니처는 무엇인가?
+- 내부적으로 LangGraph를 사용하는가?
+- 서브에이전트는 어떻게 표현되는가(도구인가? 노드인가? 별도의 그래프인가?)
+- 컨텍스트는 서브에이전트로 어떻게 전달되는가?
+- 결과는 어떻게 집계되는가?
 
-## Related Pages
+## 관련 페이지
 
 - [[Deep Agents]]
 - [[Deep Agents Code Map]]
@@ -70,6 +70,6 @@ result = agent.invoke({"input": "..."})
 - [[LangGraph]]
 - [[Tool Calling]]
 
-## Sources
+## 소스
 
-*None yet.*
+*아직 없음.*

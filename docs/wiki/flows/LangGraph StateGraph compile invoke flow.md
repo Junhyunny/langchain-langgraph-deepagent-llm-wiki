@@ -9,13 +9,13 @@ sources: []
 
 # LangGraph StateGraph compile invoke flow
 
-## Summary
+## 요약
 
-This page traces the execution flow from `StateGraph.compile()` through `.invoke()`, covering how the graph is built and how it executes.
+이 페이지는 `StateGraph.compile()`에서 `.invoke()`까지의 실행 흐름을 추적하며, 그래프가 어떻게 구축되고 어떻게 실행되는지를 다룬다.
 
-*Status: Draft stub. No source code has been read yet. All content below is hypothesis.*
+*상태: 초안 스텁이다. 아직 소스 코드를 읽지 않았다. 아래 내용은 모두 가설이다.*
 
-## Entry Point
+## 진입점
 
 ```python
 from langgraph.graph import StateGraph, START, END
@@ -31,44 +31,44 @@ compiled = graph.compile(checkpointer=MemorySaver())
 result = compiled.invoke({"messages": [...]}, config={"configurable": {"thread_id": "1"}})
 ```
 
-## Call Path (Hypothesis — Unverified)
+## 호출 경로(가설 — 미검증)
 
 ### compile()
 
 1. `StateGraph.compile(checkpointer)`
-   - Validates graph structure
-   - Builds internal representation (Pregel-like?)
-   - Attaches checkpointer
-   - Returns `CompiledStateGraph`
+   - 그래프 구조를 검증한다
+   - 내부 표현을 구축한다(`Pregel`과 유사한가?)
+   - checkpointer를 연결한다
+   - `CompiledStateGraph`를 반환한다
 
 ### invoke()
 
 1. `CompiledStateGraph.invoke(input, config)`
-   - Loads checkpoint for thread_id if exists
-   - Merges input with checkpoint state
-   - Enters execution loop
+   - 존재하면 thread_id용 체크포인트를 불러온다
+   - 입력과 체크포인트 상태를 병합한다
+   - 실행 루프에 진입한다
 
-2. Execution loop:
-   - Determines next node(s) from current state
-   - Executes node function
-   - Applies state reducers to merge update
-   - Saves checkpoint
-   - Checks for `interrupt_before` / `interrupt_after`
-   - Repeats until `END`
+2. 실행 루프:
+   - 현재 상태에서 다음 노드를 결정한다
+   - 노드 함수를 실행한다
+   - 상태 reducer를 적용해 업데이트를 병합한다
+   - 체크포인트를 저장한다
+   - `interrupt_before` / `interrupt_after`를 확인한다
+   - `END`에 도달할 때까지 반복한다
 
-3. Returns final state
+3. 최종 상태를 반환한다
 
-## Files to Read
+## 읽어야 할 파일
 
-- TBD: `libs/langgraph/langgraph/graph/state.py` (`StateGraph`, `CompiledStateGraph`)
-- TBD: `libs/langgraph/langgraph/pregel/` (execution runtime)
-- TBD: `libs/checkpoint/langgraph/checkpoint/base.py`
+- 추후 작성: `libs/langgraph/langgraph/graph/state.py` (`StateGraph`, `CompiledStateGraph`)
+- 추후 작성: `libs/langgraph/langgraph/pregel/` (실행 런타임)
+- 추후 작성: `libs/checkpoint/langgraph/checkpoint/base.py`
 
-## Tests Found
+## 찾은 테스트
 
-- TBD
+- 추후 작성
 
-## Diagrams
+## 다이어그램
 
 ```
 compile(checkpointer)
@@ -114,20 +114,20 @@ save checkpoint
 ──────────────────────────────
 ```
 
-## Open Questions
+## 미해결 질문
 
-- Is the runtime based on Pregel? Where is this in the code?
-- How do state reducers work? Where are they defined and applied?
-- How does `interrupt_before` halt execution and serialize state?
-- What exactly is stored in each checkpoint?
+- 런타임은 `Pregel` 기반인가? 코드에서는 어디에 있는가?
+- 상태 reducer는 어떻게 동작하는가? 어디에서 정의되고 적용되는가?
+- `interrupt_before`는 실행을 어떻게 중단하고 상태를 직렬화하는가?
+- 각 체크포인트에는 정확히 무엇이 저장되는가?
 
-## Related Pages
+## 관련 페이지
 
 - [[LangGraph]]
 - [[StateGraph]]
 - [[Checkpointing]]
 - [[LangGraph Code Map]]
 
-## Sources
+## 소스
 
-*None yet.*
+*아직 없음.*

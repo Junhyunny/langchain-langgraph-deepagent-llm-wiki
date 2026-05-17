@@ -12,90 +12,90 @@ sources: []
 
 # LangChain vs LangGraph vs Deep Agents
 
-## Summary
+## 요약
 
-Quick decision rule:
-- Use **LangChain** for simple chains and single-agent patterns with tools.
-- Use **LangGraph** when you need persistent state, checkpointing, or complex multi-step control flow.
-- Use **Deep Agents** when you need structured multi-agent orchestration with subagents.
+빠른 의사결정 규칙:
+- 간단한 체인과 도구를 사용하는 단일 agent 패턴에는 **LangChain**을 사용한다.
+- 영속적 상태, 체크포인팅, 복잡한 다단계 제어 흐름이 필요하면 **LangGraph**를 사용한다.
+- 서브에이전트를 활용한 구조화된 멀티 에이전트 오케스트레이션이 필요하면 **Deep Agents**를 사용한다.
 
-*Status: Hypothesis only. All claims need verification.*
+*상태: 가설 단계에 불과하다. 모든 주장은 검증이 필요하다.*
 
-## Comparison Table
+## 비교 표
 
-| Dimension              | LangChain          | LangGraph              | Deep Agents           |
-|------------------------|--------------------|------------------------|-----------------------|
-| Abstraction level      | Chains, Agents     | Graphs, State          | Multi-agent, Subagents|
-| State management       | Basic (memory)     | First-class (StateGraph) | TBD                 |
-| Checkpointing          | Limited            | Built-in               | TBD                   |
-| Human-in-the-loop      | Limited            | Built-in (interrupt)   | TBD                   |
-| Parallelism            | Limited            | Supported              | TBD                   |
-| Complexity             | Low                | Medium                 | High                  |
-| Primary use case       | Chains, RAG        | Stateful agents        | Multi-agent pipelines |
-| Relationship           | Foundation         | Extends LangChain      | Builds on both        |
+| 차원                   | LangChain          | LangGraph                | Deep Agents             |
+|------------------------|--------------------|--------------------------|-------------------------|
+| 추상화 수준            | 체인, agent        | 그래프, 상태             | 멀티 에이전트, 서브에이전트 |
+| 상태 관리              | 기본 수준(메모리)  | 일급 개념(`StateGraph`)  | 추후 작성                |
+| Checkpointing          | 제한적             | 내장                     | 추후 작성                |
+| Human-in-the-loop      | 제한적             | 내장(`interrupt`)        | 추후 작성                |
+| 병렬성                 | 제한적             | 지원                     | 추후 작성                |
+| 복잡도                 | 낮음               | 중간                     | 높음                    |
+| 주요 사용 사례         | 체인, RAG          | 상태 기반 agent          | 멀티 에이전트 파이프라인 |
+| 관계                   | 기반               | LangChain 확장           | 둘 다 기반으로 사용      |
 
-*Needs source: Most cells are hypothesis or unknown.*
+*소스 필요: 대부분의 셀은 가설이거나 아직 알 수 없다.*
 
-## Trade-offs
+## 트레이드오프
 
 ### LangChain
 
-**Pros:**
-- Simple and well-documented
-- Wide ecosystem
-- Easy to get started
+**장점:**
+- 단순하고 문서화가 잘 되어 있다
+- 생태계가 넓다
+- 시작하기 쉽다
 
-**Cons:**
-- Limited native state management
-- Control flow is less explicit
-- Less suited for complex, stateful pipelines
+**단점:**
+- 네이티브 상태 관리가 제한적이다
+- 제어 흐름이 덜 명시적이다
+- 복잡하고 상태를 가진 파이프라인에는 덜 적합하다
 
 ### LangGraph
 
-**Pros:**
-- Explicit state and control flow
-- Built-in checkpointing and resumability
-- Strong human-in-the-loop support
+**장점:**
+- 상태와 제어 흐름이 명시적이다
+- Checkpointing과 재개 기능이 내장되어 있다
+- human-in-the-loop 지원이 강력하다
 
-**Cons:**
-- Higher complexity
-- More boilerplate
-- Harder to learn initially
+**단점:**
+- 복잡도가 더 높다
+- 보일러플레이트가 더 많다
+- 초기에 학습하기 더 어렵다
 
 ### Deep Agents
 
-**Pros:**
-- Structured multi-agent orchestration
-- Subagent delegation patterns
+**장점:**
+- 구조화된 멀티 에이전트 오케스트레이션
+- 서브에이전트 위임 패턴
 
-**Cons:**
-- Less documented (Needs source)
-- Higher abstraction may obscure internals
-- Smaller ecosystem (Needs source)
+**단점:**
+- 문서가 더 적다(소스 필요)
+- 더 높은 수준의 추상화가 내부 구현을 가릴 수 있다
+- 생태계가 더 작다(소스 필요)
 
-## Example Use Cases
+## 예시 사용 사례
 
-- **LangChain**: RAG pipeline, single-agent with tools, document summarization
-- **LangGraph**: Multi-step research agent with resumable state, customer support bot with human escalation
-- **Deep Agents**: Complex multi-agent task decomposition with specialized subagents
+- **LangChain**: RAG 파이프라인, 도구를 사용하는 단일 agent, 문서 요약
+- **LangGraph**: 재개 가능한 상태를 가진 다단계 리서치 agent, 사람에게 에스컬레이션하는 고객 지원 봇
+- **Deep Agents**: 특화된 서브에이전트를 활용한 복잡한 멀티 에이전트 작업 분해
 
-## Experiments
+## 실험
 
-*None yet. See `docs/wiki/experiments/` for planned comparisons.*
+*아직 없음. 계획된 비교는 `docs/wiki/experiments/`를 참조한다.*
 
-## Decision Implications
+## 의사결정 시사점
 
-- For this study: start with LangGraph internals as the primary focus, as it has the richest internal architecture to trace.
-- LangChain is needed as foundation.
-- Deep Agents needs source verification before making strong claims.
+- 이 학습에서는 추적할 내부 아키텍처가 가장 풍부하므로 LangGraph 내부 구조를 주요 초점으로 삼는다.
+- LangChain은 기반 지식으로 필요하다.
+- 강한 주장을 하기 전에 Deep Agents는 소스 검증이 필요하다.
 
-## Open Questions
+## 미해결 질문
 
-- Can checkpoints from LangGraph be used by a Deep Agents runtime?
-- How do the three frameworks compare on parallel tool calls?
-- Which framework has the best test coverage for multi-agent scenarios?
+- LangGraph의 체크포인트를 Deep Agents 런타임에서 사용할 수 있는가?
+- 세 프레임워크는 병렬 도구 호출에서 어떻게 비교되는가?
+- 멀티 에이전트 시나리오에서 테스트 커버리지가 가장 좋은 프레임워크는 무엇인가?
 
-## Related Pages
+## 관련 페이지
 
 - [[LangChain]]
 - [[LangGraph]]
@@ -104,6 +104,6 @@ Quick decision rule:
 - [[Checkpointing]]
 - [[Subagents]]
 
-## Sources
+## 소스
 
-*None yet.*
+*아직 없음.*

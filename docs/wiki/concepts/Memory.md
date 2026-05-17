@@ -12,57 +12,57 @@ sources: []
 
 # Memory
 
-## Summary
+## 요약
 
-Memory refers to the mechanisms that allow an LLM agent to retain and recall information across turns, sessions, or tasks. Memory can be short-term (within a session) or long-term (across sessions).
+Memory는 LLM agent가 여러 턴, 세션, 작업에 걸쳐 정보를 유지하고 다시 불러올 수 있게 하는 메커니즘을 뜻한다. Memory는 단기적일 수도 있고(세션 내), 장기적일 수도 있다(세션 간).
 
-*Status: Draft stub. Needs source verification.*
+*상태: 초안 스텁이다. 소스 검증이 필요하다.*
 
-## Why It Matters
+## 중요한 이유
 
-Without memory, every agent turn is stateless. Memory enables continuity, personalization, and accumulated knowledge. Understanding how frameworks implement memory helps trace bugs and design better agents.
+Memory가 없으면 모든 agent 턴은 무상태다. Memory는 연속성, 개인화, 누적된 지식을 가능하게 한다. 프레임워크가 Memory를 어떻게 구현하는지 이해하면 버그를 추적하고 더 나은 agent를 설계하는 데 도움이 된다.
 
-## Key Concepts
+## 핵심 개념
 
-- **Short-term memory** — in-context message history within a session
-- **Long-term memory** — external storage recalled across sessions
-- **Episodic memory** — specific past events or interactions
-- **Semantic memory** — general facts or knowledge
-- **Memory store** — external database for long-term memory
-- **Memory retrieval** — selecting relevant memories from storage
+- **단기 메모리** — 세션 내 컨텍스트에 포함된 메시지 히스토리
+- **장기 메모리** — 세션 간에 다시 불러오는 외부 저장소
+- **에피소드 메모리** — 특정 과거 사건 또는 상호작용
+- **의미 메모리** — 일반적인 사실 또는 지식
+- **메모리 저장소** — 장기 메모리를 위한 외부 데이터베이스
+- **메모리 검색** — 저장소에서 관련 메모리를 선택하는 것
 
-## Framework-Specific Behavior
+## 프레임워크별 동작
 
 ### LangChain
 
-- `ConversationBufferMemory`, `ConversationSummaryMemory`, etc.
-- Attached to chains or agents
-- *Needs source.*
+- `ConversationBufferMemory`, `ConversationSummaryMemory` 등
+- 체인 또는 agent에 연결된다
+- *소스 필요.*
 
 ### LangGraph
 
-- State acts as short-term memory within a thread
-- Long-term memory via external stores (e.g., `InMemoryStore`, vector stores)
-- *Needs source.*
+- 상태는 스레드 내부에서 단기 메모리 역할을 한다
+- 장기 메모리는 외부 저장소(예: `InMemoryStore`, 벡터 저장소)를 통해 제공된다
+- *소스 필요.*
 
 ### Deep Agents
 
-- TBD
-- *Needs source.*
+- 추후 작성
+- *소스 필요.*
 
-## Open Questions
+## 미해결 질문
 
-- How does LangGraph's `MemorySaver` relate to conversation memory?
-- What is the difference between a checkpointer and a memory store in LangGraph?
-- How is long-term memory retrieved and injected into context?
+- LangGraph의 `MemorySaver`는 대화 Memory와 어떤 관련이 있는가?
+- LangGraph에서 checkpointer와 메모리 저장소의 차이는 무엇인가?
+- 장기 메모리는 어떻게 검색되어 컨텍스트에 주입되는가?
 
-## Related Pages
+## 관련 페이지
 
 - [[LangChain]]
 - [[LangGraph]]
 - [[Checkpointing]]
 - [[Context Engineering]]
 
-## Sources
+## 소스
 
-*None yet.*
+*아직 없음.*

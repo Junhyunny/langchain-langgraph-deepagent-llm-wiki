@@ -9,26 +9,26 @@ sources: []
 
 # LangGraph
 
-## Summary
+## 요약
 
-LangGraph is a library for building stateful, multi-actor LLM applications as graphs. It extends LangChain with explicit state management, checkpointing, and graph-based control flow.
+LangGraph는 상태를 가진 멀티 액터 LLM 애플리케이션을 그래프로 구축하기 위한 라이브러리다. 명시적인 상태 관리, 체크포인팅, 그래프 기반 제어 흐름을 통해 LangChain을 확장한다.
 
-*Status: Needs source. This page is a draft stub.*
+*상태: 소스 필요. 이 페이지는 초안 스텁이다.*
 
-## Why It Matters
+## 중요한 이유
 
-LangGraph is the primary orchestration framework for complex agents requiring persistent state, human-in-the-loop, and structured execution flows. Understanding it is critical for building and contributing to modern AI agents.
+LangGraph는 영속적 상태, human-in-the-loop, 구조화된 실행 흐름이 필요한 복잡한 agent를 위한 핵심 오케스트레이션 프레임워크다. 이를 이해하는 것은 현대 AI agent를 구축하고 기여하는 데 필수적이다.
 
-## Core Abstractions
+## 핵심 추상화
 
-- `StateGraph` — defines nodes, edges, and state schema
-- `CompiledGraph` — compiled runnable produced by `StateGraph.compile()`
-- `BaseCheckpointSaver` — abstract class for persistence
-- `MemorySaver` — in-memory checkpointer (non-persistent)
-- `interrupt_before` / `interrupt_after` — human-in-the-loop hooks
-- `Send` — dynamic edge to route to multiple targets
+- `StateGraph` — 노드, 엣지, 상태 스키마를 정의한다
+- `CompiledGraph` — `StateGraph.compile()`이 생성하는 컴파일된 runnable
+- `BaseCheckpointSaver` — 영속화를 위한 추상 클래스
+- `MemorySaver` — 인메모리 checkpointer(비영속)
+- `interrupt_before` / `interrupt_after` — human-in-the-loop 훅
+- `Send` — 여러 대상으로 라우팅하는 동적 엣지
 
-## Public APIs
+## 공개 API
 
 - `StateGraph(schema)`
 - `graph.add_node(name, fn)`
@@ -39,29 +39,29 @@ LangGraph is the primary orchestration framework for complex agents requiring pe
 - `compiled.stream(input, config)`
 - `compiled.astream_events(input, config)`
 
-*Needs source: Verify module paths.*
+*소스 필요: 모듈 경로를 확인해야 한다.*
 
-## Internal Implementation Map
+## 내부 구현 맵
 
-- TBD: Trace `StateGraph.compile()` and `.invoke()` → [[LangGraph StateGraph compile invoke flow]]
-- TBD: Trace checkpointing → [[Checkpointing]]
+- 추후 작성: `StateGraph.compile()` 및 `.invoke()` 추적 → [[LangGraph StateGraph compile invoke flow]]
+- 추후 작성: 체크포인팅 추적 → [[Checkpointing]]
 
-## Related Tests
+## 관련 테스트
 
-- Needs source.
+- 소스 필요.
 
-## Related Examples
+## 관련 예제
 
-- `examples/` — to be added.
+- `examples/` — 추후 추가 예정.
 
-## Open Questions
+## 미해결 질문
 
-- How does `StateGraph.compile()` produce a runnable internally?
-- How does checkpointing decide what state delta to persist?
-- How does `interrupt_before` pause and resume execution?
-- What is the difference between `MemorySaver` and a persistent checkpointer?
+- `StateGraph.compile()`은 runnable을 내부적으로 어떻게 생성하는가?
+- 체크포인팅은 어떤 상태 델타를 저장할지 어떻게 결정하는가?
+- `interrupt_before`는 실행을 어떻게 일시 중지하고 재개하는가?
+- `MemorySaver`와 영속적 checkpointer의 차이는 무엇인가?
 
-## Related Pages
+## 관련 페이지
 
 - [[LangChain]]
 - [[Deep Agents]]
@@ -73,6 +73,6 @@ LangGraph is the primary orchestration framework for complex agents requiring pe
 - [[LangGraph StateGraph compile invoke flow]]
 - [[LangChain vs LangGraph vs Deep Agents]]
 
-## Sources
+## 소스
 
-*None yet.*
+*아직 없음.*

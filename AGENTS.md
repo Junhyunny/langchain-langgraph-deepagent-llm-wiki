@@ -1,65 +1,65 @@
 # AGENTS.md
 
-This repository is an LLM-maintained learning and contribution wiki for studying AI agent frameworks deeply enough to understand internals, trace architecture, run experiments, and eventually make high-quality PRs.
+이 저장소는 LLM이 유지하는 학습 및 기여용 위키로, AI agent 프레임워크를 내부 구현까지 이해하고, 아키텍처를 추적하며, 실험을 수행하고, 궁극적으로 높은 품질의 PR을 만들 수 있을 만큼 깊이 있게 연구하기 위해 존재한다.
 
-Primary focus areas:
+주요 중점 영역:
 - LangChain
 - LangGraph
 - Deep Agents
-- AI agent architecture
-- Tool calling
-- State management
+- AI agent 아키텍처
+- 도구 호출
+- 상태 관리
 - Checkpointing
 - Memory
-- Context engineering
+- Context Engineering
 - Subagents
 - Evaluation
-- Open-source contribution workflows
+- 오픈소스 기여 워크플로
 
-The purpose of this repository is not to collect random notes.  
-The purpose is to build a durable knowledge base that connects:
-- official documentation
-- source code
-- examples
-- experiments
-- failures
-- design decisions
-- issues
-- tests
-- PR candidates
+이 저장소의 목적은 무작위 메모를 모으는 데 있지 않다.
+목적은 다음을 연결하는 지속 가능한 지식 베이스를 구축하는 데 있다.
+- 공식 문서
+- 소스 코드
+- 예제
+- 실험
+- 실패 사례
+- 설계 결정
+- 이슈
+- 테스트
+- PR 후보
 
-## Intended AI assistants
+## 대상 AI assistant
 
-This repository may be edited or inspected by:
+이 저장소는 다음 도구가 편집하거나 검토할 수 있다.
 - Codex
 - Claude Code
 - GitHub Copilot
-- other coding or writing agents
+- 기타 코딩 또는 작성 agent
 
-All agents must follow the rules in this file.
-
----
-
-# Core Philosophy
-
-Treat this repository as a learning-oriented LLM Wiki.
-
-The wiki should help answer questions like:
-- How does this framework work internally?
-- Which public API maps to which internal implementation?
-- Which files are involved in a behavior?
-- Which tests define the expected behavior?
-- What did I already learn or try?
-- What failed?
-- What is still unclear?
-- What could become a good PR?
-
-Do not optimize for producing many documents.  
-Optimize for producing accurate, source-grounded, reusable knowledge.
+모든 agent는 이 파일의 규칙을 따라야 한다.
 
 ---
 
-# Repository Structure
+# 핵심 철학
+
+이 저장소를 학습 지향적인 LLM 위키로 다룬다.
+
+이 위키는 다음과 같은 질문에 답하는 데 도움이 되어야 한다.
+- 이 프레임워크는 내부적으로 어떻게 동작하는가?
+- 어떤 공개 API가 어떤 내부 구현에 대응하는가?
+- 특정 동작에는 어떤 파일이 관여하는가?
+- 예상 동작을 정의하는 테스트는 무엇인가?
+- 내가 이미 배웠거나 시도한 것은 무엇인가?
+- 무엇이 실패했는가?
+- 아직 무엇이 불분명한가?
+- 무엇이 좋은 PR이 될 수 있는가?
+
+문서를 많이 만드는 데 최적화하지 않는다.
+정확하고, 소스에 근거하며, 재사용 가능한 지식을 만드는 데 최적화한다.
+
+---
+
+# 저장소 구조
 
 ```text
 .
@@ -90,160 +90,160 @@ Optimize for producing accurate, source-grounded, reusable knowledge.
 └── scripts/
 ```
 
-If the actual repository differs from this structure, preserve the existing structure and adapt the same principles.
+실제 저장소가 이 구조와 다르다면 기존 구조를 유지하되 같은 원칙을 적용한다.
 
 ---
 
-# Folder Responsibilities
+# 폴더별 역할
 
 ## docs/raw/
 
-Raw source material.
+원시 소스 자료다.
 
-Examples:
-- official documentation snapshots
-- copied excerpts from docs
-- issue notes
-- PR discussion notes
-- experiment logs
-- local code reading notes
-- benchmark outputs
-- model traces
-- reproduction logs
+예시:
+- 공식 문서 스냅샷
+- 문서에서 복사한 발췌문
+- 이슈 메모
+- PR 토론 메모
+- 실험 로그
+- 로컬 코드 리딩 메모
+- 벤치마크 출력
+- 모델 트레이스
+- 재현 로그
 
-Rules:
-- Raw files are evidence, not polished knowledge.
-- Do not rewrite raw files unless explicitly asked.
-- Prefer appending or adding new raw files over modifying existing ones.
-- Do not store secrets, API keys, tokens, private credentials, or sensitive personal data.
-- Do not blindly scrape large websites or entire documentation trees.
-- Collect raw materials only when they are relevant to a concrete study topic, experiment, bug, issue, or PR candidate.
+규칙:
+- Raw 파일은 다듬어진 지식이 아니라 근거 자료다.
+- 명시적으로 요청받지 않는 한 raw 파일을 다시 쓰지 않는다.
+- 기존 파일을 수정하기보다 새 raw 파일을 추가하거나 내용을 덧붙이는 편을 우선한다.
+- 시크릿, API 키, 토큰, 개인 자격 증명, 민감한 개인정보를 저장하지 않는다.
+- 대형 웹사이트나 전체 문서 트리를 무분별하게 스크래핑하지 않는다.
+- 구체적인 학습 주제, 실험, 버그, 이슈, PR 후보와 관련 있을 때만 raw 자료를 수집한다.
 
 ## docs/raw_manifest.yml
 
-Source registry.
+소스 레지스트리다.
 
-Every meaningful raw source should be listed here.
+의미 있는 raw 소스는 모두 여기에 기록해야 한다.
 
-Use this file to track:
-- source ID
-- title
-- type
+이 파일로 다음을 추적한다.
+- 소스 ID
+- 제목
+- 유형
 - URL
-- repository
-- commit SHA if applicable
-- local raw path
-- retrieval date
-- license / sharing notes if relevant
-- whether the source is public, private, generated, or local-only
+- 저장소
+- 해당하는 경우 commit SHA
+- 로컬 raw 경로
+- 수집 날짜
+- 해당하는 경우 라이선스 / 공유 메모
+- 해당 소스가 공개, 비공개, 생성물, 로컬 전용 중 무엇인지
 
-If a source influenced a wiki page, the wiki page should reference the source ID.
+어떤 소스가 위키 페이지에 영향을 주었다면, 해당 위키 페이지는 그 소스 ID를 참조해야 한다.
 
 ## docs/source_summaries/
 
-One source summary per important source.
+중요한 소스마다 하나의 요약을 둔다.
 
-Use this for:
-- official docs summary
-- issue summary
-- PR discussion summary
-- source file summary
-- paper/article summary
+다음 용도로 사용한다.
+- 공식 문서 요약
+- 이슈 요약
+- PR 토론 요약
+- 소스 파일 요약
+- 논문/기사 요약
 
-A source summary should be factual and close to the source.
-It should not over-synthesize across many sources.
+소스 요약은 사실 중심이어야 하며 원문에 가까워야 한다.
+여러 소스를 과도하게 종합해서는 안 된다.
 
 ## docs/wiki/
 
-The curated knowledge base.
+정제된 지식 베이스다.
 
-This is the main LLM Wiki.
+이곳이 메인 LLM 위키다.
 
-The wiki should contain:
-- framework pages
-- concept pages
-- comparison pages
-- architecture maps
-- execution flows
-- test maps
-- experiment reports
-- failure cases
-- decision records
-- issue triage
-- PR plans
+위키에는 다음이 포함되어야 한다.
+- 프레임워크 페이지
+- 개념 페이지
+- 비교 페이지
+- 아키텍처 맵
+- 실행 흐름
+- 테스트 맵
+- 실험 보고서
+- 실패 사례
+- 의사결정 기록
+- 이슈 트리아지
+- PR 계획
 
-Wiki pages should be concise, structured, and link-rich.
+위키 페이지는 간결하고, 구조화되어 있으며, 링크가 풍부해야 한다.
 
 ## examples/
 
-Runnable learning examples.
+실행 가능한 학습 예제다.
 
-Examples should demonstrate one concept at a time where possible.
+가능하면 예제는 한 번에 하나의 개념만 보여주어야 한다.
 
 ## reproductions/
 
-Minimal reproductions for bugs, confusing behavior, or PR candidates.
+버그, 혼란스러운 동작, PR 후보를 위한 최소 재현 예제다.
 
-A reproduction should be small, runnable, and documented.
+재현 예제는 작고, 실행 가능하며, 문서화되어 있어야 한다.
 
 ## evals/
 
-Evaluation cases and results.
+평가 사례와 결과다.
 
-Use this for comparing framework behavior, agent quality, regression tests, and repeated experiments.
+프레임워크 동작, agent 품질, 회귀 테스트, 반복 실험을 비교할 때 사용한다.
 
 ## scripts/
 
-Automation scripts.
+자동화 스크립트다.
 
-Examples:
-- fetch selected raw sources
-- verify raw source hashes
-- generate source summaries
-- scan broken wiki links
-- build an index
-- find stale pages
-
----
-
-# Raw Source Collection Policy
-
-Do not collect raw sources blindly.
-
-**Bad:**
-- Download all LangChain docs.
-- Download all LangGraph docs.
-- Download all Deep Agents docs.
-- Scrape everything just in case.
-
-**Good:**
-- I am studying LangGraph checkpointing today.
-- Collect the official checkpointing docs, relevant source files, relevant tests, and one or two related issues.
-
-Raw collection should be triggered by one of these:
-1. A concrete study topic
-2. A concrete experiment
-3. A confusing behavior
-4. A source-code reading session
-5. A bug reproduction
-6. A potential PR
-7. A decision that needs evidence
-
-Before adding raw material, ask:
-- Why is this source needed?
-- Which wiki page will use it?
-- Is it public or private?
-- Is it small enough to store in Git?
-- Can it be re-fetched instead of stored?
-- Does it have a stable URL or commit SHA?
+예시:
+- 선택한 raw 소스 가져오기
+- raw 소스 해시 검증
+- 소스 요약 생성
+- 깨진 위키 링크 스캔
+- 인덱스 구축
+- 오래된 페이지 찾기
 
 ---
 
-# Source Manifest Format
+# Raw 소스 수집 정책
 
-Use `docs/raw_manifest.yml`.
+raw 소스를 무작정 수집하지 않는다.
 
-Recommended format:
+**좋지 않은 예:**
+- LangChain 문서를 모두 다운로드한다.
+- LangGraph 문서를 모두 다운로드한다.
+- Deep Agents 문서를 모두 다운로드한다.
+- 혹시 모를 상황에 대비해 모든 것을 스크래핑한다.
+
+**좋은 예:**
+- 오늘은 LangGraph 체크포인팅을 학습한다.
+- 공식 체크포인팅 문서, 관련 소스 파일, 관련 테스트, 그리고 관련 이슈 한두 개만 수집한다.
+
+raw 수집은 다음 중 하나가 있을 때 시작되어야 한다.
+1. 구체적인 학습 주제
+2. 구체적인 실험
+3. 혼란스러운 동작
+4. 소스 코드 읽기 세션
+5. 버그 재현
+6. 잠재적인 PR
+7. 근거가 필요한 의사결정
+
+raw 자료를 추가하기 전에 다음을 자문한다.
+- 왜 이 소스가 필요한가?
+- 어떤 위키 페이지가 이를 사용할 것인가?
+- 공개인가, 비공개인가?
+- Git에 저장하기에 충분히 작은가?
+- 저장하는 대신 다시 가져올 수 있는가?
+- 안정적인 URL 또는 commit SHA가 있는가?
+
+---
+
+# 소스 매니페스트 형식
+
+`docs/raw_manifest.yml`을 사용한다.
+
+권장 형식:
 
 ```yaml
 sources:
@@ -274,23 +274,23 @@ sources:
     notes: "Update commit SHA when known."
 ```
 
-Rules:
-- Every source must have a stable `id`.
-- Prefer lowercase kebab-case IDs.
-- Include `retrieved_at`.
-- Include `url` or `repo` when applicable.
-- Include `commit` when referencing source code.
-- Include `local_path` when a local raw file exists.
-- Include `used_by` when a wiki page depends on the source.
-- Use `UNKNOWN` rather than inventing missing metadata.
+규칙:
+- 모든 소스는 안정적인 `id`를 가져야 한다.
+- 소문자 kebab-case ID를 우선한다.
+- `retrieved_at`을 포함한다.
+- 해당하는 경우 `url` 또는 `repo`를 포함한다.
+- 소스 코드를 참조할 때는 `commit`을 포함한다.
+- 로컬 raw 파일이 있으면 `local_path`를 포함한다.
+- 위키 페이지가 소스에 의존하면 `used_by`를 포함한다.
+- 없는 메타데이터를 지어내지 말고 `UNKNOWN`을 사용한다.
 
 ---
 
-# Citation and Evidence Rules
+# 인용 및 근거 규칙
 
-All non-trivial factual claims in wiki pages should be traceable.
+위키 페이지의 비사소한 사실 주장은 모두 추적 가능해야 한다.
 
-For wiki pages, use a Sources section:
+위키 페이지에서는 Sources 섹션을 사용한다.
 
 ```markdown
 ## Sources
@@ -298,7 +298,7 @@ For wiki pages, use a Sources section:
 - `langgraph-source-checkpoint-saver-2026-05-18`
 ```
 
-When discussing source code, include file paths and, when possible, commit SHA:
+소스 코드를 논의할 때는 파일 경로와, 가능하다면 commit SHA를 포함한다.
 
 ```markdown
 ## Source Code References
@@ -309,23 +309,23 @@ When discussing source code, include file paths and, when possible, commit SHA:
   - `libs/checkpoint/...`
 ```
 
-Do not pretend that a source was checked if it was not checked.
+확인하지 않은 소스를 확인한 것처럼 가장하지 않는다.
 
-Use these labels:
-- **Verified**
-- **Partially verified**
-- **Hypothesis**
-- **Unverified**
-- **Needs source**
-- **Outdated**
+다음 라벨을 사용한다.
+- **검증됨**
+- **부분 검증됨**
+- **가설**
+- **미검증**
+- **소스 필요**
+- **오래됨**
 
-When uncertain, say so explicitly.
+불확실할 때는 이를 명시적으로 드러낸다.
 
 ---
 
-# Wiki Page Standards
+# 위키 페이지 기준
 
-Every major wiki page should follow this structure unless there is a good reason not to.
+특별한 이유가 없다면 모든 주요 위키 페이지는 이 구조를 따라야 한다.
 
 ```markdown
 # Page Title
@@ -360,14 +360,14 @@ Main content.
 - `source-id`
 ```
 
-Do not create long, unfocused pages.  
-If a page becomes too large, split it into concept, flow, test, and decision pages.
+길고 초점이 흐린 페이지를 만들지 않는다.
+페이지가 너무 커지면 개념, 흐름, 테스트, 의사결정 페이지로 나눈다.
 
 ---
 
-# Wikilink Rules
+# 위키링크 규칙
 
-Use Obsidian-style wikilinks for important reusable concepts:
+중요하고 재사용 가능한 개념에는 Obsidian 스타일의 위키링크를 사용한다.
 
 ```
 [[LangChain]]
@@ -380,170 +380,170 @@ Use Obsidian-style wikilinks for important reusable concepts:
 [[Context Engineering]]
 ```
 
-Good links explain the relationship:
+좋은 링크는 관계를 설명한다.
 
-> [[Planner]] uses [[Tool Registry]] to select only available tools.
+> [[Planner]]는 사용 가능한 도구만 선택하기 위해 [[Tool Registry]]를 사용한다.
 
-Bad links are just keyword dumps:
+좋지 않은 링크는 키워드만 나열한다.
 
 > [[Planner]] [[Tool]] [[State]] [[Agent]]
 
-Use links to make knowledge navigable, not decorative.
+링크는 지식을 탐색 가능하게 만드는 데 사용하고, 장식용으로 사용하지 않는다.
 
 ---
 
-# Page Types
+# 페이지 유형
 
-## Framework Page
+## 프레임워크 페이지
 
-Example: `docs/wiki/frameworks/LangGraph.md`
+예시: `docs/wiki/frameworks/LangGraph.md`
 
-Should include:
-- summary
-- when to use
-- core abstractions
-- public APIs
-- internal implementation map
-- related tests
-- related examples
-- open questions
-- sources
+포함해야 할 내용:
+- 요약
+- 언제 사용하는가
+- 핵심 추상화
+- 공개 API
+- 내부 구현 맵
+- 관련 테스트
+- 관련 예제
+- 미해결 질문
+- 소스
 
-## Concept Page
+## 개념 페이지
 
-Example: `docs/wiki/concepts/Checkpointing.md`
+예시: `docs/wiki/concepts/Checkpointing.md`
 
-Should include:
-- definition
-- why it matters
-- where it appears
-- framework-specific behavior
-- implementation notes
-- tests
-- related pages
-- sources
+포함해야 할 내용:
+- 정의
+- 중요한 이유
+- 어디에 등장하는가
+- 프레임워크별 동작
+- 구현 메모
+- 테스트
+- 관련 페이지
+- 소스
 
-## Comparison Page
+## 비교 페이지
 
-Example: `docs/wiki/comparisons/LangChain vs LangGraph vs Deep Agents.md`
+예시: `docs/wiki/comparisons/LangChain vs LangGraph vs Deep Agents.md`
 
-Should include:
-- short decision rule
-- comparison table
-- trade-offs
-- example use cases
-- experiments
-- decision implications
-- sources
+포함해야 할 내용:
+- 짧은 의사결정 규칙
+- 비교 표
+- 트레이드오프
+- 예시 사용 사례
+- 실험
+- 의사결정 시사점
+- 소스
 
-## Code Map
+## 코드 맵
 
-Example: `docs/wiki/codebase/LangGraph Code Map.md`
+예시: `docs/wiki/codebase/LangGraph Code Map.md`
 
-Should include:
-- repo purpose
-- major packages/directories
-- important entry points
-- source files to read
-- tests to read
-- unclear areas
-- sources
+포함해야 할 내용:
+- 저장소 목적
+- 주요 패키지/디렉터리
+- 중요한 진입점
+- 읽어야 할 소스 파일
+- 읽어야 할 테스트
+- 불명확한 영역
+- 소스
 
-## Execution Flow
+## 실행 흐름
 
-Example: `docs/wiki/flows/Deep Agents create_deep_agent flow.md`
+예시: `docs/wiki/flows/Deep Agents create_deep_agent flow.md`
 
-Should include:
-- entry point
-- call path
-- state/message flow
-- files read
-- tests found
-- diagrams if useful
-- open questions
-- sources
+포함해야 할 내용:
+- 진입점
+- 호출 경로
+- 상태/메시지 흐름
+- 읽은 파일
+- 찾은 테스트
+- 유용하다면 다이어그램
+- 미해결 질문
+- 소스
 
-## Experiment Report
+## 실험 보고서
 
-Example: `docs/wiki/experiments/2026-05-18 same research agent in three frameworks.md`
+예시: `docs/wiki/experiments/2026-05-18 same research agent in three frameworks.md`
 
-Should include:
-- goal
-- setup
-- code links
-- expected behavior
-- actual behavior
-- observations
-- takeaways
-- related concepts
-- sources
+포함해야 할 내용:
+- 목표
+- 설정
+- 코드 링크
+- 기대 동작
+- 실제 동작
+- 관찰 내용
+- 핵심 정리
+- 관련 개념
+- 소스
 
-## Failure Case
+## 실패 사례
 
-Example: `docs/wiki/failures/LangGraph checkpoint resume confusion.md`
+예시: `docs/wiki/failures/LangGraph checkpoint resume confusion.md`
 
-Should include:
-- problem
-- expected behavior
-- actual behavior
-- reproduction
-- suspected cause
-- confirmed cause if known
-- related concepts
-- next actions
-- status
-- sources
+포함해야 할 내용:
+- 문제
+- 기대 동작
+- 실제 동작
+- 재현
+- 의심되는 원인
+- 알려진 경우 확인된 원인
+- 관련 개념
+- 다음 행동
+- 상태
+- 소스
 
-## Decision Record
+## 의사결정 기록
 
-Example: `docs/wiki/decisions/Use LangGraph for core orchestration.md`
+예시: `docs/wiki/decisions/Use LangGraph for core orchestration.md`
 
-Should include:
-- decision
-- context
-- options considered
-- trade-offs
-- reason
-- consequences
-- revisit criteria
-- sources
+포함해야 할 내용:
+- 결정 사항
+- 컨텍스트
+- 검토한 옵션
+- 트레이드오프
+- 이유
+- 결과
+- 재검토 기준
+- 소스
 
-## PR Candidate
+## PR 후보
 
-Example: `docs/wiki/prs/Deep Agents filesystem docs PR candidate.md`
+예시: `docs/wiki/prs/Deep Agents filesystem docs PR candidate.md`
 
-Should include:
-- problem
-- source evidence
-- reproduction if applicable
-- suspected root cause
-- proposed change
-- test plan
-- risk
-- status
+포함해야 할 내용:
+- 문제
+- 소스 근거
+- 해당하는 경우 재현
+- 의심되는 근본 원인
+- 제안된 변경
+- 테스트 계획
+- 위험
+- 상태
 
 ---
 
-# Learning Workflow
+# 학습 워크플로
 
-When studying a topic:
+주제를 학습할 때는 다음을 따른다.
 
-1. Identify the study question.
-2. Collect only relevant sources.
-3. Add or update `docs/raw_manifest.yml`.
-4. Create source summaries for important sources.
-5. Update or create wiki pages.
-6. Add wikilinks to related concepts.
-7. Add open questions.
-8. If code was studied, add source file paths.
-9. If behavior was tested, add experiment or reproduction notes.
-10. Update `_index.md` when adding major pages.
+1. 학습 질문을 식별한다.
+2. 관련 있는 소스만 수집한다.
+3. `docs/raw_manifest.yml`을 추가하거나 갱신한다.
+4. 중요한 소스에 대한 요약을 만든다.
+5. 위키 페이지를 만들거나 갱신한다.
+6. 관련 개념에 위키링크를 추가한다.
+7. 미해결 질문을 추가한다.
+8. 코드를 학습했다면 소스 파일 경로를 추가한다.
+9. 동작을 테스트했다면 실험 또는 재현 메모를 추가한다.
+10. 주요 페이지를 추가할 때 `_index.md`를 갱신한다.
 
-Example study question:
+예시 학습 질문:
 
-> How does LangGraph checkpointing work internally?
+> LangGraph 체크포인팅은 내부적으로 어떻게 동작하는가?
 
-Expected outputs:
+기대 산출물:
 - `docs/source_summaries/langgraph-checkpointing.md`
 - `docs/wiki/concepts/Checkpointing.md`
 - `docs/wiki/flows/LangGraph checkpointing flow.md`
@@ -552,22 +552,22 @@ Expected outputs:
 
 ---
 
-# Code Reading Workflow
+# 코드 리딩 워크플로
 
-When reading source code:
+소스 코드를 읽을 때는 다음을 따른다.
 
-1. Start from a public API or observed behavior.
-2. Trace definitions using the editor.
-3. Record entry points.
-4. Record files read.
-5. Record key classes/functions.
-6. Find related tests.
-7. Note what is verified vs still unclear.
-8. Update the relevant flow or code map page.
+1. 공개 API 또는 관찰한 동작에서 시작한다.
+2. 에디터를 사용해 정의를 추적한다.
+3. 진입점을 기록한다.
+4. 읽은 파일을 기록한다.
+5. 핵심 클래스/함수를 기록한다.
+6. 관련 테스트를 찾는다.
+7. 무엇이 검증되었고 무엇이 아직 불분명한지 적는다.
+8. 관련 흐름 또는 코드 맵 페이지를 갱신한다.
 
-Never claim to understand an internal flow unless source files or tests were inspected.
+소스 파일이나 테스트를 확인하지 않았다면 내부 흐름을 이해했다고 주장하지 않는다.
 
-Use this format:
+다음 형식을 사용한다.
 
 ```markdown
 ## Files Read
@@ -590,58 +590,58 @@ Use this format:
 
 ---
 
-# Experiment Workflow
+# 실험 워크플로
 
-When running experiments:
+실험을 수행할 때는 다음을 따른다.
 
-1. Create a small example or reproduction.
-2. Write down the expected behavior.
-3. Run the code.
-4. Save the result.
-5. Summarize observations in `docs/wiki/experiments/`.
-6. Link related concepts and framework pages.
-7. If the result suggests a bug, create or update a failure case.
-8. If the issue may be upstream, add a PR candidate.
+1. 작은 예제 또는 재현 코드를 만든다.
+2. 기대 동작을 적는다.
+3. 코드를 실행한다.
+4. 결과를 저장한다.
+5. 관찰 내용을 `docs/wiki/experiments/`에 요약한다.
+6. 관련 개념과 프레임워크 페이지를 연결한다.
+7. 결과가 버그를 시사하면 실패 사례를 만들거나 갱신한다.
+8. 이슈가 업스트림일 수 있다면 PR 후보를 추가한다.
 
-Do not store huge raw logs in Git.  
-Summarize them and store only minimal reproductions.
+Git에 거대한 raw 로그를 저장하지 않는다.
+이를 요약하고 최소 재현만 저장한다.
 
 ---
 
-# PR Preparation Workflow
+# PR 준비 워크플로
 
-The goal is to eventually make small, high-quality PRs.
+목표는 결국 작고 품질 높은 PR을 만드는 것이다.
 
-**Good first PR candidates:**
-- docs mismatch
-- unclear example
-- missing edge case test
-- small bug with clear reproduction
-- better error message
-- type hint or docstring improvement
-- regression test for an issue
+**좋은 첫 PR 후보:**
+- 문서 불일치
+- 불명확한 예제
+- 빠진 엣지 케이스 테스트
+- 명확한 재현이 있는 작은 버그
+- 더 나은 오류 메시지
+- 타입 힌트 또는 docstring 개선
+- 이슈를 위한 회귀 테스트
 
-**Avoid early PRs that involve:**
-- large refactors
-- new core abstractions
-- public API changes
-- new dependencies
-- broad generated documentation
-- unverified behavior changes
+**초기에 피해야 할 PR:**
+- 대규모 리팩터링
+- 새로운 핵심 추상화
+- 공개 API 변경
+- 새로운 의존성
+- 광범위한 생성형 문서
+- 검증되지 않은 동작 변경
 
-Before drafting a PR:
+PR 초안을 작성하기 전에 다음을 수행한다.
 
-1. Search existing issues and PRs.
-2. Confirm the behavior.
-3. Create a minimal reproduction.
-4. Find related tests.
-5. Add or update a failing test when behavior changes.
-6. Make the smallest reasonable fix.
-7. Run targeted tests.
-8. Update docs if needed.
-9. Write a clear PR note.
+1. 기존 이슈와 PR을 검색한다.
+2. 동작을 확인한다.
+3. 최소 재현 예제를 만든다.
+4. 관련 테스트를 찾는다.
+5. 동작이 바뀌면 실패하는 테스트를 추가하거나 갱신한다.
+6. 가장 작고 합리적인 수정만 한다.
+7. 대상 테스트를 실행한다.
+8. 필요하면 문서를 갱신한다.
+9. 명확한 PR 메모를 작성한다.
 
-PR note structure:
+PR 메모 구조:
 
 ```markdown
 ## Problem
@@ -654,65 +654,65 @@ PR note structure:
 
 ---
 
-# AI Assistant Behavior Rules
+# AI assistant 동작 규칙
 
-When acting as an AI assistant in this repo:
+이 저장소에서 AI assistant로 동작할 때는 다음을 따른다.
 
-**Do:**
-- Be source-grounded.
-- Prefer official docs, source code, tests, issues, and PRs.
-- Use explicit uncertainty.
-- Keep pages structured.
-- Add wikilinks for important concepts.
-- Update related pages when a new concept affects them.
-- Keep raw and wiki separate.
-- Preserve user-written notes unless asked to rewrite.
-- Prefer small, reviewable changes.
-- Ask for clarification only when the task is truly ambiguous and cannot be reasonably attempted.
+**해야 할 일:**
+- 소스에 근거한다.
+- 공식 문서, 소스 코드, 테스트, 이슈, PR을 우선한다.
+- 불확실성을 명시적으로 표현한다.
+- 페이지 구조를 유지한다.
+- 중요한 개념에는 위키링크를 추가한다.
+- 새 개념이 관련 페이지에 영향을 주면 해당 페이지도 함께 갱신한다.
+- raw와 wiki를 분리해 유지한다.
+- 다시 쓰라는 요청이 없다면 사용자가 작성한 메모를 보존한다.
+- 작고 리뷰 가능한 변경을 우선한다.
+- 작업이 정말 모호해서 합리적으로 시도할 수 없을 때만 설명을 요청한다.
 
-**Do Not:**
-- Do not invent sources.
-- Do not claim source code was inspected if it was not.
-- Do not bulk scrape documentation without a study purpose.
-- Do not silently delete notes.
-- Do not overwrite raw files unnecessarily.
-- Do not make large refactors unless explicitly asked.
-- Do not add secrets or credentials.
-- Do not submit or prepare large PRs from unreviewed generated content.
-- Do not treat Obsidian graph view as a graph database.
-- Do not treat vector DB search as ontology.
-- Do not confuse source summaries with synthesized wiki pages.
+**하지 말아야 할 일:**
+- 소스를 지어내지 않는다.
+- 확인하지 않은 소스 코드를 확인했다고 주장하지 않는다.
+- 학습 목적 없이 문서를 대량 스크래핑하지 않는다.
+- 메모를 조용히 삭제하지 않는다.
+- 필요 이상으로 raw 파일을 덮어쓰지 않는다.
+- 명시적으로 요청받지 않는 한 대규모 리팩터링을 하지 않는다.
+- 시크릿이나 자격 증명을 추가하지 않는다.
+- 검토되지 않은 생성형 콘텐츠로 대규모 PR을 제출하거나 준비하지 않는다.
+- Obsidian graph view를 그래프 데이터베이스로 취급하지 않는다.
+- vector DB 검색을 ontology로 취급하지 않는다.
+- 소스 요약과 종합된 위키 페이지를 혼동하지 않는다.
 
 ---
 
-# Obsidian Usage
+# Obsidian 사용법
 
-Obsidian is used as a Markdown knowledge browser.
+Obsidian은 Markdown 지식 브라우저로 사용한다.
 
-Obsidian provides:
-- note browsing
-- backlinks
+Obsidian이 제공하는 것:
+- 노트 탐색
+- 백링크
 - graph view
-- local search
-- properties
-- optional Bases views
+- 로컬 검색
+- 속성
+- 선택적인 Bases 보기
 
-Obsidian does not automatically create a real graph database or ontology.
+Obsidian이 자동으로 실제 그래프 데이터베이스나 ontology를 만들어 주는 것은 아니다.
 
-Use Obsidian links to make knowledge navigable:
+Obsidian 링크를 사용해 지식을 탐색 가능하게 만든다.
 
-> [[LangGraph]] provides runtime capabilities such as [[Checkpointing]] and [[Human in the Loop]].
+> [[LangGraph]]는 [[Checkpointing]]과 [[Human in the Loop]] 같은 런타임 기능을 제공한다.
 
-For AI assistants, the important part is not Obsidian's UI.  
-The important part is the Markdown structure, links, metadata, and source references.
+AI assistant에게 중요한 것은 Obsidian의 UI가 아니다.
+중요한 것은 Markdown 구조, 링크, 메타데이터, 소스 참조다.
 
 ---
 
-# Ontology-lite Rules
+# Ontology-lite 규칙
 
-This wiki may use lightweight ontology patterns.
+이 위키는 가벼운 ontology 패턴을 사용할 수 있다.
 
-Use explicit page types:
+명시적인 페이지 유형을 사용한다.
 
 ```yaml
 ---
@@ -727,7 +727,7 @@ sources:
 ---
 ```
 
-Useful `type` values:
+유용한 `type` 값:
 - `framework`
 - `concept`
 - `comparison`
@@ -740,47 +740,47 @@ Useful `type` values:
 - `pr_candidate`
 - `source_summary`
 
-Useful `status` values:
+유용한 `status` 값:
 - `draft`
 - `in_review`
 - `verified`
 - `outdated`
 - `needs_source`
 
-Useful `confidence` values:
+유용한 `confidence` 값:
 - `low`
 - `medium`
 - `high`
 
 ---
 
-# Index Maintenance
+# 인덱스 유지 관리
 
-Maintain:
+다음을 유지한다.
 - `docs/wiki/_index.md`
 - `docs/wiki/_roadmap.md`
 - `docs/wiki/_open_questions.md`
 
 ## _index.md
 
-Should list major pages by category.
+카테고리별 주요 페이지를 나열해야 한다.
 
 ## _roadmap.md
 
-Should track learning goals and next study areas.
+학습 목표와 다음 학습 영역을 추적해야 한다.
 
 ## _open_questions.md
 
-Should collect unresolved questions.
+해결되지 않은 질문을 수집해야 한다.
 
-When adding a major page, update `_index.md`.  
-When discovering an uncertainty, update `_open_questions.md`.
+주요 페이지를 추가할 때는 `_index.md`를 갱신한다.
+불확실성을 발견하면 `_open_questions.md`를 갱신한다.
 
 ---
 
-# Recommended Initial Pages
+# 권장 초기 페이지
 
-If missing, create these first:
+없다면 다음 페이지를 먼저 만든다.
 
 ```
 docs/wiki/_index.md
@@ -807,9 +807,9 @@ docs/wiki/flows/Deep Agents create_deep_agent flow.md
 
 ---
 
-# Raw Sync and Git Policy
+# Raw 동기화 및 Git 정책
 
-The recommended default is:
+권장 기본값은 다음과 같다.
 
 ```
 Git tracks:
@@ -831,39 +831,39 @@ Git does not track by default:
 - private notes
 ```
 
-If a raw file is small, public, and important for reproducibility, it may be committed intentionally.  
-If a raw file is large, private, copyrighted, generated, or easy to re-fetch, do not commit it.  
-Record it in `docs/raw_manifest.yml` instead.
+raw 파일이 작고, 공개되어 있으며, 재현성에 중요하다면 의도적으로 커밋할 수 있다.
+raw 파일이 크거나, 비공개이거나, 저작권 문제가 있거나, 생성물이거나, 다시 가져오기 쉽다면 커밋하지 않는다.
+대신 `docs/raw_manifest.yml`에 기록한다.
 
 ---
 
-# Quality Bar
+# 품질 기준
 
-A good wiki update should make future work easier.
+좋은 위키 갱신은 미래의 작업을 더 쉽게 만들어야 한다.
 
-Before finishing a change, check:
-- Did I add sources?
-- Did I distinguish facts from interpretation?
-- Did I link related pages?
-- Did I update the index if needed?
-- Did I record open questions?
-- Did I avoid unnecessary raw collection?
-- Did I avoid unverified claims?
-- Did I keep the change small and reviewable?
+변경을 마치기 전에 다음을 확인한다.
+- 소스를 추가했는가?
+- 사실과 해석을 구분했는가?
+- 관련 페이지를 연결했는가?
+- 필요하다면 인덱스를 갱신했는가?
+- 미해결 질문을 기록했는가?
+- 불필요한 raw 수집을 피했는가?
+- 검증되지 않은 주장을 피했는가?
+- 변경을 작고 리뷰 가능하게 유지했는가?
 
 ---
 
-# Current Learning Goal
+# 현재 학습 목표
 
-The current goal is to understand LangChain, LangGraph, and Deep Agents deeply enough to:
+현재 목표는 LangChain, LangGraph, Deep Agents를 다음이 가능할 만큼 깊이 이해하는 것이다.
 
-1. explain their architecture,
-2. compare their trade-offs,
-3. trace public APIs into internal implementation,
-4. run meaningful experiments,
-5. understand tests,
-6. reproduce issues,
-7. identify small PR opportunities,
-8. eventually submit high-quality upstream contributions.
+1. 아키텍처를 설명한다.
+2. 트레이드오프를 비교한다.
+3. 공개 API에서 내부 구현까지 추적한다.
+4. 의미 있는 실험을 수행한다.
+5. 테스트를 이해한다.
+6. 이슈를 재현한다.
+7. 작은 PR 기회를 식별한다.
+8. 궁극적으로 높은 품질의 업스트림 기여를 제출한다.
 
-Prefer depth, traceability, and correctness over speed.
+속도보다 깊이, 추적 가능성, 정확성을 우선한다.
