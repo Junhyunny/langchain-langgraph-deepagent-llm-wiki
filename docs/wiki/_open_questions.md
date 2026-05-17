@@ -20,10 +20,13 @@
 
 ## Deep Agents
 
-- LangChain에서 `create_deep_agent`는 `create_react_agent`와 비교해 정확히 어떤 역할을 하는가?
-- Deep Agents는 내부적으로 서브에이전트 오케스트레이션을 어떻게 처리하는가?
-- 서브에이전트가 호출될 때의 호출 경로는 무엇인가?
-- 도구 레지스트리는 어디에서 유지되는가?
+- `create_deep_agent` 내부에서 LangGraph의 어떤 graph를 생성하는가? — Source: `deepagents-docs-overview-2026-05-18`
+- filesystem tools는 SDK 내부에 있는가, 별도 패키지인가? — Source: `deepagents-docs-overview-2026-05-18`
+- subagent state는 parent agent와 어떻게 분리되는가? — Source: `deepagents-docs-overview-2026-05-18`
+- ACP (Agent Client Protocol) integration은 어떤 프로토콜 스펙을 따르는가? — Source: `deepagents-docs-overview-2026-05-18`
+- "durable execution"이 LangGraph의 checkpointing과 어떻게 연결되는가? — Source: `deepagents-docs-overview-2026-05-18`
+- Deep Agents Code (터미널 에이전트)는 SDK를 어떻게 확장하는가? — Source: `deepagents-docs-overview-2026-05-18`
+- `create_deep_agent`와 LangChain `create_agent`의 내부 구조 차이는 무엇인가? — 소스코드 확인 필요
 
 ## 프레임워크 간 비교
 
