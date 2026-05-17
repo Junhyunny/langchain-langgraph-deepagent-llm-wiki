@@ -1,0 +1,18 @@
+name: fetch-raw-doc
+version: 1.0.0
+description: >
+  공식 문서 URL 또는 수동 복사 내용을 받아 올바른 frontmatter를 포함한 raw 파일을 생성하고,
+  docs/raw_manifest.yml을 갱신하는 스킬.
+  브라우저 내용을 통째로 AI에게 던지는 대신, 출처 추적이 가능한 작은 단위로 raw 소스를 수집한다.
+category: knowledge-management
+tags: [wiki, raw, docs, langchain, langgraph, deep-agents, knowledge-base]
+invocation: /fetch-raw-doc
+preconditions:
+  - docs/raw_manifest.yml 이 존재해야 함
+  - docs/raw/ 디렉토리가 존재해야 함
+effects:
+  - docs/raw/official/<framework>/<source-id>.md 파일 생성
+  - docs/raw_manifest.yml에 소스 항목 추가
+next_steps:
+  - source summary 생성 요청
+  - wiki 페이지 반영

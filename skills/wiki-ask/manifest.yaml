@@ -1,0 +1,20 @@
+name: wiki-ask
+version: 1.0.0
+description: >
+  LLM Wiki의 현재 성숙도를 기반으로 질문을 재구성하는 스킬.
+  답변을 강요하지 않고 wiki 상태에 맞는 응답 형식을 선택한다.
+  초기에는 research plan, 중기에는 source 기반 설명, 후기에는 wiki 기반 답변을 생성한다.
+category: knowledge-management
+tags: [wiki, research, planning, question, llm, knowledge-base]
+invocation: /wiki-ask
+preconditions:
+  - docs/wiki/ 디렉토리가 존재해야 함
+  - docs/raw_manifest.yml이 존재해야 함
+effects:
+  - 질문에 대한 wiki 기반 구조적 응답 생성
+  - 필요한 source 목록 및 ingest 우선순위 제시
+  - 부족한 근거는 Needs Source로 명시
+next_steps:
+  - fetch-raw-doc 스킬로 필요한 source 수집
+  - source summary 생성
+  - wiki 페이지 업데이트

@@ -1,0 +1,1 @@
+../../../skills/wiki-ask/SKILL.md

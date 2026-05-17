@@ -1,0 +1,15 @@
+# raw_manifest.yml 항목 템플릿
+#
+# docs/raw_manifest.yml 의 sources: 배열에 추가할 항목 형식.
+# {{...}} 은 실제 값으로 치환한다.
+
+- id: {{source_id}}
+  title: {{title}}
+  type: {{type}}
+  framework: {{framework}}
+  url: "{{url}}"
+  local_path: "{{local_path}}"
+  retrieved_at: "{{retrieved_at}}"
+  status: current
+  used_by: []
+  notes: "{{notes}}"
