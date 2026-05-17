@@ -1,0 +1,13 @@
+docs/raw/*
+!docs/raw/.gitkeep
+docs/raw_private/
+output/
+.cache/
+*.sqlite
+*.db
+*.jsonl
+*.log
+
+# local vector indexes or search caches
+.vector/
+.qmd/
