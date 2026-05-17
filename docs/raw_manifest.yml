@@ -1,1 +1,11 @@
-sources: []
+sources:
+  - id: deepagents-docs-overview-2026-05-18
+    title: Deep Agents Overview
+    type: official_docs
+    framework: Deep Agents
+    url: "https://docs.langchain.com/oss/python/deepagents/overview"
+    local_path: "docs/raw/official/deep_agents/deepagents-docs-overview-2026-05-18.md"
+    retrieved_at: "2026-05-18"
+    status: current
+    used_by: []
+    notes: "Official overview page for the Deep Agents SDK."
