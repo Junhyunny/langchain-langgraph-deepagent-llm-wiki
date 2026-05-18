@@ -6,6 +6,7 @@ confidence: medium
 last_reviewed: 2026-05-18
 sources:
   - deepagents-docs-overview-2026-05-18
+  - deepagents-docs-context-engineering-2026-05-18
 ---
 
 # Deep Agents
@@ -71,6 +72,27 @@ agent.invoke({"messages": [{"role": "user", "content": "..."}]})
 
 - `create_deep_agent(model, tools, system_prompt)` — 검증됨
   Source: `deepagents-docs-overview-2026-05-18`
+- `create_deep_agent(model, tools, system_prompt, memory, skills, context_schema, store, backend, middleware, interrupt_on)` — 파라미터 확인됨
+  Source: `deepagents-docs-context-engineering-2026-05-18`
+
+## Context Engineering
+*Source: `deepagents-docs-context-engineering-2026-05-18`*
+
+Deep Agents는 5가지 context 타입을 체계적으로 관리한다. 자세한 내용: [[Context Engineering]]
+
+**System Prompt 조립 순서:** custom → base(graph.py#L37) → todos → memory → skills → filesystem → subagent → middleware → human-in-the-loop
+
+**핵심 차이:**
+- `memory` — 항상 로드 (no progressive disclosure); 필수 규칙/선호도에 사용
+- `skills` — frontmatter만 로드, 관련성 판단 시 전체 로드 (progressive disclosure); 특화 워크플로우에 사용
+
+**Context Compression:**
+- Offloading: tool call results > 20,000 tokens → backend offload
+- Summarization: 컨텍스트 > `max_input_tokens`의 85% → LLM 요약 생성, 원본은 파일시스템 보존
+
+**Runtime Context:** `context_schema` + `context` 인자로 per-run 설정 주입; 서브에이전트로 **자동 전파**
+
+**Long-term Memory:** 기본은 단일 스레드. 스레드 간 영속은 `CompositeBackend` + `StoreBackend` 필요
 
 ## Interpretation
 - Deep Agents는 LangGraph + LangChain의 기능을 직접 조합하는 대신, 공통 패턴을 미리 구성해 둔 고수준 래퍼로 이해할 수 있다.
@@ -120,3 +142,4 @@ agent.invoke({"messages": [{"role": "user", "content": "..."}]})
 ## Sources
 
 - `deepagents-docs-overview-2026-05-18`
+- `deepagents-docs-context-engineering-2026-05-18`

@@ -9,3 +9,23 @@ sources:
     status: current
     used_by: []
     notes: "Official overview page for the Deep Agents SDK."
+  - id: deepagents-docs-context-engineering-2026-05-18
+    title: "Deep Agents — Context Engineering"
+    type: official_docs
+    framework: Deep Agents
+    url: "https://docs.langchain.com/oss/python/deepagents/context-engineering"
+    local_path: "docs/raw/official/deep_agents/deepagents-docs-context-engineering-2026-05-18.md"
+    retrieved_at: "2026-05-18"
+    status: current
+    used_by: []
+    notes: "Context types, system prompt assembly order, offloading/summarization thresholds, subagent context isolation, long-term memory with CompositeBackend."
+  - id: langchain-docs-event-streaming-2026-05-18
+    title: "LangChain — Event Streaming"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/langchain/event-streaming"
+    local_path: "docs/raw/official/langchain/langchain-docs-event-streaming-2026-05-18.md"
+    retrieved_at: "2026-05-18"
+    status: current
+    used_by: []
+    notes: "stream_events v3 projections: messages, tool_calls, values, subgraphs, extensions. Covers reasoning, sub-agent streaming, async/sync multiple projections, custom transformers."

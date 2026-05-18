@@ -5,9 +5,10 @@ framework:
   - LangGraph
   - Deep Agents
 status: draft
-confidence: low
+confidence: medium
 last_reviewed: 2026-05-18
-sources: []
+sources:
+  - deepagents-docs-context-engineering-2026-05-18
 ---
 
 # Context Engineering
@@ -15,8 +16,6 @@ sources: []
 ## 요약
 
 Context Engineering은 출력의 품질과 신뢰성을 극대화하기 위해 LLM에 전달되는 컨텍스트(시스템 프롬프트, 대화 히스토리, 도구 설명, 주입된 데이터)를 의도적으로 구성하는 실천이다.
-
-*상태: 초안 스텁이다. 소스 검증이 필요하다.*
 
 ## 중요한 이유
 
@@ -30,6 +29,7 @@ Context Engineering은 출력의 품질과 신뢰성을 극대화하기 위해 L
 - **RAG 주입** — 컨텍스트에 추가되는 검색 문서
 - **컨텍스트 윈도우** — LLM이 처리할 수 있는 최대 토큰 수
 - **컨텍스트 압축** — 컨텍스트 윈도우에 맞추기 위해 히스토리를 줄이는 것
+- **Progressive Disclosure** — 필요할 때만 컨텍스트를 로드하는 전략 (Deep Agents의 skills 패턴)
 
 ## 프레임워크별 동작
 
@@ -46,15 +46,71 @@ Context Engineering은 출력의 품질과 신뢰성을 극대화하기 위해 L
 - *소스 필요.*
 
 ### Deep Agents
+*Source: `deepagents-docs-context-engineering-2026-05-18`*
 
-- 서브에이전트로의 컨텍스트 전달은 핵심 관심사다
-- *소스 필요.*
+Deep Agents는 5가지 context 타입으로 구분하여 체계적으로 관리한다.
+
+#### 5가지 Context 타입
+
+| Context 타입 | 범위 |
+|---|---|
+| **Input context** | 정적, 매 실행마다 적용 (startup 시 system prompt 구성) |
+| **Runtime context** | 실행 당, 서브에이전트로 자동 전파 |
+| **Context compression** | 자동 (offloading + summarization) |
+| **Context isolation** | 서브에이전트 단위 (무거운 작업 격리) |
+| **Long-term memory** | 스레드 간 영속 (CompositeBackend 필요) |
+
+#### System Prompt 조립 순서 (9단계)
+
+1. Custom `system_prompt` (제공된 경우)
+2. Base agent prompt (소스: `graph.py#L37`)
+3. To-do list prompt
+4. Memory prompt (`memory` 파라미터 제공 시에만)
+5. Skills prompt (`skills` 파라미터 제공 시에만)
+6. Virtual filesystem prompt
+7. Subagent prompt (`task` tool 사용법)
+8. 사용자 제공 미들웨어 prompts
+9. Human-in-the-loop prompt (`interrupt_on` 설정 시)
+
+#### Memory vs Skills
+
+| | Memory | Skills |
+|---|---|---|
+| 로드 시점 | **항상** 시스템 프롬프트에 포함 | frontmatter만 읽고, 관련성 판단 시 전체 로드 |
+| 패턴 | No progressive disclosure | **Progressive disclosure** |
+| 용도 | 항상 필요한 프로젝트 규칙, 선호도 | 상황별 특화 워크플로우 |
+
+#### Context Compression
+
+**Offloading (20,000 tokens threshold):**
+- Tool call results > 20,000 tokens → backend에 offload, 파일 경로 + 첫 10줄 preview로 대체
+- 세션 컨텍스트 > 85% 도달 → 오래된 tool call inputs 잘라내고 파일 포인터로 대체
+
+**Summarization (85% threshold):**
+- 컨텍스트 > `max_input_tokens`의 85% AND offloading 대상 없음 → LLM이 구조화된 요약 생성
+- 요약이 전체 대화 히스토리 대체 / 원본은 파일시스템에 보존
+- 최근 컨텍스트 10% 유지
+- Fallback: 모델 프로파일 불명 시 170,000 tokens / 6 messages 기준
+
+#### Runtime Context
+
+- 모델 프롬프트에 **자동 포함되지 않음** — tool/middleware가 명시적으로 읽어야 함
+- `context_schema` (dataclass 또는 TypedDict)로 타입 정의
+- `invoke`의 `context` 인자로 전달
+- 모든 서브에이전트로 **자동 전파**
+
+#### Long-term Memory
+
+- 기본 filesystem: 단일 스레드 내에서만 영속
+- 스레드 간 영속: `CompositeBackend` + `StoreBackend` (LangGraph Store 연동)
+- `/memories/` 경로를 `StoreBackend`로 라우팅하는 패턴이 표준
 
 ## 미해결 질문
 
-- 각 프레임워크는 컨텍스트 윈도우 초과를 어떻게 처리하는가?
-- 어떤 압축 또는 요약 전략이 내장되어 있는가?
+- LangChain, LangGraph에서 컨텍스트 윈도우 초과를 어떻게 처리하는가? (Deep Agents에서만 확인됨)
 - 도구 설명은 어떤 형식으로 구성되고 주입되는가?
+- Deep Agents의 `graph.py#L37` base agent prompt는 어떤 내용인가? 커스터마이징 가능한가?
+- Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가?
 
 ## 관련 페이지
 
@@ -67,4 +123,4 @@ Context Engineering은 출력의 품질과 신뢰성을 극대화하기 위해 L
 
 ## 소스
 
-*아직 없음.*
+- `deepagents-docs-context-engineering-2026-05-18`

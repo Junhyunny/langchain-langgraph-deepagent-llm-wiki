@@ -4,7 +4,8 @@ framework: LangChain
 status: draft
 confidence: low
 last_reviewed: 2026-05-18
-sources: []
+sources:
+  - langchain-docs-event-streaming-2026-05-18
 ---
 
 # LangChain
@@ -32,11 +33,42 @@ LangChain은 이 생태계의 기반 프레임워크다. LangGraph와 Deep Agent
 ## 공개 API
 
 - `create_react_agent()`
+- `create_agent()` — LangGraph 기반, `stream_events(version="v3")` 지원 확인됨
+  Source: `langchain-docs-event-streaming-2026-05-18`
 - `AgentExecutor`
 - `ChatPromptTemplate`
 - `RunnableSequence` / LCEL 파이프 `|`
 
 *소스 필요: 각각이 어느 모듈에 존재하는지 확인해야 한다.*
+
+## LangGraph와의 관계 (확인됨)
+
+> "LangChain agents are built on LangGraph, so they support the same streaming stack"
+> *Source: `langchain-docs-event-streaming-2026-05-18`*
+
+LangChain의 `create_agent`는 LangGraph 위에 구축되어 있어 동일한 스트리밍 스택을 공유한다.
+
+## Event Streaming
+*Source: `langchain-docs-event-streaming-2026-05-18`*
+
+- 권장: `stream_events(..., version="v3")`
+- 리턴: 타입화된 프로젝션이 있는 run object (stream-mode tuple 파싱 불필요)
+- 주요 프로젝션:
+
+| 프로젝션 | 용도 |
+|---|---|
+| `stream.messages` | LLM 호출별 메시지 스트림 (`ChatModelStream`) |
+| `stream.tool_calls` | tool 실행 라이프사이클 |
+| `stream.values` | agent state 스냅샷 |
+| `stream.output` | 최종 agent state |
+| `stream.subgraphs` | 중첩 그래프 실행 (모든 `CompiledStateGraph`) |
+| `stream.extensions` | 커스텀 transformer 프로젝션 |
+
+**서브에이전트 스트리밍:** `stream.subgraphs`로 접근; `create_agent(name="...")` 의 name이 `subagent.graph_name`
+
+**Multiple Projections:**
+- 동기: `stream.interleave("messages", "tool_calls", "values")`
+- 비동기: `astream_events` + `asyncio.gather`
 
 ## 내부 구현 맵
 
@@ -68,4 +100,4 @@ LangChain은 이 생태계의 기반 프레임워크다. LangGraph와 Deep Agent
 
 ## 소스
 
-*아직 없음.*
+- `langchain-docs-event-streaming-2026-05-18`
