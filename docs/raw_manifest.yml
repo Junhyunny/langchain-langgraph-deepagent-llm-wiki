@@ -56,9 +56,9 @@ sources:
     url: "https://docs.langchain.com/oss/python/deepagents/harness"
     local_path: "docs/raw/official/deep_agents/deepagents-docs-harness-2026-05-19.md"
     retrieved_at: "2026-05-19"
-    status: pending
+    status: current
     used_by: []
-    notes: "HarnessProfile 등록 방법, 커스터마이징 패턴 포함 예상. 403으로 자동 수집 실패 — manual_browser_copy 필요."
+    notes: "하네스 8가지 구성요소(planning, filesystem, permissions, subagents, context, code execution, human-in-the-loop, profiles), Skills/Memory 개요, HarnessProfile 등록 코드 예제 포함."
   - id: deepagents-docs-landing-2026-05-19
     title: "Deep Agents — 공식 랜딩 페이지"
     type: official_docs
