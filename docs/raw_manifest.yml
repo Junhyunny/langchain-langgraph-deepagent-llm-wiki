@@ -49,3 +49,13 @@ sources:
     status: current
     used_by: []
     notes: "create_deep_agent 핵심 구현. middleware 조립 순서, LangGraph create_agent 위임, _DeepAgentState(DeltaChannel), BASE_AGENT_PROMPT, HarnessProfile 적용 로직 포함."
+  - id: deepagents-docs-landing-2026-05-19
+    title: "Deep Agents — 공식 랜딩 페이지"
+    type: official_docs
+    framework: Deep Agents
+    url: "https://www.langchain.com/deep-agents"
+    local_path: "docs/raw/official/deep_agents/deepagents-docs-landing-2026-05-19.md"
+    retrieved_at: "2026-05-19"
+    status: pending
+    used_by: []
+    notes: "langchain.com Deep Agents 소개 페이지. 403으로 자동 수집 실패 — manual_browser_copy 필요. HarnessProfile, 커스터마이징, 사용 예제 포함 예상."
