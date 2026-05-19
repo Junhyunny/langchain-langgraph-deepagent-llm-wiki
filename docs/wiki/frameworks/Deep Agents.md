@@ -8,6 +8,7 @@ sources:
   - deepagents-docs-overview-2026-05-18
   - deepagents-docs-context-engineering-2026-05-18
   - deepagents-source-graph-2026-05-19
+  - deepagents-docs-harness-2026-05-19
 ---
 
 # Deep Agents
@@ -96,6 +97,80 @@ create_deep_agent(
 ```
 Source: `deepagents-source-graph-2026-05-19`
 
+## Harness Capabilities (공식 목록)
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+하네스는 8가지 구성요소의 조합이다. Skills·Memory는 구성요소와 별도로 "alongside" 제공됨.
+
+| 구성요소 | 핵심 역할 |
+|---------|----------|
+| **Planning** | `write_todos` tool — 상태(`pending`/`in_progress`/`completed`) 포함 태스크 목록, agent state에 영속 |
+| **Virtual filesystem** | 7 built-in tool (`ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`, `execute`) |
+| **Filesystem permissions** | declarative rule 목록, first-match-wins, 기본 허용 |
+| **Task delegation** | `task` tool → subagent 위임, stateless, 단일 최종 보고서 반환 |
+| **Context management** | offloading + summarization 자동 압축, subagent context isolation |
+| **Code execution** | sandbox → `execute` tool / interpreter → `eval` tool (QuickJS) |
+| **Human-in-the-loop** | `interrupt_on={"tool_name": True}` — opt-in, tool 호출 전 pause |
+| **Harness profiles** | `HarnessProfile` + `register_harness_profile` — 모델별 declarative 설정 번들 |
+
+### Virtual Filesystem — Built-in Tools
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+| Tool | 설명 |
+|------|------|
+| `ls` | 디렉터리 목록 (size, modified time 포함) |
+| `read_file` | 파일 읽기 (line numbers, offset/limit, 멀티모달 지원) |
+| `write_file` | 새 파일 생성 |
+| `edit_file` | exact string replacement (global replace 모드 지원) |
+| `glob` | 패턴 매칭 파일 검색 (예: `**/*.py`) |
+| `grep` | 파일 내용 검색 (files-only / content+context / counts 모드) |
+| `execute` | shell 명령 실행 (**sandbox backend 전용**) |
+
+- `FilesystemMiddleware`가 제거 불가인 이유: 이 tools + permissions 보안이 모두 여기서 처리됨
+- filesystem tools 숨기기: `HarnessProfile(excluded_tools=frozenset({...}))` 사용
+- `excluded_middleware`로 `FilesystemMiddleware` 제거 시도 → **ValueError**
+
+### Filesystem Permissions
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+```python
+# permissions= 파라미터에 rule 목록 전달
+agent = create_deep_agent(
+    model="anthropic:claude-sonnet-4-6",
+    permissions=[
+        {"operations": ["write"], "paths": [".env", "**/*.secret"], "mode": "deny"},
+        {"operations": ["read", "write"], "paths": ["/workspace/**"], "mode": "allow"},
+    ],
+)
+```
+
+- **first-match-wins**: 첫 번째 매칭 rule 적용
+- 매칭 rule 없음 → **허용** (기본 allow)
+- Subagent: parent permissions 상속, 자체 permissions 선언 시 대체
+- Sandbox backend의 `execute` tool에는 permissions 미적용
+
+### Harness Profiles
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+```python
+from deepagents import HarnessProfile, register_harness_profile
+
+# provider:model 키로 등록
+register_harness_profile(
+    "anthropic:claude-sonnet-4-6",
+    HarnessProfile(
+        excluded_tools=frozenset({"ls", "read_file", "write_file", "edit_file", "glob", "grep"}),
+    ),
+)
+
+# provider 키로도 등록 가능 (model-level이 override)
+register_harness_profile("openai", HarnessProfile(...))
+```
+
+- 등록 키: `"provider"` 또는 `"provider:model"` — provider-level + model-level 병합됨
+- `create_deep_agent`가 model resolve 시 자동 적용
+- entry points 방식으로 plugin 패키징 가능 (외부 패키지로 배포 가능)
+
 ## Context Engineering
 *Source: `deepagents-docs-context-engineering-2026-05-18`*
 
@@ -174,18 +249,23 @@ Source: `deepagents-source-graph-2026-05-19`
 
 ## Open Questions
 
-- filesystem tools는 `FilesystemMiddleware`에서 주입됨을 확인. 구체적 tool 목록과 구현은? (`deepagents/middleware/filesystem.py` 확인 필요)
 - subagent state isolation의 구체적 메커니즘은? (`SubagentTransformer`, `SubAgentMiddleware` 내부 확인 필요)
 - ACP integration은 어떤 프로토콜 스펙을 따르는가?
 - Deep Agents Code (터미널 에이전트)는 SDK를 어떻게 확장하는가?
 - `langchain.agents.create_agent`의 내부 구현은? LangGraph graph를 어떻게 조립하나?
-- `HarnessProfile`은 어떤 모델에 어떤 profile을 매핑하나? (`harness_profiles.py`)
 - `PatchToolCallsMiddleware`는 어떤 tool call 패치를 수행하나?
+- `HarnessProfile`의 전체 필드 목록은? (`base_system_prompt`, `system_prompt_suffix`, `general_purpose_subagent` 외에 더 있는가?) — Source: `deepagents-docs-harness-2026-05-19`
+- Provider-level과 model-level HarnessProfile의 merge 우선순위는? — Source: `deepagents-docs-harness-2026-05-19`
+- `register_harness_profile`의 전체 시그니처 및 entry points 패키징 방법은? — Source: `deepagents-docs-harness-2026-05-19`
+- Sandbox backend 없이 `execute` tool 호출 시 error 반환인가, tool 목록에서 제외되는가? — Source: `deepagents-docs-harness-2026-05-19`
+- Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
 
 **해소된 질문:**
 - ✅ `create_deep_agent`는 `langchain.agents.create_agent`에 위임 → `CompiledStateGraph` 반환 (Source: `deepagents-source-graph-2026-05-19`)
 - ✅ `create_deep_agent`와 LangChain `create_agent`의 차이: middleware 조립 후 `create_agent` 위임 (Source: `deepagents-source-graph-2026-05-19`)
-- ✅ "durable execution" ↔ checkpointing 연결: `checkpointer` 파라미터를 `create_agent`에 전달, `_DeepAgentState`의 `DeltaChannel`로 효율화 (Source: `deepagents-source-graph-2026-05-19`)
+- ✅ "durable execution" ↔ checkpointing 연결: `checkpointer` 파라미터 + `_DeepAgentState` `DeltaChannel` (Source: `deepagents-source-graph-2026-05-19`)
+- ✅ filesystem tools 목록 확인됨: `ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`, `execute` — `FilesystemMiddleware`에서 주입 (Source: `deepagents-docs-harness-2026-05-19`)
+- ✅ `HarnessProfile` 등록 방법: `register_harness_profile(key, HarnessProfile(...))` (Source: `deepagents-docs-harness-2026-05-19`)
 
 ## Related Pages
 
@@ -203,3 +283,4 @@ Source: `deepagents-source-graph-2026-05-19`
 - `deepagents-docs-overview-2026-05-18`
 - `deepagents-docs-context-engineering-2026-05-18`
 - `deepagents-source-graph-2026-05-19`
+- `deepagents-docs-harness-2026-05-19`
