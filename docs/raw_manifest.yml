@@ -29,3 +29,13 @@ sources:
     status: current
     used_by: []
     notes: "stream_events v3 projections: messages, tool_calls, values, subgraphs, extensions. Covers reasoning, sub-agent streaming, async/sync multiple projections, custom transformers."
+  - id: langchain-docs-contributing-overview-2026-05-18
+    title: "LangChain — Contributing Overview"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/contributing/overview"
+    local_path: "docs/raw/official/langchain/langchain-docs-contributing-overview-2026-05-18.md"
+    retrieved_at: "2026-05-18"
+    status: current
+    used_by: []
+    notes: "PR requirements (must link to approved issue), language policy (English only), LLM usage policy (verify every change, no bulk unreviewed content)."
