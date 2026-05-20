@@ -79,3 +79,64 @@ sources:
     status: pending
     used_by: []
     notes: "langchain.com Deep Agents 소개 페이지. 403으로 자동 수집 실패 — manual_browser_copy 필요. HarnessProfile, 커스터마이징, 사용 예제 포함 예상."
+  - id: langgraph-docs-persistence-2026-05-20
+    title: "LangGraph — Persistence"
+    type: official_docs
+    framework: LangGraph
+    url: "https://docs.langchain.com/oss/python/langgraph/persistence"
+    retrieved_at: "2026-05-20"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Checkpointing.md"
+      - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
+      - "docs/wiki/codebase/LangGraph Code Map.md"
+    notes: "Official persistence documentation. Covers threads, checkpoints, super-steps, pending writes, StateSnapshot fields, state history, replay, update_state, and Store distinction."
+  - id: langgraph-docs-durable-execution-2026-05-20
+    title: "LangGraph — Durable execution"
+    type: official_docs
+    framework: LangGraph
+    url: "https://docs.langchain.com/oss/python/langgraph/durable-execution"
+    retrieved_at: "2026-05-20"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Checkpointing.md"
+      - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
+    notes: "Official durable execution documentation. Used for resume semantics, deterministic replay, side-effect guidance, and durability modes (exit/async/sync)."
+  - id: langgraph-reference-stategraph-compile-2026-05-20
+    title: "LangGraph reference — StateGraph.compile"
+    type: official_reference
+    framework: LangGraph
+    url: "https://reference.langchain.com/python/langgraph/graph/state/StateGraph/compile"
+    retrieved_at: "2026-05-20"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Checkpointing.md"
+      - "docs/wiki/concepts/StateGraph.md"
+      - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
+    notes: "Reference page for compile(checkpointer=...). Describes checkpointer as versioned short-term memory and explains thread_id requirement."
+  - id: langgraph-reference-checkpoint-2026-05-20
+    title: "LangGraph reference — checkpoint API"
+    type: official_reference
+    framework: LangGraph
+    url: "https://reference.langchain.com/python/langgraph.checkpoint"
+    retrieved_at: "2026-05-20"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Checkpointing.md"
+      - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
+      - "docs/wiki/codebase/LangGraph Code Map.md"
+    notes: "Reference docs for BaseCheckpointSaver, Checkpoint, CheckpointTuple, pending writes, channel versions, and saver interface methods."
+  - id: langgraph-source-checkpoint-runtime-2026-05-20
+    title: "LangGraph source reading — checkpoint runtime paths"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "aa322c13cd5f16a3f6254a931a4104e412cd687c"
+    local_path: "docs/raw/official/langgraph/source/aa322c13cd5f16a3f6254a931a4104e412cd687c/"
+    retrieved_at: "2026-05-20"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Checkpointing.md"
+      - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
+      - "docs/wiki/codebase/LangGraph Code Map.md"
+    notes: "Pinned source reading for checkpoint runtime. Raw local files: state.py, pregel_main.py, pregel_loop.py, checkpoint_base_init.py, checkpoint_memory_init.py. Relevant upstream paths: libs/langgraph/langgraph/graph/state.py, libs/langgraph/langgraph/pregel/main.py, libs/langgraph/langgraph/pregel/_loop.py, libs/checkpoint/langgraph/checkpoint/base/__init__.py, libs/checkpoint/langgraph/checkpoint/memory/__init__.py."

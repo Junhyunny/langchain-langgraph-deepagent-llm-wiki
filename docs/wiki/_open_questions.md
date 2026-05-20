@@ -16,11 +16,22 @@
 
 ## LangGraph
 
-- `StateGraph.compile()`은 runnable을 내부적으로 어떻게 생성하는가?
-- 체크포인팅은 무엇을 저장하고 무엇을 버릴지 어떻게 결정하는가?
+- `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
+- `libs/langgraph/langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction은 어떻게 구현되어 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
+- pending writes recovery를 정의하는 canonical test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
+- `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
+- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
+- checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Source: `langgraph-docs-persistence-2026-05-20`
 - `interrupt_before` / `interrupt_after`는 그래프 수준에서 어떻게 동작하는가?
-- `MemorySaver`와 영속적 checkpointer의 차이는 무엇인가?
+- `MemorySaver`와 persistent saver의 운영상 차이는 무엇인가? async behavior, serialization, retention/pruning API의 버전 차이를 확인해야 한다. — Source: `langgraph-reference-checkpoint-2026-05-20`
 - `astream_events`와 함께 스트리밍은 어떻게 동작하는가?
+- LangGraph package version과 reference docs version의 관계는? GitHub page는 `langgraph==1.2.0`, `StateGraph.compile` reference는 v1.1.10으로 보였다. — Source: `langgraph-reference-stategraph-compile-2026-05-20`
+
+**해소됨 (2026-05-20):**
+- ✅ 체크포인팅은 무엇을 저장하고 무엇을 버릴지 어떻게 결정하는가? → LangGraph는 super-step boundary마다 `StateSnapshot` checkpoint를 저장하고, super-step 내부의 task-level writes도 pending writes로 저장한다. State에 포함되지 않은 외부 side effect나 thread 간 memory는 자동 저장 대상이 아니다. (Source: `langgraph-docs-persistence-2026-05-20`, `langgraph-reference-checkpoint-2026-05-20`)
+- ✅ `StateGraph.compile(checkpointer=...)`에서 checkpointer는 어디에 attach되는가? → `state.py`에서 `CompiledStateGraph(..., checkpointer=checkpointer, ...)`에 전달되고, `CompiledStateGraph`는 `Pregel`을 상속한다. (Source: `langgraph-source-checkpoint-runtime-2026-05-20`)
+- ✅ `InMemorySaver`의 내부 자료구조는? → `storage`, `writes`, `blobs`로 checkpoint record, pending writes, channel-version blobs를 분리한다. (Source: `langgraph-source-checkpoint-runtime-2026-05-20`)
+- ✅ `exit` / `async` / `sync` durability mode는 runtime source에서 어디에 구현되는가? → `_defaults()` 기본값은 `"async"`, `"sync"`는 tick 뒤 checkpoint future를 기다리고, `"exit"`는 `put_writes()` immediate persistence를 건너뛰고 loop exit에서 checkpoint/writes를 저장한다. (Source: `langgraph-source-checkpoint-runtime-2026-05-20`)
 
 ## Deep Agents
 
