@@ -24,17 +24,30 @@
 
 ## Deep Agents
 
-- `create_deep_agent` 내부에서 LangGraph의 어떤 graph를 생성하는가? — Source: `deepagents-docs-overview-2026-05-18`
-- filesystem tools는 SDK 내부에 있는가, 별도 패키지인가? — Source: `deepagents-docs-overview-2026-05-18`
-- subagent state는 parent agent와 어떻게 분리되는가? — Source: `deepagents-docs-overview-2026-05-18`
+- subagent state isolation의 구체적 메커니즘은? (`SubagentTransformer`, `SubAgentMiddleware` 내부 확인 필요) — Source: `deepagents-source-graph-2026-05-19`
 - ACP (Agent Client Protocol) integration은 어떤 프로토콜 스펙을 따르는가? — Source: `deepagents-docs-overview-2026-05-18`
-- "durable execution"이 LangGraph의 checkpointing과 어떻게 연결되는가? — Source: `deepagents-docs-overview-2026-05-18`
 - Deep Agents Code (터미널 에이전트)는 SDK를 어떻게 확장하는가? — Source: `deepagents-docs-overview-2026-05-18`
-- `create_deep_agent`와 LangChain `create_agent`의 내부 구조 차이는 무엇인가? — 소스코드 확인 필요
-- `graph.py#L37`의 base agent prompt는 어떤 내용인가? 커스터마이징 가능한가? — Source: `deepagents-docs-context-engineering-2026-05-18`
+- `langchain.agents.create_agent`의 내부 구현은? LangGraph `StateGraph`를 어떻게 조립하나? — Source: `deepagents-source-graph-2026-05-19`
+- `HarnessProfile`은 어떤 모델에 어떤 profile을 매핑하나? (`harness_profiles.py` 수집 필요) — Source: `deepagents-source-graph-2026-05-19`
+- `PatchToolCallsMiddleware`는 어떤 tool call 패치를 수행하나? — Source: `deepagents-source-graph-2026-05-19`
+- `DeltaChannel`의 `snapshot_frequency=50`은 정확히 무엇을 의미하나? — Source: `deepagents-source-graph-2026-05-19`
 - Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가? — Source: `deepagents-docs-context-engineering-2026-05-18`
-- Offloading backend (`StateBackend`, `StoreBackend` 등)는 어떤 구현이 기본값인가? — Source: `deepagents-docs-context-engineering-2026-05-18`
 - `@dynamic_prompt` 데코레이터의 정확한 시그니처와 사용 패턴은? — Source: `deepagents-docs-context-engineering-2026-05-18`
+
+- `HarnessProfile`의 전체 필드 목록은? (`base_system_prompt`, `system_prompt_suffix` 외에 더 있는가?) — Source: `deepagents-docs-harness-2026-05-19`
+- Provider-level vs model-level HarnessProfile의 merge 우선순위는? — Source: `deepagents-docs-harness-2026-05-19`
+- `register_harness_profile` entry points 패키징 방법은? — Source: `deepagents-docs-harness-2026-05-19`
+- Sandbox backend 없을 때 `execute` tool은 error 반환인가, tool 목록에서 제외되는가? — Source: `deepagents-docs-harness-2026-05-19`
+- Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
+
+**해소됨 (2026-05-19):**
+- ✅ `create_deep_agent` 내부에서 LangGraph의 어떤 graph를 생성하는가? → `langchain.agents.create_agent`에 위임 → `CompiledStateGraph` 반환 (Source: `deepagents-source-graph-2026-05-19`)
+- ✅ `create_deep_agent`와 LangChain `create_agent`의 내부 구조 차이는? → middleware 조립 후 `create_agent` 위임 (Source: `deepagents-source-graph-2026-05-19`)
+- ✅ `graph.py`의 base agent prompt는 어떤 내용인가? → `BASE_AGENT_PROMPT` 상수, graph.py 직접 정의 (Source: `deepagents-source-graph-2026-05-19`)
+- ✅ "durable execution"이 LangGraph checkpointing과 어떻게 연결되는가? → `checkpointer` 파라미터 + `_DeepAgentState` `DeltaChannel` (Source: `deepagents-source-graph-2026-05-19`)
+- ✅ Offloading backend 기본값은? → `StateBackend()` (Source: `deepagents-source-graph-2026-05-19`)
+- ✅ filesystem tools 목록 확인: `ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`, `execute` (Source: `deepagents-docs-harness-2026-05-19`)
+- ✅ `HarnessProfile` 등록 방법: `register_harness_profile(key, HarnessProfile(...))` (Source: `deepagents-docs-harness-2026-05-19`)
 
 ## 프레임워크 간 비교
 

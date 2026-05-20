@@ -2,11 +2,13 @@
 type: framework
 framework: Deep Agents
 status: draft
-confidence: medium
-last_reviewed: 2026-05-18
+confidence: high
+last_reviewed: 2026-05-19
 sources:
   - deepagents-docs-overview-2026-05-18
   - deepagents-docs-context-engineering-2026-05-18
+  - deepagents-source-graph-2026-05-19
+  - deepagents-docs-harness-2026-05-19
 ---
 
 # Deep Agents
@@ -70,17 +72,116 @@ agent.invoke({"messages": [{"role": "user", "content": "..."}]})
 
 ## Public API
 
-- `create_deep_agent(model, tools, system_prompt)` — 검증됨
-  Source: `deepagents-docs-overview-2026-05-18`
-- `create_deep_agent(model, tools, system_prompt, memory, skills, context_schema, store, backend, middleware, interrupt_on)` — 파라미터 확인됨
-  Source: `deepagents-docs-context-engineering-2026-05-18`
+전체 시그니처 (소스코드 기준):
+```python
+create_deep_agent(
+    model: str | BaseChatModel | None = None,  # ⚠️ None은 0.5.3부터 deprecated
+    tools: Sequence[BaseTool | Callable | dict] | None = None,
+    *,
+    system_prompt: str | SystemMessage | None = None,
+    middleware: Sequence[AgentMiddleware] = (),
+    subagents: Sequence[SubAgent | CompiledSubAgent | AsyncSubAgent] | None = None,
+    skills: list[str] | None = None,
+    memory: list[str] | None = None,
+    permissions: list[FilesystemPermission] | None = None,
+    backend: BackendProtocol | BackendFactory | None = None,
+    interrupt_on: dict[str, bool | InterruptOnConfig] | None = None,
+    response_format: ... | None = None,
+    context_schema: type[ContextT] | None = None,
+    checkpointer: Checkpointer | None = None,
+    store: BaseStore | None = None,
+    debug: bool = False,
+    name: str | None = None,
+    cache: BaseCache | None = None,
+) -> CompiledStateGraph
+```
+Source: `deepagents-source-graph-2026-05-19`
+
+## Harness Capabilities (공식 목록)
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+하네스는 8가지 구성요소의 조합이다. Skills·Memory는 구성요소와 별도로 "alongside" 제공됨.
+
+| 구성요소 | 핵심 역할 |
+|---------|----------|
+| **Planning** | `write_todos` tool — 상태(`pending`/`in_progress`/`completed`) 포함 태스크 목록, agent state에 영속 |
+| **Virtual filesystem** | 7 built-in tool (`ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`, `execute`) |
+| **Filesystem permissions** | declarative rule 목록, first-match-wins, 기본 허용 |
+| **Task delegation** | `task` tool → subagent 위임, stateless, 단일 최종 보고서 반환 |
+| **Context management** | offloading + summarization 자동 압축, subagent context isolation |
+| **Code execution** | sandbox → `execute` tool / interpreter → `eval` tool (QuickJS) |
+| **Human-in-the-loop** | `interrupt_on={"tool_name": True}` — opt-in, tool 호출 전 pause |
+| **Harness profiles** | `HarnessProfile` + `register_harness_profile` — 모델별 declarative 설정 번들 |
+
+### Virtual Filesystem — Built-in Tools
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+| Tool | 설명 |
+|------|------|
+| `ls` | 디렉터리 목록 (size, modified time 포함) |
+| `read_file` | 파일 읽기 (line numbers, offset/limit, 멀티모달 지원) |
+| `write_file` | 새 파일 생성 |
+| `edit_file` | exact string replacement (global replace 모드 지원) |
+| `glob` | 패턴 매칭 파일 검색 (예: `**/*.py`) |
+| `grep` | 파일 내용 검색 (files-only / content+context / counts 모드) |
+| `execute` | shell 명령 실행 (**sandbox backend 전용**) |
+
+- `FilesystemMiddleware`가 제거 불가인 이유: 이 tools + permissions 보안이 모두 여기서 처리됨
+- filesystem tools 숨기기: `HarnessProfile(excluded_tools=frozenset({...}))` 사용
+- `excluded_middleware`로 `FilesystemMiddleware` 제거 시도 → **ValueError**
+
+### Filesystem Permissions
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+```python
+# permissions= 파라미터에 rule 목록 전달
+agent = create_deep_agent(
+    model="anthropic:claude-sonnet-4-6",
+    permissions=[
+        {"operations": ["write"], "paths": [".env", "**/*.secret"], "mode": "deny"},
+        {"operations": ["read", "write"], "paths": ["/workspace/**"], "mode": "allow"},
+    ],
+)
+```
+
+- **first-match-wins**: 첫 번째 매칭 rule 적용
+- 매칭 rule 없음 → **허용** (기본 allow)
+- Subagent: parent permissions 상속, 자체 permissions 선언 시 대체
+- Sandbox backend의 `execute` tool에는 permissions 미적용
+
+### Harness Profiles
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+```python
+from deepagents import HarnessProfile, register_harness_profile
+
+# provider:model 키로 등록
+register_harness_profile(
+    "anthropic:claude-sonnet-4-6",
+    HarnessProfile(
+        excluded_tools=frozenset({"ls", "read_file", "write_file", "edit_file", "glob", "grep"}),
+    ),
+)
+
+# provider 키로도 등록 가능 (model-level이 override)
+register_harness_profile("openai", HarnessProfile(...))
+```
+
+- 등록 키: `"provider"` 또는 `"provider:model"` — provider-level + model-level 병합됨
+- `create_deep_agent`가 model resolve 시 자동 적용
+- entry points 방식으로 plugin 패키징 가능 (외부 패키지로 배포 가능)
 
 ## Context Engineering
 *Source: `deepagents-docs-context-engineering-2026-05-18`*
 
 Deep Agents는 5가지 context 타입을 체계적으로 관리한다. 자세한 내용: [[Context Engineering]]
 
-**System Prompt 조립 순서:** custom → base(graph.py#L37) → todos → memory → skills → filesystem → subagent → middleware → human-in-the-loop
+**System Prompt 조립 순서 (소스코드로 확인됨):**
+- `USER` (system_prompt 인자) → `BASE` (또는 HarnessProfile `CUSTOM`) → `SUFFIX` (HarnessProfile)
+- `USER`가 항상 앞 (caller 우선), `SUFFIX`가 항상 마지막
+- `USER`가 `SystemMessage`이면 기존 content_blocks에 text block append (cache_control 보존)
+
+Source: `deepagents-source-graph-2026-05-19`
 
 **핵심 차이:**
 - `memory` — 항상 로드 (no progressive disclosure); 필수 규칙/선호도에 사용
@@ -108,11 +209,39 @@ Deep Agents는 5가지 context 타입을 체계적으로 관리한다. 자세한
 - **New:** LangGraph runtime을 사용해 durable execution, streaming, human-in-the-loop 제공 — 확인됨
   Source: `deepagents-docs-overview-2026-05-18`
 
-## Internal Implementation Map
+- **Old:** "System Prompt 조립 순서: custom → base(graph.py#L37) → todos → memory → skills → filesystem → subagent → middleware → human-in-the-loop" (context engineering 문서 기반)
+- **New:** 소스코드 기준 system prompt 조립은 USER → BASE (or CUSTOM) → SUFFIX 3단계. 문서가 설명한 항목들(todos, memory, skills 등)은 실제로는 middleware가 system prompt에 주입하는 구조로 확인됨.
+  Source: `deepagents-source-graph-2026-05-19`
+  Date: 2026-05-19
 
-- 소스코드 확인 필요: `create_deep_agent` 내부에서 어떤 LangGraph graph를 생성하는가?
-- 추후 작성: [[Deep Agents create_deep_agent flow]]
-- 추후 작성: [[Deep Agents Code Map]]
+## Internal Implementation Map
+*Source: `deepagents-source-graph-2026-05-19`*
+
+- **모듈 경로:** `libs/deepagents/deepagents/graph.py`
+- **위임 구조:** `create_deep_agent` → middleware 조립 → `langchain.agents.create_agent` 위임 → `CompiledStateGraph` 반환
+- **State:** `_DeepAgentState(AgentState)` — `DeltaChannel`로 checkpoint O(N²) → O(N) 최적화 (`snapshot_frequency=50`)
+- **기본값:** `backend=StateBackend()`, `recursion_limit=9_999`, default model=`claude-sonnet-4-6` (deprecated)
+- **Required middleware:** `FilesystemMiddleware` + `SubAgentMiddleware` (제거 시 `ValueError`)
+
+**Middleware 조립 순서 (소스 확인됨):**
+
+| 순서 | Middleware | 조건 |
+|------|-----------|------|
+| 1 | `TodoListMiddleware` | 항상 |
+| 2 | `SkillsMiddleware` | `skills` 파라미터 제공 시 |
+| 3 | `FilesystemMiddleware` | 항상 (required) |
+| 4 | `SubAgentMiddleware` | inline subagents 있을 때 |
+| 5 | `AsyncSubAgentMiddleware` | async subagents 있을 때 |
+| 6 | `SummarizationMiddleware` | 항상 |
+| 7 | `PatchToolCallsMiddleware` | 항상 |
+| — | *사용자 middleware* | `middleware=` 파라미터 |
+| 8 | HarnessProfile `extra_middleware` | profile에 있을 때 |
+| 9 | `_ToolExclusionMiddleware` | profile `excluded_tools` 있을 때 |
+| 10 | `AnthropicPromptCachingMiddleware` | **항상** (비-Anthropic no-op) |
+| 11 | `MemoryMiddleware` | `memory` 파라미터 제공 시 |
+| 12 | `HumanInTheLoopMiddleware` | `interrupt_on` 파라미터 제공 시 |
+
+자세한 내용: [[Deep Agents create_deep_agent flow]] · [[Deep Agents Code Map]]
 
 ## Related Tests
 
@@ -120,13 +249,23 @@ Deep Agents는 5가지 context 타입을 체계적으로 관리한다. 자세한
 
 ## Open Questions
 
-- `create_deep_agent` 내부에서 LangGraph의 어떤 graph를 생성하는가?
-- filesystem tools는 SDK 내부에 있는가, 별도 패키지인가?
-- subagent state는 parent agent와 어떻게 분리되는가?
+- subagent state isolation의 구체적 메커니즘은? (`SubagentTransformer`, `SubAgentMiddleware` 내부 확인 필요)
 - ACP integration은 어떤 프로토콜 스펙을 따르는가?
-- "durable execution"이 LangGraph의 [[Checkpointing]]과 어떻게 연결되는가?
 - Deep Agents Code (터미널 에이전트)는 SDK를 어떻게 확장하는가?
-- `create_deep_agent`와 LangChain `create_agent`의 내부 구조 차이는 무엇인가?
+- `langchain.agents.create_agent`의 내부 구현은? LangGraph graph를 어떻게 조립하나?
+- `PatchToolCallsMiddleware`는 어떤 tool call 패치를 수행하나?
+- `HarnessProfile`의 전체 필드 목록은? (`base_system_prompt`, `system_prompt_suffix`, `general_purpose_subagent` 외에 더 있는가?) — Source: `deepagents-docs-harness-2026-05-19`
+- Provider-level과 model-level HarnessProfile의 merge 우선순위는? — Source: `deepagents-docs-harness-2026-05-19`
+- `register_harness_profile`의 전체 시그니처 및 entry points 패키징 방법은? — Source: `deepagents-docs-harness-2026-05-19`
+- Sandbox backend 없이 `execute` tool 호출 시 error 반환인가, tool 목록에서 제외되는가? — Source: `deepagents-docs-harness-2026-05-19`
+- Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
+
+**해소된 질문:**
+- ✅ `create_deep_agent`는 `langchain.agents.create_agent`에 위임 → `CompiledStateGraph` 반환 (Source: `deepagents-source-graph-2026-05-19`)
+- ✅ `create_deep_agent`와 LangChain `create_agent`의 차이: middleware 조립 후 `create_agent` 위임 (Source: `deepagents-source-graph-2026-05-19`)
+- ✅ "durable execution" ↔ checkpointing 연결: `checkpointer` 파라미터 + `_DeepAgentState` `DeltaChannel` (Source: `deepagents-source-graph-2026-05-19`)
+- ✅ filesystem tools 목록 확인됨: `ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`, `execute` — `FilesystemMiddleware`에서 주입 (Source: `deepagents-docs-harness-2026-05-19`)
+- ✅ `HarnessProfile` 등록 방법: `register_harness_profile(key, HarnessProfile(...))` (Source: `deepagents-docs-harness-2026-05-19`)
 
 ## Related Pages
 
@@ -143,3 +282,5 @@ Deep Agents는 5가지 context 타입을 체계적으로 관리한다. 자세한
 
 - `deepagents-docs-overview-2026-05-18`
 - `deepagents-docs-context-engineering-2026-05-18`
+- `deepagents-source-graph-2026-05-19`
+- `deepagents-docs-harness-2026-05-19`
