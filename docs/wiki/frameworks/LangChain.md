@@ -9,6 +9,8 @@ sources:
   - langchain-docs-messages-2026-05-23
   - langchain-docs-rag-2026-05-23
   - langchain-docs-tools-2026-05-23
+  - langchain-source-prompts-2026-05-23
+  - langchain-source-runnable-2026-05-23
 ---
 
 # LangChain
@@ -230,12 +232,170 @@ LangChain의 `create_agent`는 LangGraph 위에 구축됨.
 - `Tool` / `@tool` 데코레이터 — LLM에 노출되는 외부 기능
 - `create_agent()` — LangGraph 기반 에이전트 생성
 
-## Possible Conflict
+## Prompts (PromptTemplate / ChatPromptTemplate)
+*Source: `langchain-source-prompts-2026-05-23`*
 
-기존 문서에서 `Runnable`, `AgentExecutor`, `LCEL |` 연산자를 핵심 추상화로 정리했지만,
-2026년 공식 docs는 `create_agent` + `AgentMiddleware` 패턴으로 재편됨.
-LCEL이 여전히 지원되는지 여부는 추가 확인 필요.
-Source: `langchain-docs-tools-2026-05-23`
+### PromptTemplate
+
+`PromptTemplate`은 `StringPromptTemplate → BasePromptTemplate → Runnable` 계층을 상속하므로 LCEL 체인에 직접 연결할 수 있다 (`prompt | llm | parser`).
+
+| 필드 | 기본값 | 설명 |
+|------|--------|------|
+| `template` | — (필수) | 템플릿 문자열 |
+| `template_format` | `"f-string"` | `"f-string"` / `"mustache"` / `"jinja2"` |
+| `input_variables` | 자동 추출 | `get_template_variables(template, format)` 으로 자동 추출; `partial_variables` 키는 제외 |
+| `partial_variables` | `{}` | 미리 채워진 변수; `input_variables`에서 제외됨 |
+
+**권장 생성 방법:**
+```python
+prompt = PromptTemplate.from_template("Say {foo}")
+prompt.format(foo="bar")  # → "Say bar"
+```
+
+기타 생성자: `from_file(path)`, `from_examples(examples, suffix, input_variables)`
+
+**`__add__` 지원:** 같은 format의 두 PromptTemplate을 `+` 로 연결 가능.
+
+**⚠️ Security:** jinja2는 신뢰할 수 없는 소스 입력에 절대 사용 금지. SandboxedEnvironment는 opt-out 방식 — 완전 보장 아님. f-string 권장.
+
+### ChatPromptTemplate
+
+```python
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are {name}."),
+    MessagesPlaceholder("history"),
+    ("human", "{question}"),
+])
+```
+
+**5가지 message input format:**
+
+| 형식 | 예시 | 변환 결과 |
+|------|------|----------|
+| `BaseMessagePromptTemplate` | `HumanMessagePromptTemplate(...)` | 그대로 사용 |
+| `BaseMessage` | `SystemMessage("You are helpful")` | 그대로 사용 |
+| 2-tuple (str role, template) | `("human", "{input}")` | role에 맞는 MessagePromptTemplate |
+| 2-tuple (message class, template) | `(HumanMessage, "{input}")` | 클래스 기반 생성 |
+| str | `"{input}"` | HumanMessagePromptTemplate shorthand |
+
+**role 문자열 → 클래스 매핑:**
+
+| role 문자열 | 결과 |
+|-------------|------|
+| `"human"` / `"user"` | `HumanMessagePromptTemplate` |
+| `"ai"` / `"assistant"` | `AIMessagePromptTemplate` |
+| `"system"` | `SystemMessagePromptTemplate` |
+| `"placeholder"` | `MessagesPlaceholder(optional=True)` |
+
+### MessagesPlaceholder
+
+```python
+MessagesPlaceholder("history")              # 필수 (없으면 KeyError)
+MessagesPlaceholder("history", optional=True)  # 없으면 빈 리스트
+MessagesPlaceholder("history", n_messages=5)   # 마지막 5개만
+```
+
+shorthand: `("placeholder", "{varname}")` → `MessagesPlaceholder(variable_name="varname", optional=True)`
+
+### 단일 변수 template 단축 호출
+
+`input_variables`가 1개이면 dict 대신 값 직접 invoke 가능:
+```python
+template = ChatPromptTemplate([("system", "You are Carl."), ("human", "{user_input}")])
+template.invoke("Hello!")  # → template.invoke({"user_input": "Hello!"})
+```
+
+---
+
+## LCEL / Runnable 인터페이스
+*Source: `langchain-source-runnable-2026-05-23`*
+
+> **확인됨:** `RunnableLambda`, `RunnableParallel` 등 LCEL 클래스들은 langchain-core `main` 브랜치에 현재도 존재하며 deprecated가 아니다.
+
+### Runnable — 최소 계약
+
+`Runnable(Generic[Input, Output], ABC)` — **유일한 abstract method는 `invoke`** 하나다. 나머지(ainvoke/batch/stream)는 모두 default 구현이 있어 `invoke`만 구현하면 바로 사용 가능.
+
+| 메서드 | 기본 동작 |
+|--------|----------|
+| `ainvoke` | `invoke`를 executor thread에서 실행. 진짜 async는 override 필요 |
+| `batch` | thread pool로 `invoke` 병렬 실행 |
+| `stream` | `invoke` 결과 1개를 yield. 진짜 streaming은 override 필요 |
+| `__or__` / `pipe` | `RunnableSequence` 생성 |
+| `bind` | 인자를 고정한 새 Runnable 반환 |
+| `with_config` | 실행 설정 고정 |
+| `with_retry` | 예외 시 재시도 (기본 3회) |
+| `with_fallbacks` | 실패 시 대안 Runnable |
+| `map` | `RunnableEach(bound=self)` 반환 |
+
+### `|` 연산자 → `RunnableSequence`
+
+소스코드 확인:
+```python
+def __or__(self, other):
+    return RunnableSequence(self, coerce_to_runnable(other))
+```
+
+`RunnableSequence` 내부 구조: `first: Runnable`, `middle: list[Runnable]`, `last: Runnable`.
+각 step의 output이 다음 step의 input으로 전달된다.
+
+### RunnableLambda — callable → Runnable
+
+일반 함수를 LCEL 체인에 연결하는 가장 간단한 방법:
+```python
+from langchain_core.runnables import RunnableLambda
+
+runnable = RunnableLambda(lambda x: x + 1)
+runnable.invoke(1)   # → 2
+runnable.batch([1, 2, 3])  # → [2, 3, 4]
+```
+
+- `afunc` 없으면 `func`를 thread pool에서 실행
+- generator 함수 → streaming 지원 (yield로 chunk 단위 출력)
+
+### RunnableParallel — 병렬 실행
+
+- 출력 타입: `dict[str, Any]` — output keys = input mapping의 keys
+- 모든 runnable에 **동일한 input**을 전달하여 **동시 실행** (sync: thread pool, async: asyncio)
+
+```python
+from langchain_core.runnables import RunnableParallel
+
+parallel = RunnableParallel({"foo": step1, "bar": step2})
+parallel.invoke(input)  # → {"foo": ..., "bar": ...}
+
+# chain 내 dict literal은 자동으로 RunnableParallel로 변환:
+chain = {"context": retriever, "question": RunnablePassthrough()} | prompt | llm
+```
+
+### RunnablePassthrough / RunnableAssign / RunnablePick
+
+| 클래스 | 동작 |
+|--------|------|
+| `RunnablePassthrough` | 입력을 그대로 반환 (identity) |
+| `RunnablePassthrough.assign(key=fn)` | 입력 dict에 새 키 추가 → `RunnableAssign` 반환 |
+| `RunnablePick("key")` | dict에서 단일 키 값 반환 |
+| `RunnablePick(["k1", "k2"])` | dict에서 복수 키 dict 반환 |
+
+### coerce_to_runnable — 자동 변환
+
+| 입력 타입 | 변환 결과 |
+|----------|----------|
+| `Runnable` 인스턴스 | 그대로 |
+| `callable` | `RunnableLambda(thing)` |
+| `dict` | `RunnableParallel(thing)` |
+
+chain 내 dict literal(`{"key": step}`)이 자동으로 `RunnableParallel`로 변환되는 이유다.
+
+---
+
+## Superseded Notes
+
+- **Old (Possible Conflict):** 기존 문서에서 LCEL(`Runnable`, `|` 연산자, `RunnableLambda`, `RunnableParallel`)이 deprecated 가능성 있다고 표시
+- **New (확인됨):** `langchain-core` main 브랜치 소스코드에 모두 현재 구현 확인. Deprecated 아님.
+  Source: `langchain-source-runnable-2026-05-23`
+
+---
 
 ---
 
@@ -243,10 +403,25 @@ Source: `langchain-docs-tools-2026-05-23`
 
 - `create_agent`의 내부 구현은 어떻게 동작하는가?
 - `AgentMiddleware`로 에러 핸들링을 구성하는 방법은?
-- LCEL `RunnableLambda` / `RunnableParallel`은 완전히 deprecated인가?
 - `init_embeddings("openai:...")` 형식은 구버전 `OpenAIEmbeddings()`와 어떤 차이가 있는가?
 - `@dynamic_prompt` 데코레이터는 어떤 API인가?
 - `AgentExecutor`는 도구 호출 루프를 언제 멈출지 어떻게 결정하는가?
+- `FewShotPromptTemplate`과 `ExampleSelector`는 어떻게 동작하는가? — Source: `langchain-source-prompts-2026-05-23`
+- `PipelinePromptTemplate`은 어떻게 여러 템플릿을 연결하는가? — Source: `langchain-source-prompts-2026-05-23`
+- `PydanticOutputParser`는 LLM 출력 텍스트를 Pydantic 모델로 어떻게 변환하는가? — Source: `langchain-source-prompts-2026-05-23`
+- `with_structured_output`과 `OutputParser`의 관계는? 내부 구현은? — Source: `langchain-source-prompts-2026-05-23`
+- `RunnableParallel`의 thread pool thread 수 제한은? `max_concurrency` 옵션이 있는가? — Source: `langchain-source-runnable-2026-05-23`
+- `RunnableSequence.invoke` 내부: 각 step 간 에러 처리는 어떻게 되는가? — Source: `langchain-source-runnable-2026-05-23`
+- `astream_events`와 `astream_log`의 차이는? — Source: `langchain-source-runnable-2026-05-23`
+- `LCEL 체인에서 RunnableConfig`를 통해 실행 시간 설정을 주입하는 방법은? (`configurable` 필드) — Source: `langchain-source-runnable-2026-05-23`
+
+**해소됨 (2026-05-23):**
+- ✅ LCEL `RunnableLambda` / `RunnableParallel`은 deprecated인가? → **아니다.** main 브랜치 소스코드에 현재도 존재. (Source: `langchain-source-runnable-2026-05-23`)
+- ✅ LCEL `|` 연산자는 내부적으로 어떤 타입을 생성하는가? → `RunnableSequence`. `__or__`가 `RunnableSequence(self, coerce_to_runnable(other))` 반환. (Source: `langchain-source-runnable-2026-05-23`)
+- ✅ `Runnable` 인터페이스의 최소 계약은? → **`invoke`** 하나만 abstract. 나머지는 default 구현. (Source: `langchain-source-runnable-2026-05-23`)
+- ✅ `RunnableParallel`은 실제로 동시 실행되는가? → sync: thread pool, async: asyncio로 동시 실행 확인. (Source: `langchain-source-runnable-2026-05-23`)
+- ✅ `RunnableParallel`의 결과 딕셔너리 키는 어떻게 결정되는가? → input mapping의 keys와 동일. (Source: `langchain-source-runnable-2026-05-23`)
+- ✅ `PromptTemplate`과 `ChatPromptTemplate`의 차이는? → PromptTemplate: 단일 문자열 포맷, ChatPromptTemplate: 메시지 리스트. 둘 다 Runnable 상속. (Source: `langchain-source-prompts-2026-05-23`)
 
 ## 관련 페이지
 
@@ -264,3 +439,5 @@ Source: `langchain-docs-tools-2026-05-23`
 - `langchain-docs-messages-2026-05-23`
 - `langchain-docs-rag-2026-05-23`
 - `langchain-docs-tools-2026-05-23`
+- `langchain-source-prompts-2026-05-23`
+- `langchain-source-runnable-2026-05-23`

@@ -21,23 +21,31 @@
 - 채팅 모델 호출 시 메시지 리스트를 어떻게 전달하는가? (`invoke` vs `batch` vs `stream`)
 - `AIMessage`의 `tool_calls` 필드 구조는 어떻게 되는가?
 
-### PromptTemplate / OutputParser (소스 수집 필요)
+### PromptTemplate / OutputParser
 
-- `PromptTemplate`과 `ChatPromptTemplate`의 내부 구현 차이는? (단일 문자열 vs 메시지 리스트)
-- `FewShotPromptTemplate`에서 예시 선택기(`ExampleSelector`)는 어떻게 동작하는가?
-- `PipelinePromptTemplate`에서 여러 템플릿을 연결하는 내부 방식은?
-- `PydanticOutputParser`는 LLM 출력 텍스트를 Pydantic 모델로 어떻게 변환하는가?
-- `with_structured_output`과 `OutputParser`의 관계는? 내부적으로 같은 메커니즘을 사용하는가?
-- `OutputParser`의 `get_format_instructions()`는 프롬프트에 어떻게 주입되는가?
+- `FewShotPromptTemplate`에서 예시 선택기(`ExampleSelector`)는 어떻게 동작하는가? — Source: `langchain-source-prompts-2026-05-23`
+- `PipelinePromptTemplate`에서 여러 템플릿을 연결하는 내부 방식은? — Source: `langchain-source-prompts-2026-05-23`
+- `PydanticOutputParser`는 LLM 출력 텍스트를 Pydantic 모델로 어떻게 변환하는가? — Source: `langchain-source-prompts-2026-05-23`
+- `with_structured_output`과 `OutputParser`의 관계는? 내부적으로 같은 메커니즘을 사용하는가? — Source: `langchain-source-prompts-2026-05-23`
+- `OutputParser`의 `get_format_instructions()`는 프롬프트에 어떻게 주입되는가? — Source: `langchain-source-prompts-2026-05-23`
 - `with_structured_output`이 지원하는 4가지 타입(Pydantic, OpenAI function schema, JSON schema, TypedDict)은 내부적으로 어떻게 처리가 다른가?
 
-### Runnable 인터페이스 (소스 수집 필요)
+**해소됨 (2026-05-23):**
+- ✅ `PromptTemplate`과 `ChatPromptTemplate`의 내부 구현 차이는? → PromptTemplate: 단일 문자열 포맷 (`StringPromptTemplate` 상속), ChatPromptTemplate: 메시지 리스트 기반. 둘 다 `Runnable` 상속. (Source: `langchain-source-prompts-2026-05-23`)
 
-- `RunnableLambda`와 일반 함수를 직접 사용하는 것의 차이는? (에러 처리, 스트리밍, 배치 지원)
-- `RunnableParallel`의 결과 딕셔너리 키는 어떻게 결정되는가?
-- LCEL `|` 연산자는 내부적으로 어떤 타입을 생성하는가? (`RunnableSequence`?)
-- `Runnable` 인터페이스의 최소 계약(contract)은 무엇인가? (`invoke`, `stream`, `batch`, `astream`?)
-- `RunnableParallel`은 실제로 동시 실행되는가, 아니면 순차 실행인가?
+### Runnable 인터페이스
+
+- `RunnableLambda`와 일반 함수를 직접 사용하는 것의 차이는? (에러 처리, 스트리밍, 배치 지원) — invoke/batch/stream 인터페이스가 자동 부여됨은 확인, 에러 처리 차이는 Needs Verification. Source: `langchain-source-runnable-2026-05-23`
+- `RunnableParallel`의 thread pool thread 수 제한은? `max_concurrency` 옵션이 있는가? — Source: `langchain-source-runnable-2026-05-23`
+- `RunnableSequence.invoke` 내부: 각 step 간 에러 처리는 어떻게 되는가? — Source: `langchain-source-runnable-2026-05-23`
+- `astream_events`와 `astream_log`의 차이는? — Source: `langchain-source-runnable-2026-05-23`
+- `RunnableConfig`의 `configurable` 필드를 통해 실행 시간 설정을 주입하는 방법은? — Source: `langchain-source-runnable-2026-05-23`
+
+**해소됨 (2026-05-23):**
+- ✅ LCEL `|` 연산자는 내부적으로 어떤 타입을 생성하는가? → `RunnableSequence`. (Source: `langchain-source-runnable-2026-05-23`)
+- ✅ `Runnable` 인터페이스의 최소 계약은? → `invoke`만 abstract. (Source: `langchain-source-runnable-2026-05-23`)
+- ✅ `RunnableParallel`은 실제로 동시 실행되는가? → sync: thread pool, async: asyncio 동시 실행. (Source: `langchain-source-runnable-2026-05-23`)
+- ✅ `RunnableParallel`의 결과 dict 키는 어떻게 결정되는가? → input mapping의 keys와 동일. (Source: `langchain-source-runnable-2026-05-23`)
 
 ### @tool 데코레이터 (소스 수집 필요)
 
