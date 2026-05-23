@@ -6,10 +6,12 @@
 
 ## LangChain
 
-- agent executor는 언제 도구 호출을 멈출지 어떻게 결정하는가?
-- `AgentExecutor`와 `create_react_agent`의 차이는 무엇인가?
-- 메시지 히스토리는 내부적으로 어디에서 관리되는가?
 - `RunnableParallel`의 thread pool 크기 제한은? `max_concurrency` 옵션이 있는가? — Source: `langchain-source-runnable-2026-05-23`
+
+**해소됨 (2026-05-23):**
+- ✅ `agent executor`는 언제 도구 호출을 멈출지 어떻게 결정하는가? → `create_agent` 내부에서 `add_conditional_edges()`로 구현: model node의 출력에 `tool_calls`가 없으면 `after_agent` → `END`, 있으면 `tools node` → model node 루프. `AgentExecutor` while loop는 현재 API에 없음. (Source: `langchain-source-create-agent-factory-2026-05-23`)
+- ✅ `AgentExecutor`와 `create_react_agent`의 차이는 무엇인가? → 둘 다 **deprecated**. `create_tool_calling_agent` + `AgentExecutor`는 구버전 LangChain 패턴. `create_react_agent`는 LangGraph prebuilt 함수로 별개 API. 현재 공식 API는 `langchain.agents.create_agent` (LangGraph StateGraph 기반). 구버전 경로(`tool_calling_agent/base.py`, `agents/agent.py`)는 현재 master에 없음. (Source: `langchain-source-create-agent-factory-2026-05-23`)
+- ✅ 메시지 히스토리는 내부적으로 어디에서 관리되는가? → `AgentState`의 `messages` 필드 (StateGraph state의 일부). `add_messages` reducer로 각 노드 실행 후 자동 누적. 영속이 필요하면 `checkpointer=InMemorySaver()` + `thread_id`로 thread-scoped 관리. 레거시 `RunnableWithMessageHistory`는 deprecated. (Source: `langchain-source-create-agent-factory-2026-05-23`, `langchain-source-memory-api-2026-05-23`)
 
 **해소됨 (2026-05-23):**
 - ✅ `stream_events` v1/v2/v3 차이 → v1: 구버전 호환(parent_ids 빈 리스트), v2: 기본값(custom events, parent_ids), v3: `GraphRunStream` typed projection(BaseChatModel·CompiledGraph만 지원, 현재 베타). (Source: `langgraph-source-streaming-2026-05-23`)
@@ -36,14 +38,14 @@
 
 ### PromptTemplate / OutputParser
 
-- `FewShotPromptTemplate`에서 예시 선택기(`ExampleSelector`)는 어떻게 동작하는가? — Source: `langchain-source-prompts-2026-05-23`
-- `PipelinePromptTemplate`에서 여러 템플릿을 연결하는 내부 방식은? — Source: `langchain-source-prompts-2026-05-23`
-- `PydanticOutputParser`는 LLM 출력 텍스트를 Pydantic 모델로 어떻게 변환하는가? — Source: `langchain-source-prompts-2026-05-23`
-- `with_structured_output`과 `OutputParser`의 관계는? 내부적으로 같은 메커니즘을 사용하는가? — Source: `langchain-source-prompts-2026-05-23`
-- `OutputParser`의 `get_format_instructions()`는 프롬프트에 어떻게 주입되는가? — Source: `langchain-source-prompts-2026-05-23`
-- `with_structured_output`이 지원하는 4가지 타입(Pydantic, OpenAI function schema, JSON schema, TypedDict)은 내부적으로 어떻게 처리가 다른가?
+- `FewShotPromptTemplate`에서 예시 선택기(`ExampleSelector`)는 어떻게 동작하는가? — Needs Source
+- `PipelinePromptTemplate`에서 여러 템플릿을 연결하는 내부 방식은? — Needs Source
 
 **해소됨 (2026-05-23):**
+- ✅ `PydanticOutputParser`는 LLM 출력 텍스트를 Pydantic 모델로 어떻게 변환하는가? → `parse()` 파이프라인: LLM 텍스트 → `parse_json_markdown()` → dict → `model.model_validate(dict)` (v2) / `parse_obj()` (v1) → Pydantic 인스턴스. 실패 시 `OutputParserException`. (Source: `langchain-source-output-parsers-2026-05-23`)
+- ✅ `with_structured_output`과 `OutputParser`의 관계는? → `with_structured_output`은 method별로 다른 OutputParser를 내부적으로 사용: `json_mode`는 `PydanticOutputParser` / `JsonOutputParser`, `function_calling`(기본)은 tool calling → `PydanticToolsParser` / `JsonOutputKeyToolsParser`, `json_schema`는 `RunnableLambda` / `JsonOutputParser`. OutputParser는 수동 방식, `with_structured_output`은 provider 자동 전략 선택. (Source: `langchain-source-output-parsers-2026-05-23`)
+- ✅ `OutputParser`의 `get_format_instructions()`는 프롬프트에 어떻게 주입되는가? → `PydanticOutputParser.get_format_instructions()`가 JSON schema 기반 형식 지시 텍스트 반환 → `PromptTemplate`의 `partial_variables={"format_instructions": parser.get_format_instructions()}` 또는 `{format_instructions}` 변수로 주입. (Source: `langchain-source-output-parsers-2026-05-23`)
+- ✅ `with_structured_output`이 지원하는 4가지 타입은 내부적으로 어떻게 처리가 다른가? → Pydantic만 검증됨(Pydantic 인스턴스 반환), TypedDict/JSON schema/OpenAI function schema는 dict 반환(검증 없음). OpenAI: `method` 파라미터로 `function_calling`(기본) / `json_mode` / `json_schema` 3가지 전략 선택. `BaseChatModel.with_structured_output`은 추상 메서드(NotImplementedError), provider별 override 필수. (Source: `langchain-source-output-parsers-2026-05-23`)
 - ✅ `PromptTemplate`과 `ChatPromptTemplate`의 내부 구현 차이는? → PromptTemplate: 단일 문자열 포맷 (`StringPromptTemplate` 상속), ChatPromptTemplate: 메시지 리스트 기반. 둘 다 `Runnable` 상속. (Source: `langchain-source-prompts-2026-05-23`)
 
 ### Runnable 인터페이스

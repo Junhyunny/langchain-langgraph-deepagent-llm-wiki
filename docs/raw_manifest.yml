@@ -421,4 +421,20 @@ sources:
     status: current
     used_by: []
     notes: "StreamMode 7종(values/updates/messages/custom/checkpoints/tasks/debug). stream_events(v3) 내부: _pregel_stream_v3 → StreamMux(ValuesTransformer+MessagesTransformer+LifecycleTransformer+SubgraphTransformer+compiled) → self.stream(stream_mode=_collect_stream_modes(mux), subgraphs=True, version='v2') → GraphRunStream. astream_log deprecated since 1.3.3. v3는 BaseChatModel/CompiledGraph만 지원. create_agent compile 시 ToolCallTransformer+middleware_transformers 등록."
+  - id: langchain-source-output-parsers-2026-05-23
+    title: "LangChain — OutputParser 소스코드 및 with_structured_output 분석"
+    type: source_code
+    framework: LangChain
+    urls:
+      - "https://raw.githubusercontent.com/langchain-ai/langchain/master/libs/core/langchain_core/output_parsers/pydantic.py"
+      - "https://raw.githubusercontent.com/langchain-ai/langchain/master/libs/core/langchain_core/output_parsers/json.py"
+      - "https://raw.githubusercontent.com/langchain-ai/langchain/master/libs/core/langchain_core/language_models/chat_models.py"
+      - "https://raw.githubusercontent.com/langchain-ai/langchain/master/libs/partners/openai/langchain_openai/chat_models/base.py"
+    local_path: "docs/source_summaries/langchain-source-output-parsers-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/PromptTemplate.md"
+      - "docs/wiki/frameworks/LangChain.md"
+    notes: "PydanticOutputParser(JsonOutputParser 상속): get_format_instructions(JSON schema 추출+템플릿 래핑), parse() 파이프라인(텍스트→JSON→Pydantic.model_validate). JsonOutputParser: parse_json_markdown, partial/diff 스트리밍 지원. with_structured_output: BaseChatModel 추상(NotImplementedError), 4가지 입력 타입(Pydantic/TypedDict/JSON schema/OpenAI function schema), Pydantic만 검증됨. OpenAI 구현: method='function_calling'(기본, bind_tools→PydanticToolsParser), 'json_mode'(bind json_object→PydanticOutputParser), 'json_schema'(bind response_format→RunnableLambda). include_raw 파라미터: True시 raw/parsed/parsing_error dict 반환."
 

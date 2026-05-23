@@ -7,6 +7,7 @@ confidence: high
 last_reviewed: 2026-05-23
 sources:
   - langchain-source-prompts-2026-05-23
+  - langchain-source-output-parsers-2026-05-23
 ---
 
 # PromptTemplate
@@ -219,13 +220,121 @@ chain = (
 
 ---
 
+---
+
+## OutputParser
+
+*Source: `langchain-source-output-parsers-2026-05-23`*
+
+LLM의 텍스트 출력을 구조화된 데이터로 변환하는 컴포넌트. LCEL 체인 끝에 `.pipe(parser)`로 연결.
+
+### 상속 계층
+
+```
+BaseOutputParser
+  └── BaseCumulativeTransformOutputParser
+        └── JsonOutputParser          ← LLM 텍스트 → dict
+              └── PydanticOutputParser ← LLM 텍스트 → Pydantic 인스턴스
+```
+
+`SimpleJsonOutputParser = JsonOutputParser` (하위 호환 alias, 기능 동일)
+
+### PydanticOutputParser — `get_format_instructions()` + `parse()`
+
+**`get_format_instructions()`**: Pydantic 모델의 JSON schema를 추출해 LLM에게 출력 형식을 지시하는 텍스트를 생성. "The output should be formatted as a JSON instance that conforms to the JSON schema below..." 형태.
+
+```python
+from langchain_core.output_parsers import PydanticOutputParser
+from pydantic import BaseModel
+
+class Answer(BaseModel):
+    answer: str
+    confidence: float
+
+parser = PydanticOutputParser(pydantic_object=Answer)
+
+# 프롬프트에 형식 지시 주입
+prompt = PromptTemplate.from_template(
+    "Answer the question.\n{format_instructions}\nQuestion: {question}",
+    partial_variables={"format_instructions": parser.get_format_instructions()},
+)
+
+chain = prompt | llm | parser
+result: Answer = chain.invoke({"question": "What is 2+2?"})
+```
+
+**`parse()` 파이프라인:**
+
+```
+LLM 텍스트
+    ↓ Generation 래핑
+    ↓ parse_json_markdown() → dict  (마크다운 JSON 블록 처리 포함)
+    ↓ model.model_validate(dict)    ← Pydantic v2
+Pydantic 인스턴스 반환
+```
+
+- 실패 시: `OutputParserException`
+- `partial=True` 시: 실패 → `None` (스트리밍 용)
+
+### `with_structured_output` — OutputParser와의 관계
+
+`with_structured_output`은 provider가 적절한 전략을 자동 선택하는 상위 API다.
+
+```python
+# with_structured_output (권장 — provider가 전략 자동 선택)
+structured_llm = llm.with_structured_output(Answer)
+result: Answer = structured_llm.invoke("What is 2+2?")
+
+# OutputParser (수동 — get_format_instructions 직접 주입 필요)
+chain = prompt | llm | PydanticOutputParser(pydantic_object=Answer)
+```
+
+**지원 4가지 입력 타입:**
+
+| 타입 | 출력 | 검증 |
+|------|------|------|
+| Pydantic `BaseModel` 클래스 | Pydantic 인스턴스 | ✅ Pydantic 검증 |
+| `TypedDict` 클래스 | dict | 없음 |
+| JSON schema dict | dict | 없음 |
+| OpenAI function/tool schema | dict | 없음 |
+
+**OpenAI `method` 파라미터별 내부 파이프라인:**
+
+| method | Pydantic 입력 | dict 입력 |
+|--------|--------------|----------|
+| `"function_calling"` (기본) | `bind_tools → PydanticToolsParser` | `bind_tools → JsonOutputKeyToolsParser` |
+| `"json_mode"` | `bind(json_object) → PydanticOutputParser` | `bind(json_object) → JsonOutputParser` |
+| `"json_schema"` | `bind(response_format) → RunnableLambda` | `bind(response_format) → JsonOutputParser` |
+
+**핵심:** `json_mode`만 내부적으로 `PydanticOutputParser` 사용. `function_calling`(기본)은 tool calling 메커니즘 경유.
+
+**`include_raw` 파라미터:**
+
+```python
+# include_raw=True → 파싱 실패 시 예외 없이 에러 포함 dict 반환
+result = llm.with_structured_output(Answer, include_raw=True).invoke(...)
+# → {"raw": BaseMessage, "parsed": Answer|None, "parsing_error": Exception|None}
+```
+
+### OutputParser vs with_structured_output — 언제 사용?
+
+| | `OutputParser` | `with_structured_output` |
+|--|----------------|--------------------------|
+| provider 의존성 | 없음 (텍스트 파싱) | 있음 (provider별 구현 필요) |
+| 프롬프트 주입 | 직접 (`get_format_instructions()`) | 자동 |
+| 권장 상황 | tool calling 미지원 provider | OpenAI, Anthropic 등 지원 provider |
+
+*Source: `langchain-source-output-parsers-2026-05-23`*
+
+---
+
 ## 미해결 질문
 
 - `FewShotPromptTemplate`에서 `ExampleSelector`는 어떻게 동작하는가? — Needs Source (`langchain-source-prompts-2026-05-23`에 없음)
 - `PipelinePromptTemplate`에서 여러 템플릿을 연결하는 내부 방식은? — Needs Source
-- `PydanticOutputParser`는 LLM 출력 텍스트를 Pydantic 모델로 어떻게 변환하는가? — Needs Source
-- `with_structured_output`과 `OutputParser`의 관계는? — Needs Source
 - `mustache` 포맷의 template_variables 추출 방식 (`mustache_schema` 함수)은? — Needs Source
+- Anthropic `with_structured_output`은 어떤 전략을 사용하는가? — Needs Source
+- `PydanticToolsParser`와 `PydanticOutputParser`의 구체적 구현 차이는? — Needs Source
 
 ## 관련 페이지
 
