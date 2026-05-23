@@ -208,4 +208,24 @@ sources:
     used_by:
       - "docs/wiki/frameworks/LangGraph.md"
     notes: "StateGraph 핵심 개념: State(TypedDict/Pydantic/dataclass), Node(함수, state→update 반환), Edge(일반/조건부), Reducer(Annotated+operator.add), MessagesState, add_messages, START/END, Send API, Command, 재귀 제한(recursion_limit), RemainingSteps, graph migration 가이드."
+  - id: langchain-source-prompts-2026-05-23
+    title: "LangChain — Prompts Source Code (PromptTemplate / ChatPromptTemplate)"
+    type: source_code
+    framework: LangChain
+    url: "https://github.com/langchain-ai/langchain/tree/master/libs/core/langchain_core/prompts"
+    local_path: "docs/raw/official/langchain/langchain-source-prompts-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by: []
+    notes: "PromptTemplate(prompt.py): template_format(f-string/mustache/jinja2), from_template/from_file/from_examples, partial_variables, __add__. ChatPromptTemplate(chat.py): from_messages, MessagesPlaceholder(optional/n_messages), HumanMessage/AIMessage/SystemMessagePromptTemplate, tuple shorthand, placeholder shorthand, partial(), format_messages(). _convert_to_message_template 내부 변환 함수."
+  - id: langchain-source-runnable-2026-05-23
+    title: "LangChain — Runnable Interface Source Code (LCEL)"
+    type: source_code
+    framework: LangChain
+    url: "https://github.com/langchain-ai/langchain/tree/master/libs/core/langchain_core/runnables"
+    local_path: "docs/raw/official/langchain/langchain-source-runnable-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by: []
+    notes: "Runnable 추상 클래스(invoke/ainvoke/batch/stream/__or__/pipe/bind/map). RunnableSequence(| 연산자 결과). RunnableLambda(callable→Runnable, sync/async/generator 지원). RunnableParallel(병렬 실행, 출력=dict). RunnableEach(.map() 결과). RunnablePassthrough/RunnableAssign/RunnablePick(passthrough.py). coerce_to_runnable(dict→RunnableParallel, callable→RunnableLambda)."
 
