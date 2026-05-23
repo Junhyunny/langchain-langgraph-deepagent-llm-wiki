@@ -9,13 +9,17 @@
 - agent executor는 언제 도구 호출을 멈출지 어떻게 결정하는가?
 - `AgentExecutor`와 `create_react_agent`의 차이는 무엇인가?
 - 메시지 히스토리는 내부적으로 어디에서 관리되는가?
-- `stream_events` v3와 이전 버전의 차이는 무엇인가? — Source: `langchain-docs-event-streaming-2026-05-18`
-- LangGraph의 Pregel stream mode와 Event Streaming(`stream_events`)의 정확한 관계는? — Source: `langchain-docs-event-streaming-2026-05-18`
-- Custom stream transformer의 계약(contract)은 무엇인가? — Source: `langchain-docs-event-streaming-2026-05-18`
-- Deep Agents의 `create_deep_agent`도 `stream_events`를 동일하게 지원하는가? — Source: `langchain-docs-event-streaming-2026-05-18`
-- `astream_events`와 `astream_log`의 차이는? 반환 타입은? — Source: `langchain-source-runnable-2026-05-23`
 - `RunnableParallel`의 thread pool 크기 제한은? `max_concurrency` 옵션이 있는가? — Source: `langchain-source-runnable-2026-05-23`
-- `ConversationBufferMemory`, `ConversationSummaryMemory`는 현재도 권장 API인가, deprecated인가? — Needs Source
+
+**해소됨 (2026-05-23):**
+- ✅ `stream_events` v1/v2/v3 차이 → v1: 구버전 호환(parent_ids 빈 리스트), v2: 기본값(custom events, parent_ids), v3: `GraphRunStream` typed projection(BaseChatModel·CompiledGraph만 지원, 현재 베타). (Source: `langgraph-source-streaming-2026-05-23`)
+- ✅ LangGraph Pregel stream_mode와 `stream_events v3`의 관계 → v3는 `_pregel_stream_v3()` → `StreamMux` → `Pregel.stream(stream_mode=합집합, subgraphs=True, version="v2")` 레이어. 각 Transformer의 required_stream_modes 합집합이 Pregel stream_mode가 됨. (Source: `langgraph-source-streaming-2026-05-23`)
+- ✅ `astream_events` vs `astream_log` → `astream_log`는 **deprecated** (langchain-core 1.3.3, 제거 예정 2.0.0). RunLogPatch JSON Patch 구형 API. `astream_events`는 StreamEvent dict. `stream_events(v3)`는 GraphRunStream typed projection 현재 권장. (Source: `langgraph-source-streaming-2026-05-23`)
+- ✅ Deep Agents `create_deep_agent` stream_events 지원 여부 → **YES.** CompiledStateGraph(Pregel 상속) 반환 → stream_events v3 네이티브 지원. compile 시 ToolCallTransformer 등 자동 등록. (Source: `langgraph-source-streaming-2026-05-23`)
+- ✅ `ConversationBufferMemory`, `ConversationSummaryMemory` deprecated 여부 → 경로 404 (현재 LangChain 1.x에 파일 없음). `langchain-community` 2026-05-22 sunset. `RunnableWithMessageHistory` deprecated (langchain-core 1.3.3). 현재 권장: LangGraph checkpointer + SummarizationMiddleware. (Source: `langchain-source-memory-api-2026-05-23`)
+
+**잔여 질문:**
+- Custom stream transformer의 정확한 계약(contract)은 무엇인가? (required_stream_modes, push() 메서드?) — Needs Source
 - `MessagesPlaceholder(optional=False)`일 때 해당 변수가 없으면 KeyError가 발생하는가 확인 필요 — Source: `langchain-source-prompts-2026-05-23`
 
 ### 메시지 시스템
