@@ -63,8 +63,9 @@
 ### Checkpointer
 
 - `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification (문서는 "저장/resume 불가"라고만 설명, 에러 타입 미명시)
-- `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Needs Source (소스 summary에서 호출 사실만 확인, 내용 미수집)
+- `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — ✅ 해소 (2026-05-24): `_validate.py validate_graph()` 직접 확인. RESERVED 충돌, 구독 channel 존재, input/output/stream channel 존재, interrupt 노드 존재 검사.
 - `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test는 어디에 있는가? — Needs Source
+- `DeltaChannel`의 `snapshot_frequency` 의미: `.venv/_checkpoint.py` 직접 확인 결과 update count ≥ `snapshot_frequency` OR supersteps ≥ `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`이면 스냅샷. 50이면 50 updates(write 횟수)다. ✅ 부분 해소.
 - `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — `_checkpoint.py`에 없음, `_loop.py` 탐색 필요
 - `saver.get_delta_channel_history()` 메서드는 `BaseCheckpointSaver`에 언제 추가됐는가? — Needs Source
 - checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Needs Source
@@ -83,7 +84,8 @@
 - ACP (Agent Client Protocol) integration은 어떤 프로토콜 스펙을 따르는가? — Source: `deepagents-docs-overview-2026-05-18`
 - Deep Agents Code (터미널 에이전트)는 SDK를 어떻게 확장하는가? — Source: `deepagents-docs-overview-2026-05-18`
 - `HarnessProfile`은 어떤 모델에 어떤 profile을 매핑하나? (`harness_profiles.py` 수집 필요) — Source: `deepagents-source-graph-2026-05-19`
-- `DeltaChannel`의 `snapshot_frequency=50`은 정확히 무엇을 의미하나? 50 super-step인가 50 message인가? full snapshot과 delta 사이 재구성 비용은? — Source: `deepagents-source-graph-2026-05-19`
+- `DeltaChannel`의 `snapshot_frequency=50`은 정확히 무엇을 의미하나? — ✅ 부분 해소 (2026-05-24): update(write) 횟수가 `snapshot_frequency`에 도달하거나 super-step 수가 `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`에 도달하면 스냅샷. 50이면 50 writes.
+  재구성 비용은 아직 미확인 (ancestor walk 깊이 및 비용). — Needs Source
 - Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가? — Source: `deepagents-docs-context-engineering-2026-05-18`
 - `@dynamic_prompt` 데코레이터의 정확한 시그니처와 사용 패턴은? — Source: `deepagents-docs-context-engineering-2026-05-18`
 - `register_harness_profile` entry points 패키징 방법은? — Source: `deepagents-docs-harness-2026-05-19`

@@ -1,9 +1,9 @@
 ---
 type: flow
 framework: LangGraph
-status: partial
+status: verified
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-05-24
 sources:
   - langgraph-docs-persistence-2026-05-20
   - langgraph-docs-durable-execution-2026-05-20
@@ -205,10 +205,19 @@ flowchart TD
 
 ## Open Questions
 
-- `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? (Needs Source)
-- `langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction 구현 (Needs Source — raw 미수집)
-- pending writes recovery를 검증하는 canonical test file은 어디에 있는가? (Needs Source)
-- `DeltaChannel`이 있을 때 `StateSnapshot.values`와 saver storage를 검증하는 test file은 어디에 있는가? (Needs Source)
+- `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가?
+  → **✅ 해소 (2026-05-24)**: `_validate.py validate_graph()` 직접 확인.
+    - channel/managed/node 이름이 RESERVED 목록과 충돌하는지 검사
+    - 각 `PregelNode`의 `channels` (구독 목록)와 `triggers`가 known channels에 존재하는지 검사
+    - input/output/stream_channels가 known channels에 존재하는지 검사
+    - interrupt_before/after 노드가 nodes dict에 존재하는지 검사
+    - 마지막으로 `trigger_to_nodes` 역방향 맵핑 빌드
+- `langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction 구현
+  → **✅ 해소 (2026-05-24)**: `.venv` 설치본 직접 확인. 상세 내용은 [[LangGraph Code Map]] 참고.
+- pending writes recovery를 검증하는 canonical test file은 어디에 있는가?
+  → 아직 미확인. GitHub의 `tests/` 디렉터리 직접 탐색 필요.
+- `DeltaChannel`이 있을 때 `StateSnapshot.values`와 saver storage를 검증하는 test file은 어디에 있는가?
+  → 아직 미확인.
 
 ## Related Pages
 
