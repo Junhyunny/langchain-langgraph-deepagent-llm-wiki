@@ -130,17 +130,17 @@
 - ✅ `PostgresSaver` 설정 방법 → `PostgresSaver.from_conn_string(DB_URI)` + **`saver.setup()` 명시 호출 필수**. `pipeline=True`로 성능 향상 가능 (단일 Connection만). `AsyncPostgresSaver`는 `asetup()` 사용. (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
 - ✅ `InMemorySaver`의 `storage/writes/blobs` 구조 → `storage`: thread→ns→checkpoint_id→(checkpoint, metadata, parent_id). `writes`: (thread, ns, checkpoint_id)→(task_id, write_idx)→(task_id, channel, value, path). `blobs`: (thread, ns, channel, version)→blob. (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
 - ✅ `MemorySaver`와 persistent saver의 운영상 차이 → InMemorySaver/MemorySaver는 테스트/디버그 전용. SqliteSaver는 소규모/단일 스레드. PostgresSaver/AsyncPostgresSaver가 프로덕션 권장. (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
+- ✅ checkpointer가 있을 때 같은 `thread_id`로 재실행하면 이전 상태부터 이어서 실행되는가? → **YES.** `thread_id` 재사용 시 LangGraph가 해당 thread의 최신 checkpoint를 불러와 이전 state 위에서 계속 실행한다. `_first()`가 기존 `channel_versions`의 존재로 resume 여부를 판단하며, 새 input이 있으면 기존 state에 적용 후 graph를 진행한다. 이것이 multi-turn conversation 연속성의 구현 방식이다. (Source: `langgraph-docs-persistence-2026-05-20`, `langgraph-source-checkpoint-runtime-2026-05-20`)
+- ✅ `config = {"configurable": {"thread_id": "..."}}` 패턴의 내부 전달 경로 → `graph.invoke(input, config)` → `Pregel._defaults(config)`에서 effective checkpointer 결정 → `SyncPregelLoop(checkpointer, config)` 생성 → `_first()`에서 `checkpointer.get_tuple(config)` 호출 → saver가 `config["configurable"]["thread_id"]`를 primary key로 thread checkpoint 조회. `InMemorySaver.get_tuple()`은 명시된 checkpoint_id가 있으면 그것을, 없으면 해당 thread/ns의 최신 checkpoint를 반환한다. (Source: `langgraph-source-checkpoint-runtime-2026-05-20`)
 
 **잔여 질문:**
-- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification
-- checkpointer가 있을 때 같은 `thread_id`로 재실행하면 이전 상태부터 이어서 실행되는가? — Source: `langgraph-docs-persistence-2026-05-20` (문서 확인 필요)
-- `config = {"configurable": {"thread_id": "..."}}` 패턴은 내부적으로 어떤 경로로 checkpointer에 전달되는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- `libs/langgraph/langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction은 어떻게 구현되어 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- pending writes recovery를 정의하는 canonical test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Source: `langgraph-docs-persistence-2026-05-20`
+- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification (문서는 "저장/resume 불가"라고만 설명, 에러 타입 미명시)
+- `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Needs Source (소스 summary에서 호출 사실만 확인, 내용 미수집)
+- `libs/langgraph/langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction은 어떻게 구현되어 있는가? — Needs Source (raw 수집 미완료)
+- pending writes recovery를 정의하는 canonical test는 어디에 있는가? — Needs Source
+- `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test는 어디에 있는가? — Needs Source
+- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — Needs Source
+- checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Needs Source
 - `interrupt_before` / `interrupt_after`는 그래프 수준에서 어떻게 동작하는가?
 - `astream_events`와 함께 스트리밍은 어떻게 동작하는가?
 - LangGraph package version과 reference docs version의 관계는? GitHub page는 `langgraph==1.2.0`, `StateGraph.compile` reference는 v1.1.10으로 보였다. — Source: `langgraph-reference-stategraph-compile-2026-05-20`

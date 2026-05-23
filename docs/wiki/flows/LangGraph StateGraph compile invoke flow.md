@@ -1,15 +1,18 @@
 ---
 type: flow
 framework: LangGraph
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-20
+last_reviewed: 2026-05-23
 sources:
   - langgraph-docs-persistence-2026-05-20
   - langgraph-docs-durable-execution-2026-05-20
   - langgraph-reference-stategraph-compile-2026-05-20
   - langgraph-reference-checkpoint-2026-05-20
   - langgraph-source-checkpoint-runtime-2026-05-20
+  - langgraph-source-checkpoint-savers-2026-05-23
+  - langgraph-source-pregel-interrupts-2026-05-23
+  - langgraph-docs-graph-api-2026-05-23
 ---
 
 # LangGraph StateGraph compile invoke flow
@@ -62,9 +65,13 @@ Source: `langgraph-docs-persistence-2026-05-20`
 
 **검증됨:** source 기준 `compile()`은 `ensure_valid_checkpointer()`를 거친 checkpointer를 `CompiledStateGraph(..., checkpointer=checkpointer, ...)`에 전달한다. 이후 `START`, nodes, edges, waiting edges, branches를 attach하고 `compiled.validate()`를 반환한다. `CompiledStateGraph`는 `Pregel`을 상속한다. Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 
+**검증됨 (부분):** `compiled.validate()`는 `compile()` 마지막 단계로 호출되며 그 결과를 반환한다. 내부 구조 검사 내용은 아직 소스 미수집 상태다. (Needs Source: `_checkpoint.py`, `pregel/main.py validate()` 구현)
+
 ### 2. `CompiledStateGraph.invoke(input, config)`
 
 **검증됨:** checkpointer 사용 시 `config["configurable"]["thread_id"]`가 thread key로 사용된다. 이 값이 없으면 checkpointer는 state 저장과 interrupt 이후 resume을 할 수 없다. Source: `langgraph-docs-persistence-2026-05-20`
+
+**검증됨:** config 전달 경로: `graph.invoke(input, config)` → `Pregel._defaults(config)`에서 effective checkpointer 결정 → `SyncPregelLoop(checkpointer, config)` 생성 → `_first()`에서 `checkpointer.get_tuple(config)` 호출 → saver가 `config["configurable"]["thread_id"]`를 primary key로 thread checkpoint 조회. 같은 `thread_id`로 재실행하면 이전 checkpoint 위에서 계속 실행된다(multi-turn 연속성). Source: `langgraph-source-checkpoint-runtime-2026-05-20`, `langgraph-docs-persistence-2026-05-20`
 
 **검증됨:** `Pregel._defaults()`가 effective checkpointer와 durability를 결정한다. `checkpointer=False`는 checkpointing을 끄고, config-level checkpointer override가 있으면 그것을 사용하며, root graph에서 `checkpointer=True`는 오류다. 기본 durability는 `"async"`다. Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 
@@ -104,6 +111,17 @@ Sequential graph `START -> A -> B -> END`의 checkpoint sequence:
 **검증됨:** 과거 `checkpoint_id`로 replay하면 checkpoint 이전 node는 skipped 처리되고 이후 node는 다시 실행된다. 이때 LLM call, API request, interrupt도 다시 발생할 수 있다. Source: `langgraph-docs-persistence-2026-05-20`
 
 **검증됨:** source 기준 `_first()`는 기존 checkpoint의 `channel_versions`와 입력 형태(`None`, `Command`, same `run_id`, `CONFIG_KEY_RESUMING`)로 resume 여부를 판정한다. time-travel replay에서는 stale `RESUME` write를 제거하고 필요하면 `source="fork"` checkpoint를 만든다. Source: `langgraph-source-checkpoint-runtime-2026-05-20`
+
+### 7. Interrupt 처리
+
+**검증됨:** interrupt가 발생하면 LangGraph는 현재 checkpoint를 저장하고 실행을 중단한다. 두 가지 방식이 있다.
+
+- `interrupt_before/after` — compile() 시 설정. `Pregel.interrupt_before_nodes` / `interrupt_after_nodes`로 저장. 실행 시 override 가능 (`interrupt_before or self.interrupt_before_nodes` 패턴).
+- `interrupt()` 함수 — 노드 내부에서 동적 호출. `GraphInterrupt` 예외로 실행 중단. `scratchpad.resume` 인덱스 기반 멱등 설계로, `Command(resume=...)` 재호출 시 `interrupt()`가 resume 값을 반환하며 노드가 계속 실행됨.
+
+재개: `graph.invoke(Command(resume=user_input), config)` 또는 `graph.invoke(None, config)`.
+
+Source: `langgraph-source-pregel-interrupts-2026-05-23`
 
 ## Checkpoint Data Shape
 
@@ -187,9 +205,10 @@ flowchart TD
 
 ## Open Questions
 
-- pending writes recovery를 검증하는 test file은 어디에 있는가?
-- `libs/langgraph/langgraph/pregel/_checkpoint.py`는 `create_checkpoint`와 `channels_from_checkpoint`를 어떻게 구현하는가?
-- `DeltaChannel`이 있을 때 `StateSnapshot.values`와 saver storage를 검증하는 test file은 어디에 있는가?
+- `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? (Needs Source)
+- `langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction 구현 (Needs Source — raw 미수집)
+- pending writes recovery를 검증하는 canonical test file은 어디에 있는가? (Needs Source)
+- `DeltaChannel`이 있을 때 `StateSnapshot.values`와 saver storage를 검증하는 test file은 어디에 있는가? (Needs Source)
 
 ## Related Pages
 
