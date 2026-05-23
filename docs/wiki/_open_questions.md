@@ -176,7 +176,7 @@
 - Deep Agents Code (터미널 에이전트)는 SDK를 어떻게 확장하는가? — Source: `deepagents-docs-overview-2026-05-18`
 - `langchain.agents.create_agent`의 내부 구현은? LangGraph `StateGraph`를 어떻게 조립하나? — Source: `deepagents-source-graph-2026-05-19`
 - `HarnessProfile`은 어떤 모델에 어떤 profile을 매핑하나? (`harness_profiles.py` 수집 필요) — Source: `deepagents-source-graph-2026-05-19`
-- `PatchToolCallsMiddleware`는 어떤 tool call 패치를 수행하나? — Source: `deepagents-source-graph-2026-05-19`
+- ✅ `PatchToolCallsMiddleware`의 역할 → `before_agent` hook에서 dangling tool call(AIMessage에 tool_call은 있지만 대응하는 ToolMessage가 없는 상태) 감지 → 더미 ToolMessage 삽입. invalid_tool_call(인자 파싱 실패: "malformed or truncated")과 cancelled(중단된 정상 호출: "was cancelled") 두 케이스 처리. `Overwrite`로 state.messages 전체 교체. (Source: `deepagents-source-patch-tool-calls-2026-05-23`)
 - `DeltaChannel`의 `snapshot_frequency=50`은 정확히 무엇을 의미하나? 50 super-step인가 50 message인가? full snapshot과 delta 사이 재구성 비용은? — Source: `deepagents-source-graph-2026-05-19` (소스코드 직접 확인 필요: `_messages_reducer.py` + LangGraph `DeltaChannel` 구현)
 - Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가? — Source: `deepagents-docs-context-engineering-2026-05-18`
 - `@dynamic_prompt` 데코레이터의 정확한 시그니처와 사용 패턴은? — Source: `deepagents-docs-context-engineering-2026-05-18`
