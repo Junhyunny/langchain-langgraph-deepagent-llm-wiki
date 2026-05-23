@@ -5,11 +5,12 @@ framework:
   - LangGraph
   - Deep Agents
 status: draft
-confidence: medium
+confidence: high
 last_reviewed: 2026-05-23
 sources:
   - deepagents-docs-harness-2026-05-19
   - deepagents-source-graph-2026-05-19
+  - deepagents-source-subagents-2026-05-23
   - langgraph-docs-graph-api-2026-05-23
 ---
 
@@ -78,28 +79,114 @@ def child_node(state) -> Command:
 Source: `langgraph-docs-graph-api-2026-05-23`
 
 ### Deep Agents
-*Source: `deepagents-docs-harness-2026-05-19`, `deepagents-source-graph-2026-05-19`*
+*Source: `deepagents-docs-harness-2026-05-19`, `deepagents-source-graph-2026-05-19`, `deepagents-source-subagents-2026-05-23`*
 
-**Verified Facts:**
-- Main agent는 `task` tool로 subagent를 위임한다
-- Subagent: **fresh context**로 실행, 자율적으로 완료 후 **단일 최종 보고서만** 반환
-- Subagent는 **stateless** — 여러 메시지를 main agent에 돌려보낼 수 없다
-- 3가지 타입:
-  - `SubAgent` — declarative sync (name, description, system_prompt 지정)
-  - `CompiledSubAgent` — pre-compiled runnable
-  - `AsyncSubAgent` — remote/background (`graph_id` 필요)
-- 기본 `general-purpose` subagent 자동 추가 (비활성화 가능)
-- Subagent는 parent의 `interrupt_on` 상속; `CompiledSubAgent`·`AsyncSubAgent`는 상속 안 함
-- Subagent는 parent의 `permissions` 상속; 자체 선언 시 대체
+**Subagent 타입:**
+- `SubAgent` — declarative 방식. `name`, `description`, `system_prompt`, `model`, `tools` 명시.
+- `CompiledSubAgent` — pre-compiled `Runnable`. 상태 스키마에 반드시 `messages` 키 필요.
+- (구) `AsyncSubAgent` — remote/background (`graph_id` 필요)
 
-**이점 (원문 기준):**
-- Context isolation — subagent 작업이 main context를 오염시키지 않음
-- 병렬 실행 가능
-- Specialization — tool/설정을 subagent별로 다르게 구성
-- Token efficiency — 무거운 작업 context가 단일 결과로 압축됨
+**기본 스펙:**
+- 기본 `general-purpose` subagent 자동 추가 (HarnessProfile로 비활성화 가능)
+- Subagent는 parent의 `interrupt_on` 상속; `CompiledSubAgent`는 상속 안 함
+- Subagent는 parent의 `permissions` 상속; 자체 선언 시 완전 대체
 
-**task tool 제거 방법:** HarnessProfile로 auto-added GP subagent 비활성화 + `subagents=`에 sync subagent 없음.
-`excluded_middleware`로 `SubAgentMiddleware` 제거 시도 → **ValueError**
+---
+
+#### 상태 격리 메커니즘 (검증됨)
+*Source: `deepagents-source-subagents-2026-05-23`*
+
+**`_EXCLUDED_STATE_KEYS`** 상수가 격리의 핵심:
+
+```python
+_EXCLUDED_STATE_KEYS = {
+    "messages",
+    "todos",
+    "structured_response",
+    "skills_metadata",
+    "skills_load_errors",
+    "memory_contents",
+}
+```
+
+**두 방향으로 적용:**
+
+**① 호출 시 (입력 필터링) — `_validate_and_prepare_state()`:**
+```python
+subagent_state = {
+    k: v for k, v in runtime.state.items()
+    if k not in _EXCLUDED_STATE_KEYS
+}
+subagent_state["messages"] = [HumanMessage(content=description)]
+```
+- parent 메시지 히스토리 대신 단일 `HumanMessage(task description)` 전달
+- `skills_metadata`, `memory_contents` 등 parent-specific 상태 누출 방지
+
+**② 반환 시 (출력 필터링) — `_return_command_with_state_update()`:**
+```python
+state_update = {k: v for k, v in result.items() if k not in _EXCLUDED_STATE_KEYS}
+```
+- subagent 중간 메시지가 parent에 직접 병합되지 않음
+- `structured_response`가 있으면 JSON 직렬화 → ToolMessage content
+- 없으면 마지막 비어있지 않은 AIMessage text → ToolMessage content
+
+**결과:** `Command(update={...state_update, "messages": [ToolMessage(content)]})` 형태로 parent에 반환.
+
+---
+
+#### task tool 실행 흐름 (검증됨)
+
+```
+task(description, subagent_type, runtime)
+  ↓
+_validate_and_prepare_state()   ← _EXCLUDED_STATE_KEYS 필터 (입력)
+  ↓
+_build_subagent_config()        ← callbacks/tags/configurable만 전파
+                                ← recursion_limit, metadata는 의도적으로 제외
+  ↓
+subagent.invoke(state, config)  ← LangSmith ls_agent_type="subagent" 태깅
+  ↓
+_return_command_with_state_update()  ← _EXCLUDED_STATE_KEYS 필터 (출력)
+  ↓
+Command(update={state_update, messages=[ToolMessage]})
+```
+
+---
+
+#### Config 전파 규칙 (검증됨)
+
+parent → subagent로 전달되는 config 키:
+- `callbacks` — Pregel 스트리밍 핸들러 전파
+- `tags` — tracing 연속성
+- `configurable` — Pregel subgraph 인식
+
+전달되지 않는 것 (의도적):
+- `recursion_limit` — subagent 자체 bound config 우선
+- `metadata` — 전달 시 subagent `lc_agent_name` 덮어씀
+
+---
+
+#### SubAgentMiddleware.wrap_model_call
+
+system prompt에 task tool 사용법 + available subagent 목록을 자동 append:
+
+```python
+def wrap_model_call(self, request, handler):
+    if self.system_prompt is not None:
+        new_system_message = append_to_system_message(
+            request.system_message, self.system_prompt
+        )
+        return handler(request.override(system_message=new_system_message))
+    return handler(request)
+```
+
+---
+
+**이점:**
+- Context isolation — subagent 중간 작업이 main context를 오염시키지 않음
+- 병렬 실행 — 단일 메시지에 여러 task tool 호출로 동시 실행
+- Specialization — tool/설정을 subagent별로 독립 구성
+- Token efficiency — 무거운 작업 context가 단일 ToolMessage로 압축됨
 
 ## 미해결 질문
 
@@ -108,12 +195,13 @@ Source: `langgraph-docs-graph-api-2026-05-23`
 - LangGraph 서브그래프와 상위 그래프 간 상태 스키마 호환성 요구사항은? — Needs Source
 - Deep Agents: `SubagentTransformer`의 scope 활용 방식은? (`_subagent_transformer.py` 확인 필요) — Source: `deepagents-source-graph-2026-05-19`
 - Deep Agents: subagent가 실패할 때 main agent는 어떻게 처리하는가? — Needs Source
-- Deep Agents: `SubAgentMiddleware` 내부에서 context isolation이 구체적으로 어떻게 구현되는가? — Source: `deepagents-source-graph-2026-05-19`
 
 **해소됨:**
 - ✅ Deep Agents subagent 상태는 격리됨 — stateless, fresh context로 실행 (Source: `deepagents-docs-harness-2026-05-19`)
 - ✅ 결과 집계: 단일 최종 보고서만 반환 (Source: `deepagents-docs-harness-2026-05-19`)
 - ✅ LangGraph subagent 패턴 2가지: 서브그래프-as-노드, Send API (Source: `langgraph-docs-graph-api-2026-05-23`)
+- ✅ `SubAgentMiddleware` 내부 context isolation 구현: `_EXCLUDED_STATE_KEYS`로 입력/출력 양방향 필터링 (Source: `deepagents-source-subagents-2026-05-23`)
+- ✅ Config 전파 규칙: `callbacks`/`tags`/`configurable`만 forwarding, `recursion_limit`/`metadata` 제외 (Source: `deepagents-source-subagents-2026-05-23`)
 
 ## 관련 페이지
 
@@ -129,4 +217,5 @@ Source: `langgraph-docs-graph-api-2026-05-23`
 
 - `deepagents-docs-harness-2026-05-19`
 - `deepagents-source-graph-2026-05-19`
+- `deepagents-source-subagents-2026-05-23`
 - `langgraph-docs-graph-api-2026-05-23`

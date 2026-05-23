@@ -362,3 +362,27 @@ sources:
       - "docs/wiki/concepts/Checkpointing.md"
     notes: "BaseCheckpointSaver 추상 클래스 전체 인터페이스(get_tuple/list/put/put_writes + async 버전). InMemorySaver 내부 storage/writes/blobs 구조. MemorySaver = InMemorySaver (하위 호환 alias) 확인. SqliteSaver: 단일 스레드용, from_conn_string 패턴. PostgresSaver: 프로덕션 권장, setup() 필수 호출, pipeline 옵션, AsyncPostgresSaver 비동기 버전 별도. Checkpoint/CheckpointTuple/CheckpointMetadata TypedDict 전체 필드."
 
+  - id: deepagents-source-subagents-2026-05-23
+    title: "Deep Agents — middleware/subagents.py (SubAgentMiddleware 소스코드)"
+    type: source_code
+    framework: Deep Agents
+    url: "https://github.com/langchain-ai/deepagents/blob/main/libs/deepagents/deepagents/middleware/subagents.py"
+    local_path: "docs/source_summaries/deepagents-source-subagents-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Subagents.md"
+    notes: "SubAgent/CompiledSubAgent TypedDict 전체 필드. _EXCLUDED_STATE_KEYS(messages/todos/structured_response/skills_metadata/skills_load_errors/memory_contents) 입력·출력 양방향 필터링으로 subagent state isolation 구현. _build_subagent_config: callbacks/tags/configurable만 전파, recursion_limit/metadata 의도적 제외. task tool 실행 흐름, 결과 추출 우선순위(structured_response → AIMessage text), LangSmith tracing 태깅."
+
+  - id: langgraph-source-pregel-interrupts-2026-05-23
+    title: "LangGraph — interrupt_before/interrupt_after 및 interrupt() 함수 (Pregel 소스코드)"
+    type: source_code
+    framework: LangGraph
+    url: "https://github.com/langchain-ai/langgraph/blob/main/libs/langgraph/langgraph/pregel/main.py"
+    local_path: "docs/source_summaries/langgraph-source-pregel-interrupts-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Checkpointing.md"
+    notes: "interrupt_before_nodes/interrupt_after_nodes: Pregel 인스턴스 속성, compile() 시 설정, '*'로 전체 노드. interrupt() 함수: GraphInterrupt 예외로 중단, scratchpad.resume 인덱스로 재개 값 반환. Command(resume=...): 재개 값 전달. 정적(compile 시) vs 동적(노드 내) 비교. 2024-12부터 interrupt() 방식 권장."
+

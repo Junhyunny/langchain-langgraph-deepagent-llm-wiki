@@ -113,6 +113,13 @@
 - ✅ `Send` API를 사용한 동적 분기: 각 `Send(node, state)`가 독립 그래프 복사본 생성 → 병렬 실행 (Source: `langgraph-docs-graph-api-2026-05-23`)
 - ✅ `recursion_limit`은 `configurable` 안이 아닌 config top-level key — `{"recursion_limit": 50}` (Source: `langgraph-docs-graph-api-2026-05-23`)
 
+### Human-in-the-Loop / Interrupt
+
+**해소됨 (2026-05-23):**
+- ✅ `interrupt_before` / `interrupt_after`는 그래프 수준에서 어떻게 동작하는가? → `Pregel.interrupt_before_nodes` / `interrupt_before_nodes` 속성으로 저장. compile() 시 설정, `"*"` 전달 시 전체 노드. stream 실행 시 runtime override 가능 (`interrupt_before = interrupt_before or self.interrupt_before_nodes`). checkpointer + thread_id 필수. (Source: `langgraph-source-pregel-interrupts-2026-05-23`)
+- ✅ `interrupt()` 함수 동작: `GraphInterrupt` 예외로 실행 중단 → state checkpoint 저장 → `Command(resume=...)` 재호출 시 `interrupt()`가 resume 값을 반환하며 노드 계속 실행. scratchpad.resume 인덱스 기반 멱등 설계. (Source: `langgraph-source-pregel-interrupts-2026-05-23`)
+- ✅ `interrupt_before/after` vs `interrupt()` 차이: 전자는 compile 시 고정, 조건 불가. 후자는 노드 내 동적, 조건부 가능. 2024-12부터 `interrupt()` 방식이 권장. (Source: `langgraph-source-pregel-interrupts-2026-05-23`)
+
 ### Memory / Store
 
 ### Checkpointer 종류
@@ -162,8 +169,10 @@
 
 ## Deep Agents
 
-- subagent state isolation의 구체적 메커니즘은? (`SubagentTransformer`, `SubAgentMiddleware` 내부 확인 필요) — Source: `deepagents-source-graph-2026-05-19`
 - ACP (Agent Client Protocol) integration은 어떤 프로토콜 스펙을 따르는가? — Source: `deepagents-docs-overview-2026-05-18`
+
+**해소됨 (2026-05-23):**
+- ✅ subagent state isolation의 구체적 메커니즘은? → `_EXCLUDED_STATE_KEYS = {messages, todos, structured_response, skills_metadata, skills_load_errors, memory_contents}` 로 입력·출력 양방향 필터링. 호출 시 parent 메시지 히스토리 제거 + 단일 HumanMessage. 반환 시 마지막 AIMessage text 또는 structured_response만 ToolMessage로 전달. `SubagentTransformer`는 별도 파일 — 아직 미확인. (Source: `deepagents-source-subagents-2026-05-23`)
 - Deep Agents Code (터미널 에이전트)는 SDK를 어떻게 확장하는가? — Source: `deepagents-docs-overview-2026-05-18`
 - `langchain.agents.create_agent`의 내부 구현은? LangGraph `StateGraph`를 어떻게 조립하나? — Source: `deepagents-source-graph-2026-05-19`
 - `HarnessProfile`은 어떤 모델에 어떤 profile을 매핑하나? (`harness_profiles.py` 수집 필요) — Source: `deepagents-source-graph-2026-05-19`

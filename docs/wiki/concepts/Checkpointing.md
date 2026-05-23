@@ -13,6 +13,7 @@ sources:
   - langgraph-reference-checkpoint-2026-05-20
   - langgraph-source-checkpoint-runtime-2026-05-20
   - langgraph-source-checkpoint-savers-2026-05-23
+  - langgraph-source-pregel-interrupts-2026-05-23
 ---
 
 # Checkpointing
@@ -184,6 +185,95 @@ async with AsyncPostgresSaver.from_conn_string(DB_URI) as saver:
   - `libs/checkpoint/langgraph/checkpoint/base/__init__.py` — `BaseCheckpointSaver`, checkpoint data types
   - `libs/checkpoint/langgraph/checkpoint/memory/__init__.py` — in-memory saver implementation
 
+## Human-in-the-Loop (Interrupt)
+*Source: `langgraph-source-pregel-interrupts-2026-05-23`*
+
+LangGraph는 checkpointing을 기반으로 두 가지 HITL 패턴을 제공한다. 두 방식 모두 **checkpointer와 thread_id가 필수**다.
+
+### 정적 중단: interrupt_before / interrupt_after
+
+`compile()` 시점에 중단할 노드를 지정한다.
+
+```python
+graph = builder.compile(
+    checkpointer=MemorySaver(),
+    interrupt_before=["human_review"],   # 노드 실행 전 중단
+    interrupt_after=["generate_draft"],  # 노드 실행 후 중단
+)
+
+# 1. 실행 — interrupt 노드에서 멈춤
+graph.invoke(inputs, {"configurable": {"thread_id": "1"}})
+
+# 2. 상태 확인 및 수정 (선택)
+graph.update_state(
+    {"configurable": {"thread_id": "1"}},
+    {"state_key": new_value},
+    as_node="human_review",
+)
+
+# 3. 재개 — None 입력으로 이어서 실행
+graph.invoke(None, {"configurable": {"thread_id": "1"}})
+```
+
+**Pregel 내부 동작:**
+- `interrupt_before_nodes`, `interrupt_after_nodes`로 저장
+- stream 실행 시 `interrupt_before = interrupt_before or self.interrupt_before_nodes` 패턴으로 runtime override 가능
+- `"*"` 또는 `All` 전달 시 모든 노드에서 인터럽트
+
+### 동적 중단: interrupt() 함수 (현재 권장)
+
+LangChain 공식 블로그 2024-12 기준 권장 방식. 노드 함수 내에서 조건부로 중단.
+
+```python
+from langgraph.types import interrupt, Command
+
+def human_review_node(state):
+    result = interrupt({
+        "question": "이 결과를 승인하시겠습니까?",
+        "draft": state["draft"]
+    })
+    # interrupt()가 resume 값을 반환 — 노드가 여기서 계속 실행됨
+    if result == "approve":
+        return {"approved": True}
+    return {"approved": False, "feedback": result}
+
+# 재개: Command(resume=...) 전달
+graph.invoke(
+    Command(resume="approve"),
+    {"configurable": {"thread_id": "1"}}
+)
+```
+
+**내부 구현 (`langgraph/types.py`):**
+```python
+def interrupt(value: Any) -> Any:
+    conf = get_config()["configurable"]
+    scratchpad = conf[CONFIG_KEY_SCRATCHPAD]
+    idx = scratchpad.interrupt_counter()
+
+    if scratchpad.resume and idx < len(scratchpad.resume):
+        return scratchpad.resume[idx]          # ← 이미 resume 값 있으면 반환
+
+    v = scratchpad.get_null_resume(True)
+    if v is not None:
+        scratchpad.resume.append(v)
+        return v                               # ← 새 resume 값 반환
+
+    raise GraphInterrupt(...)                  # ← 없으면 예외로 실행 중단
+```
+
+### interrupt_before/after vs interrupt() 비교
+
+| 구분 | interrupt_before/after | interrupt() |
+|------|----------------------|-------------|
+| 설정 위치 | compile() 시 | 노드 함수 내부 |
+| 조건부 중단 | ❌ | ✅ |
+| 코드 변경 | ❌ | ✅ |
+| 도입 시기 | 초기 | 2024-12 신규 |
+| 현재 권장 | 구 방식 | ✅ **권장** |
+
+---
+
 ## Tests
 
 - TBD. 다음 코드 리딩 루프에서 checkpoint saver tests와 Pregel recovery tests를 찾아야 한다.
@@ -211,3 +301,4 @@ async with AsyncPostgresSaver.from_conn_string(DB_URI) as saver:
 - `langgraph-reference-stategraph-compile-2026-05-20`
 - `langgraph-reference-checkpoint-2026-05-20`
 - `langgraph-source-checkpoint-runtime-2026-05-20`
+- `langgraph-source-pregel-interrupts-2026-05-23`
