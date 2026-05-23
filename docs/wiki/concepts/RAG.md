@@ -274,8 +274,10 @@ Source: `langchain-docs-rag-2026-05-23`
 - ✅ `RecursiveCharacterTextSplitter` 내부 알고리즘: separators 리스트를 순서대로 시도 → 첫 매칭 구분자로 분할 → 초과 청크 재귀 분할 → `_merge_splits()`로 병합. (Source: `langchain-source-text-splitters-2026-05-23`)
 - ✅ `@dynamic_prompt` 정체: `langchain.agents.middleware.types`의 AgentMiddleware 생성 데코레이터. 서명은 `(request: ModelRequest) -> str | SystemMessage`. (Source: `langchain-source-dynamic-prompt-2026-05-23`)
 
+**해소됨 (2026-05-23):**
+- ✅ RAG 문서의 `@dynamic_prompt(user_query: str) -> list` 패턴 — **문서 오류 확정.** 실제 `@dynamic_prompt` 서명: `(request: ModelRequest) -> str | SystemMessage`. 문서 예제는 실제 API가 아닌 일반 함수 패턴을 잘못 표기한 것. (Source: `langchain-source-dynamic-prompt-2026-05-23`)
+
 **잔여 질문:**
-- ⚠️ RAG 문서의 `@dynamic_prompt(user_query: str) -> list` 패턴 — 실제 API `(request: ModelRequest) -> str | SystemMessage`와 불일치. 문서 오류인가, 다른 decorator인가? — Source: `langchain-docs-rag-2026-05-23`, `langchain-source-dynamic-prompt-2026-05-23`
 - `init_embeddings("openai:text-embedding-3-small")` 형식은 새로운 API인가? 구버전 `OpenAIEmbeddings()`와의 차이는? — Source: `langchain-docs-rag-2026-05-23`
 - `response_format="content_and_artifact"` 옵션의 정확한 의미는? — Source: `langchain-docs-rag-2026-05-23`
 - FAISS `similarity_search`의 내부 알고리즘은? (L2 거리 기본값인가?) — Needs Source

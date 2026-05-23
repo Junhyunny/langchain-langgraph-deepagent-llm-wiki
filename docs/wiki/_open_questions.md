@@ -18,9 +18,11 @@
 - ✅ Deep Agents `create_deep_agent` stream_events 지원 여부 → **YES.** CompiledStateGraph(Pregel 상속) 반환 → stream_events v3 네이티브 지원. compile 시 ToolCallTransformer 등 자동 등록. (Source: `langgraph-source-streaming-2026-05-23`)
 - ✅ `ConversationBufferMemory`, `ConversationSummaryMemory` deprecated 여부 → 경로 404 (현재 LangChain 1.x에 파일 없음). `langchain-community` 2026-05-22 sunset. `RunnableWithMessageHistory` deprecated (langchain-core 1.3.3). 현재 권장: LangGraph checkpointer + SummarizationMiddleware. (Source: `langchain-source-memory-api-2026-05-23`)
 
+**해소됨 (2026-05-23):**
+- ✅ `MessagesPlaceholder(optional=False)`일 때 해당 변수가 없으면 KeyError가 발생하는가? → **YES.** `optional=False`(기본값)이면 `kwargs`에 `variable_name`이 없을 경우 `KeyError` 발생. `optional=True`이면 빈 리스트 `[]` 반환. `("placeholder", "{var}")` shorthand는 자동으로 `optional=True`로 생성. (Source: `langchain-source-prompts-2026-05-23`)
+
 **잔여 질문:**
 - Custom stream transformer의 정확한 계약(contract)은 무엇인가? (required_stream_modes, push() 메서드?) — Needs Source
-- `MessagesPlaceholder(optional=False)`일 때 해당 변수가 없으면 KeyError가 발생하는가 확인 필요 — Source: `langchain-source-prompts-2026-05-23`
 
 ### 메시지 시스템
 
@@ -46,17 +48,17 @@
 
 ### Runnable 인터페이스
 
-- `RunnableLambda`와 일반 함수를 직접 사용하는 것의 차이는? (에러 처리, 스트리밍, 배치 지원) — invoke/batch/stream 인터페이스가 자동 부여됨은 확인, 에러 처리 차이는 Needs Verification. Source: `langchain-source-runnable-2026-05-23`
-- `RunnableParallel`의 thread pool thread 수 제한은? `max_concurrency` 옵션이 있는가? — Source: `langchain-source-runnable-2026-05-23`
-- `RunnableSequence.invoke` 내부: 각 step 간 에러 처리는 어떻게 되는가? — Source: `langchain-source-runnable-2026-05-23`
-- `astream_events`와 `astream_log`의 차이는? — Source: `langchain-source-runnable-2026-05-23`
-- `RunnableConfig`의 `configurable` 필드를 통해 실행 시간 설정을 주입하는 방법은? — Source: `langchain-source-runnable-2026-05-23`
+- `RunnableParallel`의 thread pool thread 수 제한은? `max_concurrency` 옵션이 있는가? — Needs Verification (`base.py` 전체 미수집)
+- `RunnableSequence.invoke` 내부: 각 step 간 에러 처리는 어떻게 되는가? — Needs Source (`base.py` 부분 수집만)
+- `astream_events`와 `astream_log`의 차이는? — Needs Source
+- `RunnableConfig`의 `configurable` 필드를 통해 실행 시간 설정을 주입하는 방법은? — Needs Source
 
 **해소됨 (2026-05-23):**
 - ✅ LCEL `|` 연산자는 내부적으로 어떤 타입을 생성하는가? → `RunnableSequence`. (Source: `langchain-source-runnable-2026-05-23`)
 - ✅ `Runnable` 인터페이스의 최소 계약은? → `invoke`만 abstract. (Source: `langchain-source-runnable-2026-05-23`)
 - ✅ `RunnableParallel`은 실제로 동시 실행되는가? → sync: thread pool, async: asyncio 동시 실행. (Source: `langchain-source-runnable-2026-05-23`)
 - ✅ `RunnableParallel`의 결과 dict 키는 어떻게 결정되는가? → input mapping의 keys와 동일. (Source: `langchain-source-runnable-2026-05-23`)
+- ✅ `RunnableLambda`와 일반 함수를 직접 사용하는 것의 차이는? → `invoke/batch/stream/ainvoke` 인터페이스 자동 부여 + LCEL `|` 체인 연결 가능. generator 함수 전달 시 streaming 지원. async def 전달 시 `afunc`으로 처리. 에러 처리 차이는 소스 부분 수집으로 미확인(Needs Verification). (Source: `langchain-source-runnable-2026-05-23`)
 
 ### @tool 데코레이터
 
@@ -90,8 +92,10 @@
 - ✅ `MMR 작동 방식` → fetch_k 후보 → `maximal_marginal_relevance(embedding, candidates, k, lambda_mult)`. lambda_mult: 1.0=관련성, 0.0=다양성, 0.5=기본. (Source: `langchain-source-vectorstore-embeddings-2026-05-23`)
 - ✅ `BaseRetriever.get_relevant_documents 계약` → deprecated. 현재 `invoke()` 사용. 구현 시 `_get_relevant_documents()` override. (Source: `langchain-source-vectorstore-embeddings-2026-05-23`)
 
+**해소됨 (2026-05-23):**
+- ✅ RAG 문서의 `@dynamic_prompt(user_query: str) -> list` 패턴 — 실제 API와 불일치 → **문서 오류 확정.** 실제 `@dynamic_prompt` 서명: `(request: ModelRequest) -> str | SystemMessage`. RAG 문서 예제는 `@dynamic_prompt`가 아닌 일반 LCEL 함수 패턴을 잘못 표기한 것으로 추정. 올바른 사용법: `request.state["messages"]`에서 쿼리 추출 후 `str` 반환. (Source: `langchain-source-dynamic-prompt-2026-05-23`)
+
 **잔여 질문:**
-- ⚠️ RAG 문서의 `@dynamic_prompt(user_query: str) -> list` 패턴 — 실제 API와 불일치. 문서 오류인가, 다른 decorator인가? — Source: `langchain-docs-rag-2026-05-23`, `langchain-source-dynamic-prompt-2026-05-23`
 - ⚠️ FAISS `similarity_search`의 내부 알고리즘 (L2 거리 기본값인가?) — Needs Source (GitHub 파일 접근 실패)
 - ⚠️ FAISS 거리 점수와 cosine similarity 관계, 변환 공식 — Needs Source
 - `init_embeddings("openai:text-embedding-3-small")` 형식은 새로운 API인가? 구버전 `OpenAIEmbeddings()`와의 차이는? — Source: `langchain-docs-rag-2026-05-23`
@@ -137,15 +141,20 @@
 - ✅ checkpointer가 있을 때 같은 `thread_id`로 재실행하면 이전 상태부터 이어서 실행되는가? → **YES.** `thread_id` 재사용 시 LangGraph가 해당 thread의 최신 checkpoint를 불러와 이전 state 위에서 계속 실행한다. `_first()`가 기존 `channel_versions`의 존재로 resume 여부를 판단하며, 새 input이 있으면 기존 state에 적용 후 graph를 진행한다. 이것이 multi-turn conversation 연속성의 구현 방식이다. (Source: `langgraph-docs-persistence-2026-05-20`, `langgraph-source-checkpoint-runtime-2026-05-20`)
 - ✅ `config = {"configurable": {"thread_id": "..."}}` 패턴의 내부 전달 경로 → `graph.invoke(input, config)` → `Pregel._defaults(config)`에서 effective checkpointer 결정 → `SyncPregelLoop(checkpointer, config)` 생성 → `_first()`에서 `checkpointer.get_tuple(config)` 호출 → saver가 `config["configurable"]["thread_id"]`를 primary key로 thread checkpoint 조회. `InMemorySaver.get_tuple()`은 명시된 checkpoint_id가 있으면 그것을, 없으면 해당 thread/ns의 최신 checkpoint를 반환한다. (Source: `langgraph-source-checkpoint-runtime-2026-05-20`)
 
+**해소됨 (2026-05-23):**
+- ✅ `create_checkpoint` 구현 → 이전 checkpoint + live channels에서 새 Checkpoint 빌드. DeltaChannel이면 `channels_to_snapshot`에 포함 여부로 `_DeltaSnapshot(전체값)` vs `ch.checkpoint()(일반값)` 분기. exit 모드에서 쓰기 없는 채널은 channel_versions 수동 bump. (Source: `langgraph-source-checkpoint-internals-2026-05-23`)
+- ✅ `channels_from_checkpoint` 구현 → 일반 채널: `spec.from_checkpoint(values[k])` 직접 복원. DeltaChannel이고 `channel_values`에 없으면: `_needs_replay()=True` → `saver.get_delta_channel_history()` 배치 호출 → seed에서 `from_checkpoint` → `replay_writes()` 순서로 재구성. (Source: `langgraph-source-checkpoint-internals-2026-05-23`)
+- ✅ `DeltaChannel` snapshot 조건 → `updates >= snapshot_frequency` 또는 `supersteps >= DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` 중 하나 충족 시 스냅샷. `delta_channels_to_snapshot()` 순수 함수로 판단. (Source: `langgraph-source-checkpoint-internals-2026-05-23`)
+- ✅ `copy_checkpoint` 구현 → 2-depth 복사: `channel_values.copy()`, `channel_versions.copy()`, `versions_seen={k: v.copy() ...}`. (Source: `langgraph-source-checkpoint-internals-2026-05-23`)
+
 **잔여 질문:**
 - `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification (문서는 "저장/resume 불가"라고만 설명, 에러 타입 미명시)
 - `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Needs Source (소스 summary에서 호출 사실만 확인, 내용 미수집)
-- `libs/langgraph/langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction은 어떻게 구현되어 있는가? — Needs Source (raw 수집 미완료)
 - pending writes recovery를 정의하는 canonical test는 어디에 있는가? — Needs Source
 - `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test는 어디에 있는가? — Needs Source
-- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — Needs Source
+- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — `_checkpoint.py`에 없음, `_loop.py` 탐색 필요
+- `saver.get_delta_channel_history()` 메서드는 `BaseCheckpointSaver`에 언제 추가됐는가? — Needs Source
 - checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Needs Source
-- `interrupt_before` / `interrupt_after`는 그래프 수준에서 어떻게 동작하는가?
 - `astream_events`와 함께 스트리밍은 어떻게 동작하는가?
 - LangGraph package version과 reference docs version의 관계는? GitHub page는 `langgraph==1.2.0`, `StateGraph.compile` reference는 v1.1.10으로 보였다. — Source: `langgraph-reference-stategraph-compile-2026-05-20`
 
