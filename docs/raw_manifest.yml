@@ -255,8 +255,37 @@ sources:
     local_path: "docs/source_summaries/langgraph-store-base-2026-05-23.md"
     retrieved_at: "2026-05-23"
     status: current
-    used_by: []
+    used_by:
+      - "docs/wiki/concepts/Store.md"
     notes: "BaseStore 추상 클래스 전체 인터페이스. Item/SearchItem 데이터 클래스, namespace tuple 개념, get/put/search/delete/list_namespaces 메서드, batch/abatch 추상화 포인트, TTLConfig, IndexConfig(vector search), Op 타입들(GetOp/SearchOp/PutOp/ListNamespacesOp)."
+
+  - id: langchain-source-create-agent-factory-2026-05-23
+    title: "LangChain — create_agent 소스코드 (factory.py)"
+    type: source_code
+    framework: LangChain
+    url: "https://github.com/langchain-ai/langchain/blob/master/libs/langchain_v1/langchain/agents/factory.py"
+    local_path: "docs/source_summaries/langchain-source-create-agent-factory-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/flows/LangChain create_agent flow.md"
+      - "docs/wiki/codebase/LangChain Code Map.md"
+      - "docs/wiki/frameworks/LangChain.md"
+    notes: "create_agent는 libs/langchain_v1/langchain/agents/factory.py에 구현. StateGraph 동적 구성: model node + ToolNode + conditional edges. create_tool_calling_agent/AgentExecutor는 deprecated. middleware 조합: _chain_model_call_handlers, _chain_tool_call_wrappers. ToolNode 조건부 추가. middleware hook nodes: before/after_agent, before/after_model."
+
+  - id: langchain-source-bind-tools-function-calling-2026-05-23
+    title: "LangChain — bind_tools 및 tool schema → API payload 변환 경로"
+    type: source_code
+    framework: LangChain
+    url: "https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/utils/function_calling.py"
+    local_path: "docs/source_summaries/langchain-source-bind-tools-function-calling-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Tool Calling.md"
+      - "docs/wiki/flows/LangChain create_agent flow.md"
+      - "docs/wiki/codebase/LangChain Code Map.md"
+    notes: "BaseChatModel.bind_tools는 추상(NotImplementedError). OpenAI 구현: BaseChatOpenAI.bind_tools → convert_to_openai_tool → convert_to_openai_function → _format_tool_to_openai_function → {type:function, function:{...}}. tool_choice 정규화(any→required, 이름→dict). Anthropic은 별도 변환 경로."
 
   - id: langchain-source-tools-2026-05-23
     title: "LangChain — Tools Source Code (BaseTool / StructuredTool / @tool decorator)"

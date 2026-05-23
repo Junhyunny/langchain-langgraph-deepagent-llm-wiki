@@ -8,6 +8,8 @@ sources:
   - langchain-source-prompts-2026-05-23
   - langchain-source-runnable-2026-05-23
   - langchain-source-tools-2026-05-23
+  - langchain-source-create-agent-factory-2026-05-23
+  - langchain-source-bind-tools-function-calling-2026-05-23
 ---
 
 # LangChain Code Map
@@ -51,10 +53,12 @@ libs/
         chat.py           ← ChatPromptTemplate
         few_shot.py       ← FewShotPromptTemplate
         pipeline.py       ← PipelinePromptTemplate
-  langchain/
-    agents/               ← Agent 생성 (create_react_agent, AgentExecutor 등)
-      react/              ← ReAct agent
-      tool_calling/       ← Tool calling agent (create_tool_calling_agent)
+  langchain_v1/
+    langchain/
+      agents/
+        factory.py        ← create_agent (현재 공식 API, LangGraph StateGraph 기반)
+  langchain/              ← 구버전 패키지 (master에서 부분 유지)
+    agents/               ← create_react_agent, AgentExecutor (deprecated)
 ```
 
 ## 핵심 파일별 역할
@@ -122,16 +126,67 @@ libs/
                                 └─→ _run() → _format_output → ToolMessage
 ```
 
-## 읽어야 할 소스 파일 (미수집)
+### `langchain_v1/langchain/agents/factory.py`
+*Source: `langchain-source-create-agent-factory-2026-05-23`*
 
-- `libs/langchain/langchain/agents/` — `create_react_agent`, `create_tool_calling_agent`, `AgentExecutor` → [[LangChain create_agent flow]]
-- `langchain_core/language_models/chat_models.py` — `bind_tools()` 구현, tool schema → API payload 변환
-- `langchain_core/utils/function_calling.py` — `_parse_google_docstring`, `_py_38_safe_origin`
+| 심볼 | 역할 |
+|------|------|
+| `create_agent` | 현재 공식 agent 생성 API. StateGraph 동적 구성 |
+| `_chain_model_call_handlers` | middleware model call handler 체이닝 |
+| `_chain_tool_call_wrappers` | middleware tool call wrapper 체이닝 |
+
+**검증됨:** `create_agent`는 `StateGraph`를 직접 구성한다. model node + ToolNode + conditional edges = agent loop. `create_tool_calling_agent` + `AgentExecutor` 패턴은 deprecated이며 현재 master에 없다.
+
+### `langchain_core/utils/function_calling.py`
+*Source: `langchain-source-bind-tools-function-calling-2026-05-23`*
+
+| 심볼 | 역할 |
+|------|------|
+| `convert_to_openai_tool` | tool → OpenAI API tool schema 변환 진입점 |
+| `convert_to_openai_function` | 다양한 입력 타입(BaseTool/Pydantic/callable/dict) → OpenAI function 형식 |
+| `_format_tool_to_openai_function` | BaseTool 전용 변환. tool_call_schema → OpenAI function |
+
+### `langchain_core/language_models/chat_models.py`
+*Source: `langchain-source-bind-tools-function-calling-2026-05-23`*
+
+| 심볼 | 역할 |
+|------|------|
+| `BaseChatModel` | 모든 chat model의 추상 기반. `_generate` abstract |
+| `BaseChatModel.bind_tools` | 추상 메서드(NotImplementedError). provider별 구현 필요 |
+
+**검증됨:** `bind_tools`는 추상이므로 실제 변환은 provider 패키지에 있다. OpenAI → `BaseChatOpenAI.bind_tools` → `convert_to_openai_tool`.
+
+## 실행 흐름 요약 (업데이트)
+
+```
+@tool 함수 정의
+    │
+    └─→ StructuredTool (args_schema 자동 생성)
+            │
+            └─→ create_agent(model, tools=[tool])
+                    │  factory.py: StateGraph 구성
+                    │  · model node
+                    │  · tools node (ToolNode)
+                    │  · conditional edges
+                    │
+                    LLM API 호출 시:
+                    tool.tool_call_schema
+                        → bind_tools([tool])           (provider)
+                        → convert_to_openai_tool()     (langchain_core)
+                        → {"type": "function", ...}
+                    │
+                    LLM이 AIMessage(tool_calls=[...]) 반환
+                    │
+                    └─→ ToolNode → BaseTool.invoke(ToolCall)
+                                        │
+                                        └─→ _run() → _format_output → ToolMessage
+```
 
 ## 불명확한 영역
 
-- `bind_tools()`가 `tool_call_schema`를 구체적으로 어떤 provider API payload로 변환하는가?
-- `create_react_agent` vs `create_tool_calling_agent`의 차이는?
+- `_chain_model_call_handlers()`의 구체적인 체이닝 구현은?
+- `create_react_agent`(LangGraph prebuilt)과 `create_agent`(LangChain)의 차이는?
+- Anthropic provider `bind_tools`의 변환 경로는?
 
 ## 관련 페이지
 
@@ -144,3 +199,5 @@ libs/
 - `langchain-source-tools-2026-05-23`
 - `langchain-source-runnable-2026-05-23`
 - `langchain-source-prompts-2026-05-23`
+- `langchain-source-create-agent-factory-2026-05-23`
+- `langchain-source-bind-tools-function-calling-2026-05-23`
