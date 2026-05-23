@@ -79,6 +79,8 @@ Checkpointing은 다음을 가능하게 한다.
 
 **검증됨:** 재개는 Python call stack의 같은 줄에서 계속되는 방식이 아니다. LangGraph는 적절한 시작점을 찾아 replay한다. Graph API에서는 중단된 node의 시작점이 resume 시작점이다. Source: `langgraph-docs-durable-execution-2026-05-20`
 
+**검증됨:** checkpointer가 활성화된 graph에서 같은 `thread_id`로 새 입력을 전달해 재실행하면, LangGraph는 해당 thread의 최신 checkpoint를 불러와 이전 state 위에서 계속 실행한다. `_first()`가 기존 `channel_versions`의 존재로 resume 여부를 판단하며, 새 input이 있으면 기존 state에 적용 후 graph를 진행한다. 이것이 multi-turn conversation 연속성의 구현 방식이다. Source: `langgraph-docs-persistence-2026-05-20`, `langgraph-source-checkpoint-runtime-2026-05-20`
+
 **검증됨:** 과거 `checkpoint_id`로 invoke하면 그 checkpoint 이전 node는 저장된 결과를 사용하고, 이후 node는 다시 실행된다. 따라서 LLM call, API request, interrupt 같은 동작은 다시 발생할 수 있다. Source: `langgraph-docs-persistence-2026-05-20`
 
 **검증됨:** source 기준 resume 여부는 기존 checkpoint에 `channel_versions`가 있고 입력이 `None`, `Command`, 같은 `run_id`, 또는 `CONFIG_KEY_RESUMING`인 경우로 판정된다. `Command(resume=...)`는 기존 state 위에 resume write를 추가하고, time-travel replay는 stale `RESUME` write를 제거할 수 있다. Source: `langgraph-source-checkpoint-runtime-2026-05-20`
@@ -94,6 +96,7 @@ Checkpointing은 다음을 가능하게 한다.
 - `StateGraph.compile(checkpointer=...)`는 `CompiledStateGraph` runnable을 만든다. Reference 문서는 이 checkpointer를 versioned short-term memory로 설명한다.
 - `StateGraph.compile()`는 `checkpointer`를 검증한 뒤 `CompiledStateGraph(..., checkpointer=checkpointer, ...)`에 전달한다. `CompiledStateGraph`는 `Pregel`을 상속한다. Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 - `_defaults()`에서 `checkpointer=False`는 checkpointing을 끄고, config의 `CONFIG_KEY_CHECKPOINTER`는 runtime checkpointer override로 사용되며, `checkpointer=True`는 root graph에서 허용되지 않는다. Source: `langgraph-source-checkpoint-runtime-2026-05-20`
+- `config = {"configurable": {"thread_id": "..."}}` 전달 경로: `graph.invoke(input, config)` → `Pregel._defaults(config)`에서 effective checkpointer 결정 → `SyncPregelLoop(checkpointer, config)` 생성 → `_first()`에서 `checkpointer.get_tuple(config)` 호출 → saver가 `config["configurable"]["thread_id"]`를 primary key로 thread checkpoint 조회. `InMemorySaver.get_tuple()`은 명시된 `checkpoint_id`가 없으면 해당 `thread_id`/`checkpoint_ns`의 최신 checkpoint를 반환한다. Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 - `BaseCheckpointSaver.put`은 full checkpoint와 metadata를 저장하고, `put_writes`는 checkpoint에 연결된 intermediate writes를 저장한다. Source: `langgraph-reference-checkpoint-2026-05-20`
 - `get_tuple`은 config로 checkpoint tuple을 가져온다. 이 tuple에는 checkpoint, config, metadata, pending writes가 포함된다. Source: `langgraph-reference-checkpoint-2026-05-20`
 - `checkpoint_ns`는 root graph와 subgraph checkpoint를 구분한다. Source: `langgraph-docs-persistence-2026-05-20`
@@ -289,10 +292,13 @@ def interrupt(value: Any) -> Any:
 
 ## Open Questions
 
-- pending writes recovery를 정의하는 canonical test는 어디에 있는가?
-- `DeltaChannel` reconstruction과 pruning/copying safety를 검증하는 canonical test는 어디에 있는가?
-- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가?
-- checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가?
+- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — 문서는 "저장/resume 불가"만 언급, 에러 타입 미명시 (Needs Verification)
+- `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — 소스에서 호출 사실만 확인, 내용 미수집 (Needs Source)
+- `langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint` 구현은? — raw 수집 미완료 (Needs Source)
+- pending writes recovery를 정의하는 canonical test는 어디에 있는가? (Needs Source)
+- `DeltaChannel` reconstruction과 pruning/copying safety를 검증하는 test는 어디에 있는가? (Needs Source)
+- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? (Needs Source)
+- checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? (Needs Source)
 
 ## Sources
 

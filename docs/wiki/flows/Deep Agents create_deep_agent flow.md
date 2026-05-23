@@ -7,6 +7,8 @@ last_reviewed: 2026-05-23
 sources:
   - deepagents-source-graph-2026-05-19
   - deepagents-docs-harness-2026-05-19
+  - deepagents-source-subagents-2026-05-23
+  - deepagents-source-patch-tool-calls-2026-05-23
 ---
 
 # Deep Agents create_deep_agent flow
@@ -166,7 +168,7 @@ Source: `deepagents-source-graph-2026-05-19`
 - **Files:**
   - `libs/deepagents/deepagents/graph.py` — 이 페이지의 주 소스
   - `libs/deepagents/deepagents/middleware/filesystem.py` — FilesystemMiddleware (미수집)
-  - `libs/deepagents/deepagents/middleware/subagents.py` — SubAgentMiddleware (미수집)
+  - `libs/deepagents/deepagents/middleware/subagents.py` — SubAgentMiddleware (수집 완료: `deepagents-source-subagents-2026-05-23`)
   - `libs/deepagents/deepagents/_subagent_transformer.py` — SubagentTransformer (미수집)
   - `libs/deepagents/deepagents/profiles/harness/harness_profiles.py` — HarnessProfile (미수집)
 
@@ -225,6 +227,8 @@ create_deep_agent(skills=[...], memory=[...])
   Source: `deepagents-docs-harness-2026-05-19`
 - Subagent는 fresh context로 실행되며 stateless다. 단일 최종 보고서만 반환 가능.
   Source: `deepagents-docs-harness-2026-05-19`
+- `PatchToolCallsMiddleware`는 `before_agent` hook에서 dangling tool call을 감지해 더미 `ToolMessage`로 채운다. LangGraph interrupt, 사용자 중단, 인자 파싱 실패 등으로 미응답 tool call이 히스토리에 남을 때 LLM 오류를 방지한다.
+  Source: `deepagents-source-patch-tool-calls-2026-05-23`
 
 ---
 
@@ -258,7 +262,7 @@ create_deep_agent(skills=[...], memory=[...])
 - `SubagentTransformer`는 scope를 어떻게 활용하나? streaming/tracing에서 어떤 역할인가?
 - `HarnessProfile`은 어떤 모델에 어떤 profile을 매핑하나?
 - `DeltaChannel`의 `snapshot_frequency=50`은 정확히 무엇을 의미하나?
-- `PatchToolCallsMiddleware`는 어떤 tool call을 어떻게 패치하나?
+- ✅ `PatchToolCallsMiddleware` 역할 확인됨 — `before_agent` hook에서 dangling tool call (AIMessage에 tool_call이 있는데 그에 대응하는 ToolMessage가 없는 경우)을 감지해 더미 ToolMessage를 삽입. invalid_tool_call(인자 파싱 실패)과 cancelled(중단된 정상 호출) 두 케이스 처리. `Overwrite`로 state.messages 전체 교체. Source: `deepagents-source-patch-tool-calls-2026-05-23`
 - `create_summarization_middleware`는 어떤 조건에서 summarization을 트리거하나? (문서 기준 85% 초과 확인됨, 소스 확인 필요)
 
 ---

@@ -9,13 +9,17 @@
 - agent executor는 언제 도구 호출을 멈출지 어떻게 결정하는가?
 - `AgentExecutor`와 `create_react_agent`의 차이는 무엇인가?
 - 메시지 히스토리는 내부적으로 어디에서 관리되는가?
-- `stream_events` v3와 이전 버전의 차이는 무엇인가? — Source: `langchain-docs-event-streaming-2026-05-18`
-- LangGraph의 Pregel stream mode와 Event Streaming(`stream_events`)의 정확한 관계는? — Source: `langchain-docs-event-streaming-2026-05-18`
-- Custom stream transformer의 계약(contract)은 무엇인가? — Source: `langchain-docs-event-streaming-2026-05-18`
-- Deep Agents의 `create_deep_agent`도 `stream_events`를 동일하게 지원하는가? — Source: `langchain-docs-event-streaming-2026-05-18`
-- `astream_events`와 `astream_log`의 차이는? 반환 타입은? — Source: `langchain-source-runnable-2026-05-23`
 - `RunnableParallel`의 thread pool 크기 제한은? `max_concurrency` 옵션이 있는가? — Source: `langchain-source-runnable-2026-05-23`
-- `ConversationBufferMemory`, `ConversationSummaryMemory`는 현재도 권장 API인가, deprecated인가? — Needs Source
+
+**해소됨 (2026-05-23):**
+- ✅ `stream_events` v1/v2/v3 차이 → v1: 구버전 호환(parent_ids 빈 리스트), v2: 기본값(custom events, parent_ids), v3: `GraphRunStream` typed projection(BaseChatModel·CompiledGraph만 지원, 현재 베타). (Source: `langgraph-source-streaming-2026-05-23`)
+- ✅ LangGraph Pregel stream_mode와 `stream_events v3`의 관계 → v3는 `_pregel_stream_v3()` → `StreamMux` → `Pregel.stream(stream_mode=합집합, subgraphs=True, version="v2")` 레이어. 각 Transformer의 required_stream_modes 합집합이 Pregel stream_mode가 됨. (Source: `langgraph-source-streaming-2026-05-23`)
+- ✅ `astream_events` vs `astream_log` → `astream_log`는 **deprecated** (langchain-core 1.3.3, 제거 예정 2.0.0). RunLogPatch JSON Patch 구형 API. `astream_events`는 StreamEvent dict. `stream_events(v3)`는 GraphRunStream typed projection 현재 권장. (Source: `langgraph-source-streaming-2026-05-23`)
+- ✅ Deep Agents `create_deep_agent` stream_events 지원 여부 → **YES.** CompiledStateGraph(Pregel 상속) 반환 → stream_events v3 네이티브 지원. compile 시 ToolCallTransformer 등 자동 등록. (Source: `langgraph-source-streaming-2026-05-23`)
+- ✅ `ConversationBufferMemory`, `ConversationSummaryMemory` deprecated 여부 → 경로 404 (현재 LangChain 1.x에 파일 없음). `langchain-community` 2026-05-22 sunset. `RunnableWithMessageHistory` deprecated (langchain-core 1.3.3). 현재 권장: LangGraph checkpointer + SummarizationMiddleware. (Source: `langchain-source-memory-api-2026-05-23`)
+
+**잔여 질문:**
+- Custom stream transformer의 정확한 계약(contract)은 무엇인가? (required_stream_modes, push() 메서드?) — Needs Source
 - `MessagesPlaceholder(optional=False)`일 때 해당 변수가 없으면 KeyError가 발생하는가 확인 필요 — Source: `langchain-source-prompts-2026-05-23`
 
 ### 메시지 시스템
@@ -130,17 +134,17 @@
 - ✅ `PostgresSaver` 설정 방법 → `PostgresSaver.from_conn_string(DB_URI)` + **`saver.setup()` 명시 호출 필수**. `pipeline=True`로 성능 향상 가능 (단일 Connection만). `AsyncPostgresSaver`는 `asetup()` 사용. (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
 - ✅ `InMemorySaver`의 `storage/writes/blobs` 구조 → `storage`: thread→ns→checkpoint_id→(checkpoint, metadata, parent_id). `writes`: (thread, ns, checkpoint_id)→(task_id, write_idx)→(task_id, channel, value, path). `blobs`: (thread, ns, channel, version)→blob. (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
 - ✅ `MemorySaver`와 persistent saver의 운영상 차이 → InMemorySaver/MemorySaver는 테스트/디버그 전용. SqliteSaver는 소규모/단일 스레드. PostgresSaver/AsyncPostgresSaver가 프로덕션 권장. (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
+- ✅ checkpointer가 있을 때 같은 `thread_id`로 재실행하면 이전 상태부터 이어서 실행되는가? → **YES.** `thread_id` 재사용 시 LangGraph가 해당 thread의 최신 checkpoint를 불러와 이전 state 위에서 계속 실행한다. `_first()`가 기존 `channel_versions`의 존재로 resume 여부를 판단하며, 새 input이 있으면 기존 state에 적용 후 graph를 진행한다. 이것이 multi-turn conversation 연속성의 구현 방식이다. (Source: `langgraph-docs-persistence-2026-05-20`, `langgraph-source-checkpoint-runtime-2026-05-20`)
+- ✅ `config = {"configurable": {"thread_id": "..."}}` 패턴의 내부 전달 경로 → `graph.invoke(input, config)` → `Pregel._defaults(config)`에서 effective checkpointer 결정 → `SyncPregelLoop(checkpointer, config)` 생성 → `_first()`에서 `checkpointer.get_tuple(config)` 호출 → saver가 `config["configurable"]["thread_id"]`를 primary key로 thread checkpoint 조회. `InMemorySaver.get_tuple()`은 명시된 checkpoint_id가 있으면 그것을, 없으면 해당 thread/ns의 최신 checkpoint를 반환한다. (Source: `langgraph-source-checkpoint-runtime-2026-05-20`)
 
 **잔여 질문:**
-- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification
-- checkpointer가 있을 때 같은 `thread_id`로 재실행하면 이전 상태부터 이어서 실행되는가? — Source: `langgraph-docs-persistence-2026-05-20` (문서 확인 필요)
-- `config = {"configurable": {"thread_id": "..."}}` 패턴은 내부적으로 어떤 경로로 checkpointer에 전달되는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- `libs/langgraph/langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction은 어떻게 구현되어 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- pending writes recovery를 정의하는 canonical test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
-- checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Source: `langgraph-docs-persistence-2026-05-20`
+- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification (문서는 "저장/resume 불가"라고만 설명, 에러 타입 미명시)
+- `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Needs Source (소스 summary에서 호출 사실만 확인, 내용 미수집)
+- `libs/langgraph/langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction은 어떻게 구현되어 있는가? — Needs Source (raw 수집 미완료)
+- pending writes recovery를 정의하는 canonical test는 어디에 있는가? — Needs Source
+- `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test는 어디에 있는가? — Needs Source
+- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — Needs Source
+- checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Needs Source
 - `interrupt_before` / `interrupt_after`는 그래프 수준에서 어떻게 동작하는가?
 - `astream_events`와 함께 스트리밍은 어떻게 동작하는가?
 - LangGraph package version과 reference docs version의 관계는? GitHub page는 `langgraph==1.2.0`, `StateGraph.compile` reference는 v1.1.10으로 보였다. — Source: `langgraph-reference-stategraph-compile-2026-05-20`
@@ -176,7 +180,7 @@
 - Deep Agents Code (터미널 에이전트)는 SDK를 어떻게 확장하는가? — Source: `deepagents-docs-overview-2026-05-18`
 - `langchain.agents.create_agent`의 내부 구현은? LangGraph `StateGraph`를 어떻게 조립하나? — Source: `deepagents-source-graph-2026-05-19`
 - `HarnessProfile`은 어떤 모델에 어떤 profile을 매핑하나? (`harness_profiles.py` 수집 필요) — Source: `deepagents-source-graph-2026-05-19`
-- `PatchToolCallsMiddleware`는 어떤 tool call 패치를 수행하나? — Source: `deepagents-source-graph-2026-05-19`
+- ✅ `PatchToolCallsMiddleware`의 역할 → `before_agent` hook에서 dangling tool call(AIMessage에 tool_call은 있지만 대응하는 ToolMessage가 없는 상태) 감지 → 더미 ToolMessage 삽입. invalid_tool_call(인자 파싱 실패: "malformed or truncated")과 cancelled(중단된 정상 호출: "was cancelled") 두 케이스 처리. `Overwrite`로 state.messages 전체 교체. (Source: `deepagents-source-patch-tool-calls-2026-05-23`)
 - `DeltaChannel`의 `snapshot_frequency=50`은 정확히 무엇을 의미하나? 50 super-step인가 50 message인가? full snapshot과 delta 사이 재구성 비용은? — Source: `deepagents-source-graph-2026-05-19` (소스코드 직접 확인 필요: `_messages_reducer.py` + LangGraph `DeltaChannel` 구현)
 - Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가? — Source: `deepagents-docs-context-engineering-2026-05-18`
 - `@dynamic_prompt` 데코레이터의 정확한 시그니처와 사용 패턴은? — Source: `deepagents-docs-context-engineering-2026-05-18`

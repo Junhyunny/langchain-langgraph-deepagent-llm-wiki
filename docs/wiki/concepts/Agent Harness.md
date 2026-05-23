@@ -121,8 +121,9 @@ Source: `langchain-docs-products-2026-05-23`
 - LangGraph의 `checkpointer` + `_DeepAgentState` (`DeltaChannel`) 활용
 - `create_deep_agent()` 함수로 harness 조립
 - middleware 기반 구성: planning, filesystem, permissions, subagents, context, code execution, HITL, profiles
+- `PatchToolCallsMiddleware` (base stack #7): dangling tool call (AIMessage의 tool_call에 대응하는 ToolMessage가 없는 상태)을 `before_agent` 시점에 감지하여 더미 ToolMessage로 채움. interrupt·취소·인자 파싱 실패로 발생하는 히스토리 정합성 문제를 자동 수정.
 
-*Source: `deepagents-source-graph-2026-05-19`, `deepagents-docs-harness-2026-05-19`*
+*Source: `deepagents-source-graph-2026-05-19`, `deepagents-docs-harness-2026-05-19`, `deepagents-source-patch-tool-calls-2026-05-23`*
 
 ## Framework vs Runtime vs Harness 위치
 
@@ -230,3 +231,4 @@ with open("openai-gpt-5.4.yaml") as f:
 - `deepagents-source-graph-2026-05-19`
 - `deepagents-docs-harness-2026-05-19`
 - `deepagents-source-harness-profiles-2026-05-19`
+- `deepagents-source-patch-tool-calls-2026-05-23`
