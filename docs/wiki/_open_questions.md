@@ -18,12 +18,15 @@
 - `ConversationBufferMemory`, `ConversationSummaryMemory`는 현재도 권장 API인가, deprecated인가? — Needs Source
 - `MessagesPlaceholder(optional=False)`일 때 해당 변수가 없으면 KeyError가 발생하는가 확인 필요 — Source: `langchain-source-prompts-2026-05-23`
 
-### 메시지 시스템 (소스 수집 필요)
+### 메시지 시스템
 
-- `BaseMessage` 클래스 계층은 어떻게 구성되는가? (SystemMessage/HumanMessage/AIMessage/ToolMessage 외에 14개 중 나머지 10개는 무엇인가?)
-- `ToolMessage`의 `tool_call_id`는 `AIMessage`의 `tool_calls`와 어떻게 연결되는가?
-- 채팅 모델 호출 시 메시지 리스트를 어떻게 전달하는가? (`invoke` vs `batch` vs `stream`)
-- `AIMessage`의 `tool_calls` 필드 구조는 어떻게 되는가?
+**해소됨 (2026-05-23):**
+- ✅ `ToolMessage`의 `tool_call_id`는 `AIMessage`의 `tool_calls`와 어떻게 연결되는가? → `ToolMessage.tool_call_id`가 `AIMessage.tool_calls[i]['id']`와 반드시 일치해야 한다. 불일치 시 모델이 tool 결과를 올바르게 연결하지 못함. (Source: `langchain-docs-messages-2026-05-23`)
+- ✅ `AIMessage`의 `tool_calls` 필드 구조는 어떻게 되는가? → `dict[]`, 각 항목은 `{'name': str, 'args': dict, 'id': str}`. tool이 없으면 빈 리스트. (Source: `langchain-docs-messages-2026-05-23`)
+- ✅ 채팅 모델 호출 시 메시지 리스트를 어떻게 전달하는가? → `model.invoke([HumanMessage(...), ...])` 또는 OpenAI chat completions dict 형식(`{"role": "user", "content": "..."}`)도 지원. `batch`는 리스트 of 리스트, `stream`은 이터레이터 반환. (Source: `langchain-docs-messages-2026-05-23`)
+
+**잔여 질문:**
+- `BaseMessage` 클래스 계층은 어떻게 구성되는가? (SystemMessage/HumanMessage/AIMessage/ToolMessage 외에 14개 중 나머지 10개는 무엇인가?) — Needs Source (공식 문서에서 4종만 확인됨)
 
 ### PromptTemplate / OutputParser
 
@@ -139,8 +142,10 @@
 - ✅ `Item` 필드: `value: dict`, `key: str`, `namespace: tuple[str, ...]`, `created_at`, `updated_at`. (Source: `langgraph-store-base-2026-05-23`)
 - ✅ `search`의 `query` 파라미터: semantic search용 (구현체가 vector store 지원 시에만 의미 있음). (Source: `langgraph-store-base-2026-05-23`)
 
+**해소됨 (2026-05-23):**
+- ✅ `InMemoryStore`의 vector search 지원 여부는? → 기본값은 keyword filter만 지원. `IndexConfig(dims=..., embed=...)` 설정 시 semantic search 활성화 가능. `SearchOp.query` 파라미터가 구현체의 vector store 지원 시에만 의미 있음. (Source: `langgraph-store-base-2026-05-23`)
+
 **잔여 질문:**
-- `InMemoryStore`의 구체적 구현은? vector search를 지원하는가? — Source: `langgraph-store-base-2026-05-23`
 - 프로덕션용 Store 구현체(Redis, PostgreSQL)는 어떤 패키지에 있는가? — Needs Source
 - `create_deep_agent`에서 Store는 어떤 middleware가 어떻게 활용하는가? (`MemoryMiddleware`와의 관계?) — Needs Source
 
