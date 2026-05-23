@@ -178,9 +178,13 @@
 - `excluded_middleware`에 매칭되지 않는 entry가 있을 때 rejection은 생성 시점인가, 조립 시점인가? — Source: `deepagents-source-harness-profiles-2026-05-19`
 - Sandbox backend 없을 때 `execute` tool은 error 반환인가, tool 목록에서 제외되는가? — Source: `deepagents-docs-harness-2026-05-19`
 - Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
-- 외부 벤치마크(BFCL, Terminal Bench 2.0)를 "adapting"하는 구체적인 방법은? — Source: `deepagents-blog-evals-2026-05-23`
-- LLM-as-a-judge에서 어떤 judge 모델을 사용하는가? — Source: `deepagents-blog-evals-2026-05-23`
-- `libs/evals` 디렉토리의 실제 eval 구현 구조는? — Source: `deepagents-blog-evals-2026-05-23`
+**해소됨 (2026-05-23):**
+- ✅ `libs/evals 디렉토리 실제 구조` → `deepagents_evals/` + `deepagents_harbor/` + `tests/evals/`. pytest + TrajectoryScorer(.success()=hard, .expect()=soft). 111개 eval, 7 카테고리. (Source: `deepagents-source-evals-structure-2026-05-23`)
+- ✅ 외부 벤치마크 적용 방법 → Harbor 통해 Terminal Bench 2.0 실행. `DeepAgentsWrapper`로 래핑, LangSmith로 결과 추적. reward score (0.0~1.0) 피드백 push. (Source: `deepagents-source-evals-structure-2026-05-23`)
+
+**잔여 질문:**
+- LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? → `MODEL_GROUPS.md` 확인 필요. (Source: `deepagents-blog-evals-2026-05-23`, `deepagents-source-evals-structure-2026-05-23`)
+- BFCL 벤치마크도 Harbor를 통해 동일하게 적용되는가? — Needs Source
 - eval을 지속적으로 "줄이는(reduce)" 기준은 무엇인가? — Source: `deepagents-blog-evals-2026-05-23`
 
 **해소됨 (2026-05-23):**
