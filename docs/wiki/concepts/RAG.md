@@ -3,10 +3,12 @@ type: concept
 framework:
   - LangChain
 status: draft
-confidence: high
+confidence: medium
 last_reviewed: 2026-05-23
 sources:
   - langchain-docs-rag-2026-05-23
+  - langchain-source-text-splitters-2026-05-23
+  - langchain-source-dynamic-prompt-2026-05-23
 ---
 
 # RAG (Retrieval-Augmented Generation)
@@ -66,7 +68,17 @@ Source: `langchain-docs-rag-2026-05-23`
 
 ## RAG chain 패턴
 
+> ⚠️ **Possible Conflict — @dynamic_prompt 서명 불일치**
+>
+> 공식 RAG 문서는 아래 패턴을 보여줬지만, 실제 소스코드(`langchain-source-dynamic-prompt-2026-05-23`)의 `@dynamic_prompt` API는 다른 서명을 요구한다.
+>
+> - **RAG 문서 예제:** `(user_query: str) -> list[SystemMessage, HumanMessage]`
+> - **실제 소스 API:** `(request: ModelRequest) -> str | SystemMessage`
+>
+> 두 패턴은 다르다. RAG 문서 예제가 오래됐거나, 다른 decorator/패턴을 가리킬 가능성이 있다. 확인 전까지 아래 코드를 그대로 사용하지 말 것.
+
 ```python
+# ⚠️ 아래 서명은 실제 @dynamic_prompt API와 불일치 — 검증 필요
 @dynamic_prompt
 def rag_prompt(user_query: str) -> list:
     retrieved_docs = vector_store.similarity_search(user_query, k=2)
@@ -77,7 +89,24 @@ def rag_prompt(user_query: str) -> list:
     ]
 ```
 
-Source: `langchain-docs-rag-2026-05-23`
+**실제 `@dynamic_prompt` 올바른 사용법** (소스코드 기준):
+```python
+from langchain.agents.middleware import dynamic_prompt
+from langchain.agents.middleware.types import ModelRequest
+
+@dynamic_prompt
+def rag_system_prompt(request: ModelRequest) -> str:
+    # state나 runtime에서 쿼리를 가져와야 함
+    # retrieve + context 주입 → str 반환
+    docs = vector_store.similarity_search(request.state["messages"][-1].content, k=2)
+    context = "\n\n".join(doc.page_content for doc in docs)
+    return f"Answer using the following context:\n\n{context}"
+
+agent = create_agent(model, middleware=[rag_system_prompt])
+```
+
+Source (RAG 문서 패턴): `langchain-docs-rag-2026-05-23`
+Source (실제 API): `langchain-source-dynamic-prompt-2026-05-23`
 
 ## 인덱싱 파이프라인
 
@@ -94,18 +123,50 @@ Source: `langchain-docs-rag-2026-05-23`
 
 권장: `RecursiveCharacterTextSplitter`
 
-분할 우선 순서: **단락 → 문장 → 단어 → 문자**
-
 ```python
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
-    chunk_overlap=200  # 청크 경계 문맥 단절 방지
+    chunk_overlap=200,  # 청크 경계 문맥 단절 방지
+    # separators 기본값: ["\n\n", "\n", " ", ""]
 )
 splits = text_splitter.split_documents(docs)
 ```
 
+**내부 알고리즘 (소스 기반):**
+- separators 리스트를 순서대로 순회 — 첫 번째로 텍스트에서 매칭되는 구분자 선택
+- 선택된 구분자로 분할 → `chunk_size` 초과 조각은 남은 구분자로 **재귀** 분할
+- `_merge_splits()`로 작은 조각들을 `chunk_overlap`을 지키며 병합
+- 기본 분할 우선순위: **단락(`\n\n`) → 줄(`\n`) → 단어(` `) → 문자(`""`)**
+
+Source (동작 설명): `langchain-docs-rag-2026-05-23`
+Source (내부 구현): `langchain-source-text-splitters-2026-05-23`
+
+**TextSplitter 공통 파라미터:**
+
+| 파라미터 | 기본값 | 설명 |
+|----------|--------|------|
+| `chunk_size` | `4000` | 청크 최대 크기 |
+| `chunk_overlap` | `200` | 청크 간 겹치는 문자 수 |
+| `keep_separator` | `True` (Recursive) | 구분자 유지 위치 |
+| `add_start_index` | `False` | 메타데이터에 시작 인덱스 추가 |
+
+**언어별 최적 설정:**
+```python
+from langchain_text_splitters import Language
+
+# 코드 분할
+py_splitter = RecursiveCharacterTextSplitter.from_language(
+    language=Language.PYTHON,
+    chunk_size=1000, chunk_overlap=200,
+)
+# Python separators: ["\nclass ", "\ndef ", "\n\tdef ", "\n\n", "\n", " ", ""]
+```
+
+Source: `langchain-source-text-splitters-2026-05-23`
+
 `chunk_overlap` 이유: 청크 경계에서 문맥 단절 방지. 인접 청크끼리 일부 내용이 겹쳐 문맥 연속성 유지.
-Source: `langchain-docs-rag-2026-05-23`
 
 ### 3. Vector Stores
 
@@ -160,13 +221,19 @@ Source: `langchain-docs-rag-2026-05-23`
 
 ## 미해결 질문
 
+**해소됨 (2026-05-23):**
+- ✅ `RecursiveCharacterTextSplitter` 내부 알고리즘: separators 리스트를 순서대로 시도 → 첫 매칭 구분자로 분할 → 초과 청크 재귀 분할 → `_merge_splits()`로 병합. (Source: `langchain-source-text-splitters-2026-05-23`)
+- ✅ `@dynamic_prompt` 정체: `langchain.agents.middleware.types`의 AgentMiddleware 생성 데코레이터. 서명은 `(request: ModelRequest) -> str | SystemMessage`. (Source: `langchain-source-dynamic-prompt-2026-05-23`)
+
+**잔여 질문:**
+- ⚠️ RAG 문서의 `@dynamic_prompt(user_query: str) -> list` 패턴 — 실제 API `(request: ModelRequest) -> str | SystemMessage`와 불일치. 문서 오류인가, 다른 decorator인가? — Source: `langchain-docs-rag-2026-05-23`, `langchain-source-dynamic-prompt-2026-05-23`
 - `init_embeddings("openai:text-embedding-3-small")` 형식은 새로운 API인가? 구버전 `OpenAIEmbeddings()`와의 차이는? — Source: `langchain-docs-rag-2026-05-23`
-- `@dynamic_prompt` 데코레이터는 무엇인가? LCEL chain을 대체하는 새 패턴인가? — Source: `langchain-docs-rag-2026-05-23`
 - `response_format="content_and_artifact"` 옵션의 정확한 의미는? — Source: `langchain-docs-rag-2026-05-23`
 - FAISS `similarity_search`의 내부 알고리즘은? (L2 거리 기본값인가?) — Needs Source
 - `as_retriever()`의 `search_type` 옵션: `similarity`, `mmr`, `similarity_score_threshold` 차이는? — Needs Source
 - MMR(Maximal Marginal Relevance)의 구체적인 작동 방식은? — Needs Source
 - `BaseRetriever`의 `get_relevant_documents` 메서드 계약은? — Needs Source
+- `_merge_splits()`의 `chunk_overlap` 구현 방식 — 슬라이딩 윈도우 방식인가? — Source: `langchain-source-text-splitters-2026-05-23`
 
 ## 관련 페이지
 
@@ -176,6 +243,14 @@ Source: `langchain-docs-rag-2026-05-23`
 - [[Context Engineering]]
 - [[LangChain Code Map]]
 
+## 소스 코드 참조
+
+- 패키지: `langchain-text-splitters` (별도 패키지)
+- 파일: `libs/text-splitters/langchain_text_splitters/character.py`, `base.py`
+- 커밋: UNKNOWN (2026-05-23 기준)
+
 ## 소스
 
 - `langchain-docs-rag-2026-05-23`
+- `langchain-source-text-splitters-2026-05-23`
+- `langchain-source-dynamic-prompt-2026-05-23`
