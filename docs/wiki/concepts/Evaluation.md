@@ -9,6 +9,7 @@ confidence: medium
 last_reviewed: 2026-05-23
 sources:
   - deepagents-blog-evals-2026-05-23
+  - deepagents-source-evals-structure-2026-05-23
 ---
 
 # Evaluation
@@ -106,6 +107,74 @@ Source: `deepagents-blog-evals-2026-05-23` ⚠️ blog 출처 (medium confidence
 - **태그 기반 subset 실행**: `--eval-category file_operations --eval-category tool_use`
 - **오픈소스 구현**: [`github.com/langchain-ai/deepagents/tree/main/libs/evals`](https://github.com/langchain-ai/deepagents/tree/main/libs/evals)
 
+## libs/evals 실제 구조 (소스 검증)
+
+Source: `deepagents-source-evals-structure-2026-05-23`
+
+### 디렉토리 구조
+
+```
+libs/evals/
+├── deepagents_evals/        # 공유 eval 유틸리티
+├── deepagents_harbor/       # Harbor 샌드박스 연동
+├── tests/
+│   └── evals/
+│       ├── utils.py         # AgentTrajectory, TrajectoryScorer, run_agent
+│       ├── conftest.py      # pytest fixtures, --model CLI
+│       ├── pytest_reporter.py   # 메트릭 수집/리포트
+│       └── llm_judge.py     # LLM-as-a-judge (OpenEvals 래퍼)
+├── EVAL_CATALOG.md          # 111개 eval 전체 목록
+└── MODEL_GROUPS.md          # 사용 가능한 LLM 모델 카탈로그
+```
+
+### TrajectoryScorer 패턴 (소스 검증)
+
+```python
+@pytest.mark.langsmith
+def test_example(model: BaseChatModel) -> None:
+    agent = create_deep_agent(model=model)
+    run_agent(
+        agent,
+        model=model,
+        query="...",
+        scorer=(
+            TrajectoryScorer()
+            .expect(agent_steps=1)              # soft: 로그만, fail 없음
+            .success(final_text_contains("4"))  # hard: 실패 시 test fail
+        ),
+    )
+```
+
+### LLM-as-a-judge 구현
+
+```python
+from tests.evals.llm_judge import llm_judge
+
+scorer = TrajectoryScorer().success(
+    llm_judge(
+        "The answer mentions Paris.",
+        "The tone is conversational.",
+    )
+)
+```
+
+- **OpenEvals** 라이브러리를 래핑
+- human-readable criteria string을 LLM에 전달해 semantic 평가
+- ⚠️ 구체적 judge 모델 미확인 (`MODEL_GROUPS.md` 확인 필요)
+
+### Harbor 샌드박스 (Terminal Bench 2.0)
+
+```bash
+uv run harbor run \
+  --agent-import-path deepagents_harbor:DeepAgentsWrapper \
+  --dataset terminal-bench@2.0 -n 10 \
+  --jobs-dir jobs/terminal-bench --env daytona
+```
+
+지원 환경: `docker`, `daytona`, `modal`, `runloop`
+
+Harbor → LangSmith 통합: reward score (0.0~1.0) 피드백 자동 push.
+
 ## 프레임워크별 동작
 
 ### LangChain
@@ -132,12 +201,16 @@ Source: `deepagents-blog-evals-2026-05-23` ⚠️ blog 출처 (medium confidence
 
 ## 미해결 질문
 
+**해소됨 (2026-05-23):**
+- ✅ `libs/evals` 디렉토리 실제 구조 → `deepagents_evals/` + `deepagents_harbor/` + `tests/evals/`. pytest + TrajectoryScorer. (Source: `deepagents-source-evals-structure-2026-05-23`)
+- ✅ 외부 벤치마크 적용 방법 → Harbor를 통해 Terminal Bench 2.0 실행. `DeepAgentsWrapper`로 래핑, LangSmith로 결과 추적. (Source: `deepagents-source-evals-structure-2026-05-23`)
+
+**잔여 질문:**
+- LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? → `MODEL_GROUPS.md` 확인 필요
+- BFCL 벤치마크도 Harbor를 통해 동일하게 적용되는가? — Needs Source
+- eval을 지속적으로 "줄이는(reduce)" 기준은 무엇인가? — Source: `deepagents-blog-evals-2026-05-23`
 - 각 프레임워크에는 어떤 내장 평가 유틸리티가 존재하는가? (LangChain, LangGraph 소스 필요)
 - LangSmith를 Trajectory evaluation에 어떻게 사용할 수 있는가?
-- 외부 벤치마크를 "adapting"하는 구체적인 방법은? — Source: `deepagents-blog-evals-2026-05-23`
-- LLM-as-a-judge에서 어떤 judge 모델을 사용하는가? — Source: `deepagents-blog-evals-2026-05-23`
-- `libs/evals` 디렉토리의 실제 eval 구현 구조는? — Source: `deepagents-blog-evals-2026-05-23`
-- eval을 지속적으로 "줄이는(reduce)" 기준은 무엇인가? — Source: `deepagents-blog-evals-2026-05-23`
 
 ## 관련 페이지
 
