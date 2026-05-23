@@ -235,6 +235,41 @@
 - ✅ filesystem tools 목록 확인: `ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`, `execute` (Source: `deepagents-docs-harness-2026-05-19`)
 - ✅ `HarnessProfile` 등록 방법: `register_harness_profile(key, HarnessProfile(...))` (Source: `deepagents-docs-harness-2026-05-19`)
 
+## 에이전트 런타임 / 에이전트 구성 요소
+
+### 에이전트 런타임 (Agent Runtime)
+
+- 에이전트 런타임(모델 + 오케스트레이션 + 도구)은 LangChain / LangGraph / Deep Agents에서 각각 어떤 클래스/컴포넌트로 구현되는가? — Needs Source
+- 오케스트레이션 레이어의 인스트럭션(시스템 프롬프트)은 각 프레임워크에서 어떻게 설정하며, 런타임에 동적으로 변경할 수 있는가? — Needs Source (관련: `langchain-source-dynamic-prompt-2026-05-23`)
+- `instructions`와 `system_prompt`는 같은 개념인가? 프레임워크마다 명칭이 다른 이유는? — Needs Source
+
+### 리즈닝 / 플래닝 (Reasoning / Planning)
+
+- 리즈닝/플래닝은 LLM이 자체적으로 수행하는가, 아니면 프레임워크가 특별히 지원하는 기능(ReAct, CoT 등)인가? — Needs Source
+- Deep Agents `create_deep_agent`에서 planning 전용 노드가 별도로 존재하는가, 아니면 단일 LLM 노드가 암묵적으로 reasoning + acting을 수행하는가? — Needs Source (관련: `deepagents-source-graph-2026-05-19`)
+- ReAct 패턴, Chain-of-Thought, Plan-and-Execute 중 각 프레임워크가 기본으로 채택하는 방식은 무엇인가? — Needs Source
+
+### 가드레일 (Guardrails)
+
+- LangChain / LangGraph / Deep Agents에서 가드레일(입력 필터링, 출력 검증, 금칙어, 정책 준수)을 구현하는 표준 패턴 또는 전용 API는? — Needs Source
+- Deep Agents에 `InputGuardrail` / `OutputGuardrail` 같은 전용 클래스가 있는가? middleware로 구현되는가? — Needs Source (관련: `deepagents-source-harness-profiles-2026-05-19`)
+- JSON 스키마 기반 출력 검증은 `with_structured_output`으로 충분한가, 별도 가드레일 레이어가 추가로 필요한가? — Needs Source (관련: `langchain-source-output-parsers-2026-05-23`)
+- RAG Indirect Prompt Injection 방어를 위한 가드레일 구현 패턴은? — Needs Source (관련: `langchain-docs-rag-2026-05-23`)
+
+### 핸드오프 (Handoffs)
+
+- 핸드오프가 "특별한 도구 호출"로 구현된다면, 각 프레임워크에서 어떤 API/클래스를 사용하는가? — Needs Source
+- 핸드오프 시 메시지 히스토리와 상태는 대상 에이전트로 전달되는가, 전달되지 않는가? Deep Agents의 `_EXCLUDED_STATE_KEYS` 패턴과의 관계는? — Needs Source (관련: `deepagents-source-subagents-2026-05-23`)
+- 핸드오프(단방향 제어 이전)와 서브에이전트 도구 호출(결과 반환)의 실질적 차이는 무엇인가? — Needs Source
+- LangGraph의 `Command(goto=...)` 패턴이 핸드오프로 사용될 수 있는가? — Needs Source (관련: `langgraph-docs-graph-api-2026-05-23`)
+
+### 트레이싱 (Tracing)
+
+- LangChain / LangGraph / Deep Agents의 트레이싱 기능은 각각 어떤 API로 제공되는가? 내장인가, 외부 도구(LangSmith) 연동인가? — Needs Source
+- LangSmith는 LangChain / LangGraph / Deep Agents와 어떻게 통합되는가? (자동 instrumenting vs 명시 설정?) — Needs Source
+- 그래프 스텝별 input/output을 프로그래밍 방식으로 접근하는 API는? (`stream_mode="debug"` 등?) — Needs Source (관련: `langgraph-source-streaming-2026-05-23`)
+- Deep Agents의 트레이싱 구현체는 별도로 존재하는가, LangGraph Pregel 기반인가? — Needs Source
+
 ## 프레임워크 간 비교
 
 - 세 프레임워크는 병렬 도구 호출 처리에서 어떻게 비교되는가?
