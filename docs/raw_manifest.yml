@@ -399,6 +399,18 @@ sources:
       - "docs/wiki/flows/Deep Agents create_deep_agent flow.md"
       - "docs/wiki/concepts/Agent Harness.md"
     notes: "PatchToolCallsMiddleware: before_agent hook 단독 사용. dangling tool call(AIMessage에 tool_call이 있는데 ToolMessage가 없는 경우) 감지 → 더미 ToolMessage 삽입. invalid_tool_call(인자 파싱 실패)과 cancelled(중단된 정상 호출) 두 케이스. Overwrite로 state.messages 전체 교체."
+  - id: langgraph-source-checkpoint-internals-2026-05-23
+    title: "LangGraph — Pregel _checkpoint.py (체크포인트 유틸리티 소스코드)"
+    type: source_code
+    framework: LangGraph
+    url: "https://raw.githubusercontent.com/langchain-ai/langgraph/main/libs/langgraph/langgraph/pregel/_checkpoint.py"
+    local_path: "docs/raw/official/langgraph/langgraph-source-checkpoint-internals-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Checkpointing.md"
+    notes: "create_checkpoint(DeltaChannel snapshot 분기/exit 모드 버전 bump), channels_from_checkpoint(ancestor walk 패턴: _needs_replay→get_delta_channel_history→replay_writes), delta_channels_to_snapshot(snapshot_frequency OR DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT), empty_checkpoint, copy_checkpoint(2-depth 복사). LATEST_VERSION=4. _put_exit_delta_writes는 이 파일에 없음(_loop.py 추정)."
+
   - id: langgraph-source-streaming-2026-05-23
     title: "LangGraph — Streaming Source Code (StreamMode, Transformers, stream_events v3, GraphRunStream)"
     type: source_code

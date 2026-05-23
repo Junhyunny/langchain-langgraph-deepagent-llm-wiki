@@ -14,6 +14,7 @@ sources:
   - langgraph-source-checkpoint-runtime-2026-05-20
   - langgraph-source-checkpoint-savers-2026-05-23
   - langgraph-source-pregel-interrupts-2026-05-23
+  - langgraph-source-checkpoint-internals-2026-05-23
 ---
 
 # Checkpointing
@@ -277,6 +278,51 @@ def interrupt(value: Any) -> Any:
 
 ---
 
+## DeltaChannel — 효율적 누적 채널 저장
+
+*Source: `langgraph-source-checkpoint-internals-2026-05-23`*
+
+`DeltaChannel`은 메시지 히스토리처럼 **누적되는 채널**에 사용된다. Deep Agents의 `_DeepAgentState.messages`가 이 타입으로 선언된다. 일반 채널과 달리 매 super-step마다 전체 값을 직렬화하지 않고 **변경분(writes)만 저장**하다가 주기적으로 전체 스냅샷을 기록한다.
+
+### 저장 전략
+
+| 상황 | `channel_values`에 저장되는 값 |
+|------|-------------------------------|
+| 스냅샷 타이밍 (`updates >= snapshot_frequency` 또는 `supersteps >= DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`) | `_DeltaSnapshot(전체값)` |
+| 일반 super-step | 저장 안 됨 — writes만 `checkpoint_writes`에 보존 |
+| 일반 채널 | `ch.checkpoint()` 직렬화 값 |
+
+### 스냅샷 판단 — `delta_channels_to_snapshot()`
+
+```python
+# 두 조건 중 하나 충족 시 스냅샷
+updates >= ch.snapshot_frequency          # 누적 업데이트 수
+supersteps >= DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT  # 최대 super-step 수 상수
+```
+
+순수 함수 — mutation 없음.
+
+### 복원 — `channels_from_checkpoint()`
+
+```
+DeltaChannel이고 channel_values에 없으면 (_needs_replay=True):
+    saver.get_delta_channel_history(config, channels=delta_names)  ← 배치 단일 호출
+    → history["seed"] (가장 최근 _DeltaSnapshot 또는 pre-migration 값)
+    → replay_ch = spec.from_checkpoint(seed)
+    → replay_ch.replay_writes(history["writes"])  ← seed 이후 writes 순서 재적용
+
+일반 채널 또는 channel_values에 있으면:
+    spec.from_checkpoint(checkpoint["channel_values"][k])
+```
+
+`saver` 또는 `config`가 `None`이면 ancestor walk를 건너뛰어 빈 채널로 복원된다 (테스트/디버그 시나리오).
+
+### exit 모드 버전 bump
+
+exit 모드에서는 마지막 super-step에 채널 쓰기가 없으면 `channel_versions`가 bump되지 않아 `_DeltaSnapshot` blob이 saver에서 누락될 수 있다. `create_checkpoint()`는 이를 방지하기 위해 `updated_channels`에 없는 snapshot 대상 채널에 `get_next_version()`으로 수동 bump한다.
+
+---
+
 ## Tests
 
 - TBD. 다음 코드 리딩 루프에서 checkpoint saver tests와 Pregel recovery tests를 찾아야 한다.
@@ -292,13 +338,18 @@ def interrupt(value: Any) -> Any:
 
 ## Open Questions
 
-- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — 문서는 "저장/resume 불가"만 언급, 에러 타입 미명시 (Needs Verification)
-- `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — 소스에서 호출 사실만 확인, 내용 미수집 (Needs Source)
-- `langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint` 구현은? — raw 수집 미완료 (Needs Source)
-- pending writes recovery를 정의하는 canonical test는 어디에 있는가? (Needs Source)
-- `DeltaChannel` reconstruction과 pruning/copying safety를 검증하는 test는 어디에 있는가? (Needs Source)
-- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? (Needs Source)
-- checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? (Needs Source)
+**해소됨 (2026-05-23):**
+- ✅ `create_checkpoint` 구현 → DeltaChannel 분기, exit 모드 버전 bump, `_DeltaSnapshot` vs `ch.checkpoint()`. (Source: `langgraph-source-checkpoint-internals-2026-05-23`)
+- ✅ `channels_from_checkpoint` 구현 → ancestor walk 패턴: `_needs_replay` → `get_delta_channel_history` 배치 → `from_checkpoint(seed)` + `replay_writes()`. (Source: `langgraph-source-checkpoint-internals-2026-05-23`)
+- ✅ `DeltaChannel` snapshot 조건 → `snapshot_frequency` 또는 `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`. (Source: `langgraph-source-checkpoint-internals-2026-05-23`)
+
+**잔여 질문:**
+- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification
+- `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Needs Source
+- pending writes recovery를 정의하는 canonical test는 어디에 있는가? — Needs Source
+- `_put_exit_delta_writes()` 검증 테스트 → `_checkpoint.py`에 없음, `_loop.py` 탐색 필요
+- `saver.get_delta_channel_history()` 메서드는 `BaseCheckpointSaver`에 언제 추가됐는가? — Needs Source
+- checkpoint schema migration 대응은 공식적으로 어떻게 권장되는가? — Needs Source
 
 ## Sources
 
@@ -308,3 +359,4 @@ def interrupt(value: Any) -> Any:
 - `langgraph-reference-checkpoint-2026-05-20`
 - `langgraph-source-checkpoint-runtime-2026-05-20`
 - `langgraph-source-pregel-interrupts-2026-05-23`
+- `langgraph-source-checkpoint-internals-2026-05-23`
