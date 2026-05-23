@@ -109,15 +109,20 @@
 - Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가? — Source: `deepagents-docs-context-engineering-2026-05-18`
 - `@dynamic_prompt` 데코레이터의 정확한 시그니처와 사용 패턴은? — Source: `deepagents-docs-context-engineering-2026-05-18`
 
-- `HarnessProfile`의 전체 필드 목록은? (`base_system_prompt`, `system_prompt_suffix` 외에 더 있는가?) — Source: `deepagents-docs-harness-2026-05-19`
-- Provider-level vs model-level HarnessProfile의 merge 우선순위는? — Source: `deepagents-docs-harness-2026-05-19`
 - `register_harness_profile` entry points 패키징 방법은? — Source: `deepagents-docs-harness-2026-05-19`
+- 빌트인 profile(`_builtin_profiles`)에는 어떤 모델에 어떤 profile이 등록되어 있는가? — Source: `deepagents-source-harness-profiles-2026-05-19`
+- `serialized_name: ClassVar[str]`을 가지는 공식 middleware는 어떤 것들이 있는가? (`SummarizationMiddleware` 등) — Source: `deepagents-source-harness-profiles-2026-05-19`
+- `excluded_middleware`에 매칭되지 않는 entry가 있을 때 rejection은 생성 시점인가, 조립 시점인가? — Source: `deepagents-source-harness-profiles-2026-05-19`
 - Sandbox backend 없을 때 `execute` tool은 error 반환인가, tool 목록에서 제외되는가? — Source: `deepagents-docs-harness-2026-05-19`
 - Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
 - 외부 벤치마크(BFCL, Terminal Bench 2.0)를 "adapting"하는 구체적인 방법은? — Source: `deepagents-blog-evals-2026-05-23`
 - LLM-as-a-judge에서 어떤 judge 모델을 사용하는가? — Source: `deepagents-blog-evals-2026-05-23`
 - `libs/evals` 디렉토리의 실제 eval 구현 구조는? — Source: `deepagents-blog-evals-2026-05-23`
 - eval을 지속적으로 "줄이는(reduce)" 기준은 무엇인가? — Source: `deepagents-blog-evals-2026-05-23`
+
+**해소됨 (2026-05-23):**
+- ✅ `HarnessProfile`의 전체 필드 목록은? → 7개: `base_system_prompt`, `system_prompt_suffix`, `tool_description_overrides`, `excluded_tools`, `excluded_middleware`, `extra_middleware`, `general_purpose_subagent` (Source: `deepagents-source-harness-profiles-2026-05-19`)
+- ✅ Provider-level vs model-level HarnessProfile의 merge 우선순위는? → exact + provider 둘 다 매칭 시 `_merge_profiles(provider, exact)` — scalar 필드는 model-level(override) 우선, set 필드는 union (Source: `deepagents-source-harness-profiles-2026-05-19`)
 
 **해소됨 (2026-05-19):**
 - ✅ `create_deep_agent` 내부에서 LangGraph의 어떤 graph를 생성하는가? → `langchain.agents.create_agent`에 위임 → `CompiledStateGraph` 반환 (Source: `deepagents-source-graph-2026-05-19`)

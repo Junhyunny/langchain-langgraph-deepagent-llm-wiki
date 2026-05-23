@@ -67,7 +67,9 @@ sources:
     local_path: "docs/raw/official/deep_agents/deepagents-source-harness-profiles-2026-05-19.md"
     retrieved_at: "2026-05-19"
     status: current
-    used_by: []
+    used_by:
+      - "docs/wiki/concepts/Agent Harness.md"
+      - "docs/wiki/frameworks/Deep Agents.md"
     notes: "HarnessProfile, HarnessProfileConfig, GeneralPurposeSubagentProfile 전체 구현. register_harness_profile(additive merge), _merge_profiles(per-field merge semantics), _get_harness_profile(exact→provider→None), _harness_profile_for_model 포함."
   - id: deepagents-docs-landing-2026-05-19
     title: "Deep Agents — 공식 랜딩 페이지"
