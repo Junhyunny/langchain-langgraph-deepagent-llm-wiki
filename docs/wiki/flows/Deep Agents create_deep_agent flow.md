@@ -1,11 +1,12 @@
 ---
 type: flow
 framework: Deep Agents
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-19
+last_reviewed: 2026-05-23
 sources:
   - deepagents-source-graph-2026-05-19
+  - deepagents-docs-harness-2026-05-19
 ---
 
 # Deep Agents create_deep_agent flow
@@ -171,6 +172,43 @@ Source: `deepagents-source-graph-2026-05-19`
 
 ---
 
+## Permissions 처리 흐름
+
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+```
+create_deep_agent(permissions=[rule1, rule2, ...])
+    │
+    └── FilesystemMiddleware ← permissions rules 주입
+            │
+            ├── tool 호출 시: rule 순서대로 first-match-wins 평가
+            │       매칭 없으면 → 허용 (기본 allow)
+            │
+            └── subagent 생성 시: parent permissions 자동 상속
+                    subagent 자체 permissions 선언 시 → 대체 (override)
+```
+
+- Sandbox backend의 `execute` tool에는 permissions **미적용** (임의 명령 실행 가능)
+- deny rule을 allow rule 앞에 배치해야 first-match-wins 의미대로 동작함
+
+## Skills / Memory 로딩 타이밍
+
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+```
+create_deep_agent(skills=[...], memory=[...])
+    │
+    ├── SkillsMiddleware (base stack #2)
+    │       startup: frontmatter만 로드 (progressive disclosure)
+    │       실행 중: 관련성 판단 시 전체 skill 로드
+    │
+    └── MemoryMiddleware (tail stack #11)
+            항상 전체 로드 (no progressive disclosure)
+```
+
+- `SkillsMiddleware`는 base stack에, `MemoryMiddleware`는 tail stack에 위치
+- Skills는 토큰 효율을 위해 lazy loading; Memory는 항상 context에 포함
+
 ## Verified Facts
 
 - `create_deep_agent`는 `langchain.agents.create_agent`에 최종 위임한다.
@@ -183,6 +221,10 @@ Source: `deepagents-source-graph-2026-05-19`
   Source: `deepagents-source-graph-2026-05-19`
 - `recursion_limit`는 9,999로 하드코딩된다.
   Source: `deepagents-source-graph-2026-05-19`
+- `execute` tool은 sandbox backend 없을 때 tool 목록에서 **제외**된다 (error 반환이 아님).
+  Source: `deepagents-docs-harness-2026-05-19`
+- Subagent는 fresh context로 실행되며 stateless다. 단일 최종 보고서만 반환 가능.
+  Source: `deepagents-docs-harness-2026-05-19`
 
 ---
 

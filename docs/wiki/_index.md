@@ -18,6 +18,7 @@
 - [[Evaluation]] → `concepts/Evaluation.md`
 - [[Agent Harness]] → `concepts/Agent Harness.md`
 - [[Event Streaming]] → `concepts/Event Streaming.md`
+- [[Store]] → `concepts/Store.md` *(source_summary 수집됨, 페이지 생성 대기)*
 
 ## 코드베이스 맵
 - [[LangChain Code Map]] → `codebase/LangChain Code Map.md`

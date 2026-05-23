@@ -1,11 +1,13 @@
 ---
 type: code_map
 framework: Deep Agents
-status: draft
+status: partial
 confidence: medium
-last_reviewed: 2026-05-19
+last_reviewed: 2026-05-23
 sources:
   - deepagents-source-graph-2026-05-19
+  - deepagents-source-harness-profiles-2026-05-19
+  - deepagents-docs-harness-2026-05-19
 ---
 
 # Deep Agents Code Map
@@ -13,7 +15,7 @@ sources:
 ## 요약
 
 Deep Agents 저장소 구조 탐색 가이드.
-현재 `graph.py` 한 파일의 소스 기반으로 확인된 내용만 기록. 나머지는 추론 또는 미확인.
+`graph.py`, `harness_profiles.py` 두 파일 소스 및 harness 공식 문서 기반 확인. 나머지 middleware 파일들은 미수집.
 
 ---
 
@@ -72,7 +74,10 @@ Source: `deepagents-source-graph-2026-05-19` (import 분석 기반)
 | `FilesystemMiddleware` | `deepagents/middleware/filesystem.py` | ❌ 미수집 |
 | `SubAgentMiddleware` | `deepagents/middleware/subagents.py` | ❌ 미수집 |
 | `SubagentTransformer` | `deepagents/_subagent_transformer.py` | ❌ 미수집 |
-| `HarnessProfile` | `deepagents/profiles/harness/harness_profiles.py` | ❌ 미수집 |
+| `HarnessProfile` | `deepagents/profiles/harness/harness_profiles.py` | ✅ 소스 수집됨 |
+| `HarnessProfileConfig` | `deepagents/profiles/harness/harness_profiles.py` | ✅ 소스 수집됨 |
+| `GeneralPurposeSubagentProfile` | `deepagents/profiles/harness/harness_profiles.py` | ✅ 소스 수집됨 |
+| `register_harness_profile` | `deepagents/profiles/harness/harness_profiles.py` | ✅ 소스 수집됨 |
 | `StateBackend` | `deepagents/backends/` | ❌ 미수집 |
 
 ---
@@ -81,9 +86,9 @@ Source: `deepagents-source-graph-2026-05-19` (import 분석 기반)
 
 1. `deepagents/middleware/filesystem.py` — FilesystemMiddleware의 tool 주입 방식, 권한 처리
 2. `deepagents/middleware/subagents.py` — SubAgent/SubAgentMiddleware, task tool 구현
-3. `deepagents/profiles/harness/harness_profiles.py` — HarnessProfile 모델 매핑
-4. `deepagents/_subagent_transformer.py` — SubagentTransformer scope 활용 방식
-5. `langchain/agents/__init__.py` + `create_agent` — 실제 LangGraph graph 조립 위치
+3. `deepagents/_subagent_transformer.py` — SubagentTransformer scope 활용 방식
+4. `langchain/agents/__init__.py` + `create_agent` — 실제 LangGraph graph 조립 위치
+5. `deepagents/middleware/patch_tool_calls.py` — PatchToolCallsMiddleware 동작 확인
 
 ---
 

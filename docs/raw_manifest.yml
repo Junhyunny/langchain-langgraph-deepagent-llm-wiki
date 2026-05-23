@@ -51,7 +51,11 @@ sources:
     local_path: "docs/raw/official/deep_agents/deepagents-source-graph-2026-05-19.md"
     retrieved_at: "2026-05-19"
     status: current
-    used_by: []
+    used_by:
+      - "docs/wiki/codebase/Deep Agents Code Map.md"
+      - "docs/wiki/flows/Deep Agents create_deep_agent flow.md"
+      - "docs/wiki/frameworks/Deep Agents.md"
+      - "docs/wiki/concepts/Agent Harness.md"
     notes: "create_deep_agent 핵심 구현. middleware 조립 순서, LangGraph create_agent 위임, _DeepAgentState(DeltaChannel), BASE_AGENT_PROMPT, HarnessProfile 적용 로직 포함."
   - id: deepagents-docs-harness-2026-05-19
     title: "Deep Agents — Harness"
@@ -61,7 +65,10 @@ sources:
     local_path: "docs/raw/official/deep_agents/deepagents-docs-harness-2026-05-19.md"
     retrieved_at: "2026-05-19"
     status: current
-    used_by: []
+    used_by:
+      - "docs/wiki/concepts/Agent Harness.md"
+      - "docs/wiki/frameworks/Deep Agents.md"
+      - "docs/wiki/flows/Deep Agents create_deep_agent flow.md"
     notes: "하네스 8가지 구성요소(planning, filesystem, permissions, subagents, context, code execution, human-in-the-loop, profiles), Skills/Memory 개요, HarnessProfile 등록 코드 예제 포함."
   - id: deepagents-source-harness-profiles-2026-05-19
     title: "Deep Agents — harness_profiles.py (HarnessProfile 소스코드)"
@@ -240,6 +247,17 @@ sources:
       - "docs/wiki/frameworks/LangChain.md"
       - "docs/wiki/concepts/Context Engineering.md"
     notes: "Runnable 추상 클래스(invoke/ainvoke/batch/stream/__or__/pipe/bind/map). RunnableSequence(| 연산자 결과). RunnableLambda(callable→Runnable, sync/async/generator 지원). RunnableParallel(병렬 실행, 출력=dict). RunnableEach(.map() 결과). RunnablePassthrough/RunnableAssign/RunnablePick(passthrough.py). coerce_to_runnable(dict→RunnableParallel, callable→RunnableLambda)."
+  - id: langgraph-store-base-2026-05-23
+    title: "LangGraph — BaseStore / InMemoryStore (Store Interface Source Code)"
+    type: source_code
+    framework: LangGraph
+    url: "https://raw.githubusercontent.com/langchain-ai/langgraph/main/libs/checkpoint/langgraph/store/base/__init__.py"
+    local_path: "docs/source_summaries/langgraph-store-base-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by: []
+    notes: "BaseStore 추상 클래스 전체 인터페이스. Item/SearchItem 데이터 클래스, namespace tuple 개념, get/put/search/delete/list_namespaces 메서드, batch/abatch 추상화 포인트, TTLConfig, IndexConfig(vector search), Op 타입들(GetOp/SearchOp/PutOp/ListNamespacesOp)."
+
   - id: langchain-source-tools-2026-05-23
     title: "LangChain — Tools Source Code (BaseTool / StructuredTool / @tool decorator)"
     type: source_code
