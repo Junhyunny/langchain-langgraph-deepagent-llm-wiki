@@ -230,4 +230,17 @@ sources:
     used_by:
       - "docs/wiki/frameworks/LangChain.md"
     notes: "Runnable 추상 클래스(invoke/ainvoke/batch/stream/__or__/pipe/bind/map). RunnableSequence(| 연산자 결과). RunnableLambda(callable→Runnable, sync/async/generator 지원). RunnableParallel(병렬 실행, 출력=dict). RunnableEach(.map() 결과). RunnablePassthrough/RunnableAssign/RunnablePick(passthrough.py). coerce_to_runnable(dict→RunnableParallel, callable→RunnableLambda)."
+  - id: langchain-source-tools-2026-05-23
+    title: "LangChain — Tools Source Code (BaseTool / StructuredTool / @tool decorator)"
+    type: source_code
+    framework: LangChain
+    url: "https://github.com/langchain-ai/langchain/tree/master/libs/core/langchain_core/tools"
+    local_path: "docs/raw/official/langchain/langchain-source-tools-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Tool Calling.md"
+      - "docs/wiki/codebase/LangChain Code Map.md"
+      - "docs/wiki/flows/LangChain create_agent flow.md"
+    notes: "@tool 데코레이터(convert.py): 4가지 오버로드, StructuredTool.from_function 위임, async 함수는 coroutine 파라미터로 처리, infer_schema=False면 단순 Tool 반환. StructuredTool(structured.py): BaseTool 구현체, func/coroutine 필드, from_function classmethod, create_schema_from_function으로 args_schema 자동 생성. BaseTool(base.py): RunnableSerializable 상속, tool_call_schema(InjectedToolArg 제외), _parse_input→_to_args_and_kwargs→_run 실행 경로, handle_tool_error/handle_validation_error, _format_output→ToolMessage 반환. InjectedToolArg/InjectedToolCallId: LLM schema에서 제외되는 runtime 주입 인자."
 

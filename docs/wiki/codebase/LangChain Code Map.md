@@ -2,9 +2,12 @@
 type: code_map
 framework: LangChain
 status: draft
-confidence: low
-last_reviewed: 2026-05-18
-sources: []
+confidence: medium
+last_reviewed: 2026-05-23
+sources:
+  - langchain-source-prompts-2026-05-23
+  - langchain-source-runnable-2026-05-23
+  - langchain-source-tools-2026-05-23
 ---
 
 # LangChain Code Map
@@ -13,49 +16,122 @@ sources: []
 
 이 페이지는 LangChain 저장소 구조를 매핑한다. 소스 코드를 읽을 때 탐색 가이드로 사용한다.
 
-*상태: 초안 스텁이다. 실제 저장소를 기준으로 한 소스 검증이 필요하다.*
-
 ## 저장소
 
 - **저장소:** `https://github.com/langchain-ai/langchain`
-- **커밋:** UNKNOWN
+- **주요 패키지 루트:** `libs/core/langchain_core/`
 
-## 주요 패키지 / 디렉터리
+## 핵심 패키지 구조
 
 ```
-langchain/                    # Main package
-langchain_core/               # Core abstractions (Runnable, BaseMessage, etc.)
-langchain_community/          # Community integrations
-langchain_text_splitters/     # Text splitting utilities
 libs/
+  core/
+    langchain_core/
+      runnables/          ← LCEL 핵심 (Runnable, RunnableSequence, RunnableParallel...)
+        base.py           ← Runnable 추상 클래스
+        passthrough.py    ← RunnablePassthrough, RunnableAssign, RunnablePick
+        parallel.py       ← RunnableParallel
+        lambda_.py        ← RunnableLambda
+        branch.py         ← RunnableBranch
+        utils.py          ← coerce_to_runnable
+      tools/              ← Tool 시스템 핵심
+        base.py           ← BaseTool, ToolException, create_schema_from_function, InjectedToolArg
+        structured.py     ← StructuredTool, from_function classmethod
+        convert.py        ← @tool 데코레이터 구현
+        simple.py         ← Tool (string→string 단순 도구)
+      messages/           ← 메시지 시스템
+        base.py           ← BaseMessage
+        human.py          ← HumanMessage
+        ai.py             ← AIMessage, AIMessageChunk
+        tool.py           ← ToolMessage, ToolCall, ToolOutputMixin
+        system.py         ← SystemMessage
+      prompts/            ← 프롬프트 템플릿
+        base.py           ← BasePromptTemplate
+        prompt.py         ← PromptTemplate (StringPromptTemplate 상속)
+        chat.py           ← ChatPromptTemplate
+        few_shot.py       ← FewShotPromptTemplate
+        pipeline.py       ← PipelinePromptTemplate
   langchain/
-  langchain_core/
-  langchain_community/
+    agents/               ← Agent 생성 (create_react_agent, AgentExecutor 등)
+      react/              ← ReAct agent
+      tool_calling/       ← Tool calling agent (create_tool_calling_agent)
 ```
 
-*소스 필요: 실제 디렉터리 구조를 확인해야 한다.*
+## 핵심 파일별 역할
 
-## 중요한 진입점
+### `langchain_core/tools/base.py`
+*Source: `langchain-source-tools-2026-05-23`*
 
-- `langchain_core.runnables` — `Runnable`, `RunnableSequence`, `RunnableLambda`
-- `langchain.agents` — `create_react_agent`, `AgentExecutor`
-- `langchain_core.messages` — `HumanMessage`, `AIMessage`, `ToolMessage`
-- `langchain_core.tools` — `BaseTool`, `@tool`
+| 심볼 | 역할 |
+|------|------|
+| `BaseTool` | 모든 tool의 추상 기반. `RunnableSerializable` 상속 |
+| `create_schema_from_function` | 함수 시그니처 → Pydantic schema 변환 (pydantic validate_arguments 사용) |
+| `ToolException` | tool 에러를 agent에 전달하는 전용 예외 |
+| `InjectedToolArg` | LLM schema에서 제외되는 runtime 주입 인자 annotation |
+| `InjectedToolCallId` | tool_call_id를 runtime 주입할 때 사용 |
+| `_format_output` | tool 출력 → `ToolMessage` 래핑 |
+| `FILTERED_ARGS` | `("run_manager", "callbacks")` — schema에서 항상 제외 |
 
-*소스 필요.*
+### `langchain_core/tools/structured.py`
+*Source: `langchain-source-tools-2026-05-23`*
 
-## 읽어야 할 소스 파일
+| 심볼 | 역할 |
+|------|------|
+| `StructuredTool` | `@tool` 기본 반환 타입. `func`/`coroutine` 필드 보유 |
+| `StructuredTool.from_function` | `@tool` 내부에서 호출되는 실제 생성 진입점 |
 
-- 추후 작성: `langchain.agents.create_react_agent`에서 시작 → [[LangChain create_agent flow]]
+### `langchain_core/tools/convert.py`
+*Source: `langchain-source-tools-2026-05-23`*
 
-## 읽어야 할 테스트
+| 심볼 | 역할 |
+|------|------|
+| `tool()` | `@tool` 데코레이터 구현. `StructuredTool.from_function` 위임 |
+| `convert_runnable_to_tool` | `Runnable` → `BaseTool` 변환 |
 
-- 추후 작성
+### `langchain_core/runnables/base.py`
+*Source: `langchain-source-runnable-2026-05-23`*
+
+| 심볼 | 역할 |
+|------|------|
+| `Runnable` | 추상 기반. `invoke`만 abstract |
+| `RunnableSequence` | `|` 연산자 결과. `steps` 리스트로 순서 실행 |
+| `RunnableLambda` | callable → Runnable 변환 |
+| `RunnableParallel` | 병렬 실행. sync=thread pool, async=asyncio |
+
+### `langchain_core/prompts/chat.py`
+*Source: `langchain-source-prompts-2026-05-23`*
+
+| 심볼 | 역할 |
+|------|------|
+| `ChatPromptTemplate` | 메시지 리스트 기반 프롬프트 |
+| `MessagesPlaceholder` | 메시지 히스토리 삽입 (optional, n_messages 제한 가능) |
+
+## 실행 흐름 요약
+
+```
+@tool 함수 정의
+    │
+    └─→ StructuredTool (args_schema 자동 생성)
+            │
+            └─→ LLM.bind_tools([tool]) → tool_call_schema JSON 전달
+                    │
+                    LLM이 AIMessage(tool_calls=[...]) 반환
+                    │
+                    └─→ BaseTool.invoke(ToolCall)
+                                │
+                                └─→ _run() → _format_output → ToolMessage
+```
+
+## 읽어야 할 소스 파일 (미수집)
+
+- `libs/langchain/langchain/agents/` — `create_react_agent`, `create_tool_calling_agent`, `AgentExecutor` → [[LangChain create_agent flow]]
+- `langchain_core/language_models/chat_models.py` — `bind_tools()` 구현, tool schema → API payload 변환
+- `langchain_core/utils/function_calling.py` — `_parse_google_docstring`, `_py_38_safe_origin`
 
 ## 불명확한 영역
 
-- LCEL(파이프 `|`)은 내부적으로 runnable을 어떻게 조합하는가?
-- 메시지 타입 디스패치 로직은 어디에 있는가?
+- `bind_tools()`가 `tool_call_schema`를 구체적으로 어떤 provider API payload로 변환하는가?
+- `create_react_agent` vs `create_tool_calling_agent`의 차이는?
 
 ## 관련 페이지
 
@@ -65,4 +141,6 @@ libs/
 
 ## 소스
 
-*아직 없음.*
+- `langchain-source-tools-2026-05-23`
+- `langchain-source-runnable-2026-05-23`
+- `langchain-source-prompts-2026-05-23`

@@ -5,11 +5,12 @@ framework:
   - LangGraph
   - Deep Agents
 status: draft
-confidence: medium
+confidence: high
 last_reviewed: 2026-05-23
 sources:
   - langchain-docs-tools-2026-05-23
   - langchain-docs-messages-2026-05-23
+  - langchain-source-tools-2026-05-23
 ---
 
 # Tool Calling
@@ -108,6 +109,138 @@ def set_language(language: str, runtime: ToolRuntime) -> Command:
 
 ---
 
+## @tool 데코레이터 내부 구조
+*Source: `langchain-source-tools-2026-05-23`*
+
+### @tool → StructuredTool 변환 경로
+
+`@tool` 데코레이터의 실제 구현은 `langchain_core/tools/convert.py`의 `tool()` 함수다.
+
+```
+@tool (convert.py: tool())
+    │
+    ├─ infer_schema=True (기본값) ──→ StructuredTool.from_function(func, coroutine, ...)
+    │                                       │
+    │                                       ├─ create_schema_from_function() → args_schema (Pydantic model)
+    │                                       ├─ docstring → description_
+    │                                       └─ StructuredTool(name, func, coroutine, args_schema, description)
+    │
+    └─ infer_schema=False, args_schema=None ──→ Tool (string→string 단순 도구)
+```
+
+- **sync 함수** → `func` 필드에 저장, `coroutine=None`
+- **async 함수** → `coroutine` 필드에 저장, `func=None`
+- **Runnable** → `invoke_wrapper`/`ainvoke_wrapper` 생성 후 `func`/`coroutine`으로 래핑
+
+### docstring → LLM 전달 경로
+
+```
+함수 docstring
+    │
+    ▼
+create_schema_from_function()
+    │  ├─ pydantic validate_arguments → inferred_model
+    │  ├─ _infer_arg_descriptions() → (description, arg_descriptions)
+    │  └─ _create_subset_model(descriptions=arg_descriptions, fn_description=description)
+    ▼
+StructuredTool.args_schema (Pydantic BaseModel subclass)
+    │
+    ▼
+tool_call_schema property → model_json_schema()
+    │  {
+    │    "title": "search_api",
+    │    "description": "함수 docstring",  ← LLM이 도구 선택에 사용
+    │    "properties": {
+    │      "query": {"type": "string", "description": "Args: 섹션 설명"}
+    │    }
+    │  }
+    ▼
+LLM API 호출 payload (tools 파라미터)
+```
+
+**파라미터별 description 전달 방법:**
+```python
+# 방법 1: Google Style docstring
+@tool(parse_docstring=True)
+def search(query: str) -> str:
+    """Search the database.
+    Args:
+        query: Search terms to look for.
+    """
+
+# 방법 2: Annotated 타입 힌트
+from typing import Annotated
+@tool
+def search(query: Annotated[str, "Search terms to look for"]) -> str:
+    """Search the database."""
+```
+
+### 실행 경로 (내부 구현)
+*Source: `langchain-source-tools-2026-05-23` — `BaseTool.run()`*
+
+```
+invoke(ToolCall) [BaseTool]
+    │
+    ├─ _prep_run_args() → tool_input (dict), tool_call_id (str)
+    │
+    ▼
+run(tool_input, tool_call_id=...)
+    │
+    ├─ _to_args_and_kwargs()
+    │       └─ _parse_input()  ← args_schema로 Pydantic validation
+    │                          ← InjectedToolCallId 주입
+    │
+    ├─ _run(*args, **kwargs)   ← 실제 함수 실행 (StructuredTool → self.func())
+    │
+    ├─ 예외 처리:
+    │   ├─ ToolException → handle_tool_error 설정에 따라 에러 문자열 반환 or re-raise
+    │   ├─ ValidationError → handle_validation_error 설정에 따라 처리
+    │   └─ 기타 Exception → 항상 re-raise
+    │
+    └─ _format_output(content, tool_call_id=...)
+            └─ tool_call_id 있으면 → ToolMessage(content, tool_call_id=..., name=..., status=...)
+               tool_call_id 없으면 → content 그대로 반환
+```
+
+### tool_call_schema — LLM에 전달되는 스키마
+
+`BaseTool.tool_call_schema` property는 LLM에 노출되는 스키마다. `InjectedToolArg`로 어노테이션된 파라미터는 **제외**된다.
+
+```python
+from typing import Annotated
+from langchain_core.tools import InjectedToolArg, InjectedToolCallId
+
+@tool
+def process(
+    query: str,                                           # ✅ LLM schema에 포함
+    user_id: Annotated[str, InjectedToolArg()],          # ❌ LLM schema에서 제외 (runtime 주입)
+    tool_call_id: Annotated[str, InjectedToolCallId()],  # ❌ LLM schema에서 제외 (자동 주입)
+) -> str:
+    """Process query for user."""
+    return f"user {user_id}: {query}"
+```
+
+### 에러 처리 옵션
+
+```python
+# ToolException: 도구 에러를 agent에 알리는 전용 예외
+from langchain_core.tools import ToolException
+
+@tool(handle_tool_error=True)  # 에러 메시지를 LLM에 전달 (agent 중단 없음)
+def risky_tool(input: str) -> str:
+    """A tool that might fail."""
+    if not input:
+        raise ToolException("Input cannot be empty.")
+    return "OK"
+
+# handle_tool_error=True → ToolException.args[0] 를 LLM에 반환
+# handle_tool_error="custom message" → 고정 문자열 반환
+# handle_tool_error=callable → 함수(e) 결과 반환
+# handle_tool_error=False (기본값) → re-raise (agent 중단)
+```
+
+---
+
 ## Tool Call 흐름 (메시지 관점)
 *Source: `langchain-docs-messages-2026-05-23`*
 
@@ -154,9 +287,17 @@ def set_language(language: str, runtime: ToolRuntime) -> Command:
 ## 미해결 질문
 
 - 각 프레임워크는 병렬 도구 호출을 내부적으로 어떻게 처리하는가?
-- 도구가 예외를 발생시키면 어떻게 되는가? `AgentMiddleware` 에러 처리는?
 - LangGraph `ToolNode`와 `create_agent` 도구 실행의 차이는?
 - LCEL `.bind_tools()` 방식과 `create_agent([tool])` 방식의 차이는?
+- `@tool`로 만든 tool의 `args_schema.model_json_schema()`가 LLM API 호출 시 어떤 payload로 변환되는가? (ChatModel `bind_tools` 경로)
+- `ToolRuntime`(`_DirectlyInjectedToolArg` 상속)의 전체 필드 구성은?
+
+**해소됨 (2026-05-23):**
+- ✅ `@tool` 데코레이터로 만든 tool의 내부 타입은? → `StructuredTool` (infer_schema=True 기본값). infer_schema=False면 단순 `Tool`. (Source: `langchain-source-tools-2026-05-23`)
+- ✅ docstring이 LLM에 전달되는 방식은? → `create_schema_from_function` → `_infer_arg_descriptions` → `_create_subset_model`의 `fn_description` → `model_json_schema()`의 `description` 필드. (Source: `langchain-source-tools-2026-05-23`)
+- ✅ 비동기 tool 정의 방법은? → `async def`로 정의하면 `coroutine` 파라미터로 자동 처리. 별도 설정 불필요. (Source: `langchain-source-tools-2026-05-23`)
+- ✅ tool 실행 중 예외 처리는? → `ToolException`은 `handle_tool_error` 설정에 따라 에러 메시지 반환 or re-raise. 기타 예외는 항상 re-raise. (Source: `langchain-source-tools-2026-05-23`)
+- ✅ LLM tool call → tool 실행 → ToolMessage 반환 흐름은? → `invoke(ToolCall)` → `_prep_run_args` → `run()` → `_to_args_and_kwargs` → `_run()` → `_format_output` → `ToolMessage(content, tool_call_id=...)`. (Source: `langchain-source-tools-2026-05-23`)
 
 ## 관련 페이지
 
@@ -170,3 +311,4 @@ def set_language(language: str, runtime: ToolRuntime) -> Command:
 
 - `langchain-docs-tools-2026-05-23`
 - `langchain-docs-messages-2026-05-23`
+- `langchain-source-tools-2026-05-23`
