@@ -11,6 +11,7 @@ sources:
   - langchain-docs-tools-2026-05-23
   - langchain-docs-messages-2026-05-23
   - langchain-source-tools-2026-05-23
+  - langchain-source-bind-tools-function-calling-2026-05-23
 ---
 
 # Tool Calling
@@ -260,6 +261,62 @@ def risky_tool(input: str) -> str:
 
 ---
 
+## bind_tools → LLM API Payload 변환 경로
+*Source: `langchain-source-bind-tools-function-calling-2026-05-23`*
+
+### BaseChatModel.bind_tools는 추상 메서드
+
+**검증됨:** `BaseChatModel.bind_tools`는 `NotImplementedError`를 raise하는 추상 메서드다. 실제 변환 로직은 `langchain_openai`, `langchain_anthropic` 등 각 provider 구현체에 있다. Source: `langchain-source-bind-tools-function-calling-2026-05-23`
+
+### OpenAI provider의 변환 체인
+
+**검증됨:** OpenAI provider(`BaseChatOpenAI.bind_tools`)는 각 tool을 `convert_to_openai_tool()`로 변환한다.
+
+```
+BaseTool.tool_call_schema
+    │  (InjectedToolArg 필드가 제외된 args_schema의 JSON schema)
+    │
+    ▼
+bind_tools([tool])                     ← BaseChatOpenAI
+    │
+    ▼
+convert_to_openai_tool(tool)           ← langchain_core/utils/function_calling.py
+    │  · 잘 알려진 OpenAI tool(file_search 등)은 그대로 통과
+    │  · 나머지는 convert_to_openai_function에 위임
+    │
+    ▼
+convert_to_openai_function(tool)
+    │  · Anthropic/Bedrock/OpenAI/JSON schema 포맷 자동 감지
+    │  · BaseTool이면 _format_tool_to_openai_function에 위임
+    │
+    ▼
+_format_tool_to_openai_function(tool: BaseTool)
+    │  · tool.tool_call_schema 확인
+    │  · dict schema → _convert_json_schema_to_openai_function
+    │  · Pydantic model → _convert_pydantic_to_openai_function
+    │  · args 없는 tool → generic string 파라미터 래퍼
+    │
+    ▼
+{"type": "function", "function": {"name": ..., "description": ..., "parameters": {...}}}
+    │  OpenAI API 형식의 tool schema
+    │
+    ▼
+self.bind(tools=[formatted_tool, ...])  ← 이후 LLM API 호출 시 tools= 파라미터로 전달
+```
+
+### tool_choice 정규화 (OpenAI)
+
+**검증됨:** OpenAI provider는 `tool_choice`를 다음과 같이 정규화한다:
+- tool 이름(str) → `{"type": "function", "function": {"name": ...}}`
+- `"any"` → `"required"` (OpenAI 표준)
+- `"file_search"`, `"code_interpreter"` 등 잘 알려진 이름 → `{"type": tool_choice}`
+
+### provider별 변환 방식 차이
+
+**검증됨:** `BaseChatModel.bind_tools`는 추상이므로 provider마다 다른 변환 경로를 사용한다. OpenAI는 `convert_to_openai_tool`을 공유하지만, Anthropic은 Anthropic API 형식(`{"name": ..., "description": ..., "input_schema": {...}}`)으로 자체 변환한다. Source: `langchain-source-bind-tools-function-calling-2026-05-23`
+
+---
+
 ## LangGraph에서의 Tool Calling
 
 - 도구는 `StateGraph` 안의 노드로 정의하거나 `ToolNode`를 사용
@@ -298,6 +355,7 @@ def risky_tool(input: str) -> str:
 - ✅ 비동기 tool 정의 방법은? → `async def`로 정의하면 `coroutine` 파라미터로 자동 처리. 별도 설정 불필요. (Source: `langchain-source-tools-2026-05-23`)
 - ✅ tool 실행 중 예외 처리는? → `ToolException`은 `handle_tool_error` 설정에 따라 에러 메시지 반환 or re-raise. 기타 예외는 항상 re-raise. (Source: `langchain-source-tools-2026-05-23`)
 - ✅ LLM tool call → tool 실행 → ToolMessage 반환 흐름은? → `invoke(ToolCall)` → `_prep_run_args` → `run()` → `_to_args_and_kwargs` → `_run()` → `_format_output` → `ToolMessage(content, tool_call_id=...)`. (Source: `langchain-source-tools-2026-05-23`)
+- ✅ `@tool`로 만든 tool의 `args_schema.model_json_schema()`가 LLM API 호출 시 어떤 payload로 변환되는가? → `BaseTool.tool_call_schema` → `bind_tools([tool])` → `convert_to_openai_tool` → `convert_to_openai_function` → `_format_tool_to_openai_function` → `{"type": "function", "function": {...}}` 형식의 OpenAI API payload. `BaseChatModel.bind_tools`는 추상이므로 provider별로 다른 변환 경로 사용. (Source: `langchain-source-bind-tools-function-calling-2026-05-23`)
 
 ## 관련 페이지
 
@@ -312,3 +370,4 @@ def risky_tool(input: str) -> str:
 - `langchain-docs-tools-2026-05-23`
 - `langchain-docs-messages-2026-05-23`
 - `langchain-source-tools-2026-05-23`
+- `langchain-source-bind-tools-function-calling-2026-05-23`

@@ -60,8 +60,8 @@
 - ✅ 비동기 tool 정의 방법은? → `async def`로 정의하면 `coroutine` 파라미터로 자동 처리. `StructuredTool._arun`에서 `await self.coroutine(...)` 실행. (Source: `langchain-source-tools-2026-05-23`)
 - ✅ tool 실행 중 예외 처리는? → `ToolException`은 `handle_tool_error` 설정에 따라 에러 메시지 반환 or re-raise. `ValidationError`는 `handle_validation_error`로 처리. 기타 예외는 항상 re-raise. (Source: `langchain-source-tools-2026-05-23`)
 
-**잔여 질문:**
-- `@tool`로 만든 tool의 `args_schema.model_json_schema()`가 LLM API 호출 시 어떤 payload로 변환되는가? (ChatModel `bind_tools` 경로 — 소스 미수집)
+**해소됨 (2026-05-23):**
+- ✅ `@tool`로 만든 tool의 `args_schema.model_json_schema()`가 LLM API 호출 시 어떤 payload로 변환되는가? → `BaseTool.tool_call_schema` → `bind_tools([tool])` (provider 구현체) → `convert_to_openai_tool` → `convert_to_openai_function` → `_format_tool_to_openai_function` → `{"type": "function", "function": {...}}` OpenAI API 형식. `BaseChatModel.bind_tools`는 추상(NotImplementedError)이므로 provider별 구현 필요. (Source: `langchain-source-bind-tools-function-calling-2026-05-23`)
 
 ### RAG / 임베딩 / 벡터 스토어 / 리트리버 (소스 수집 필요)
 

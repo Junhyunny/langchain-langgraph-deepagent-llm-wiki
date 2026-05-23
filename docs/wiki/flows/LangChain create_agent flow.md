@@ -6,6 +6,8 @@ confidence: medium
 last_reviewed: 2026-05-23
 sources:
   - langchain-source-tools-2026-05-23
+  - langchain-source-create-agent-factory-2026-05-23
+  - langchain-source-bind-tools-function-calling-2026-05-23
 ---
 
 # LangChain create_agent flow
@@ -13,14 +15,148 @@ sources:
 ## 요약
 
 이 페이지는 LangChain에서 tool calling agent를 생성하고 실행하는 흐름을 추적한다.
-`create_agent` 진입점 소스 코드는 미수집이며, tool 실행 경로(`BaseTool` 이하)는 소스 코드 기반으로 검증됨.
+`create_agent` 진입점은 소스 코드 기반으로 검증됨. tool 실행 경로(`BaseTool` 이하)도 소스 코드 기반으로 검증됨.
+
+**중요:** `create_tool_calling_agent` + `AgentExecutor`는 구버전 API. 현재 공식 API는 `create_agent`이며 LangGraph `StateGraph` 기반으로 구현됨.
+
+---
+
+## create_agent 전체 흐름
+
+*Source: `langchain-source-create-agent-factory-2026-05-23`*
+
+```python
+from langchain.agents import create_agent
+
+agent = create_agent(
+    model="anthropic:claude-sonnet-4-6",
+    tools=[search_db, send_email],
+    system_prompt="You are a helpful assistant.",
+)
+result = agent.invoke({"messages": [HumanMessage("...")]})
+```
+
+**검증됨:** `create_agent`는 `libs/langchain_v1/langchain/agents/factory.py`에 구현됨. `StateGraph`를 동적으로 구성하는 팩토리 함수다.
+
+---
+
+## create_agent Graph 구성
+
+*Source: `langchain-source-create-agent-factory-2026-05-23`*
+
+**검증됨:** `create_agent`는 내부에서 `StateGraph`를 구성한다. 노드와 엣지 구성:
+
+### 노드
+
+| 노드 | 역할 | 조건 |
+|------|------|------|
+| model node | LLM 호출. middleware가 있으면 `_chain_model_call_handlers()`로 래핑 | 항상 존재 |
+| tools node | `ToolNode(tools=available_tools)` | client-side tools 있거나 middleware가 wrap_tool_call 정의 시 |
+| before_agent | middleware 훅 | middleware 등록 시 |
+| before_model | middleware 훅 | middleware 등록 시 |
+| after_model | middleware 훅 | middleware 등록 시 |
+| after_agent | middleware 훅 | middleware 등록 시 |
+
+### 실행 루프 (graph edges)
+
+```
+[START]
+    │
+    ▼
+before_agent (있을 경우)
+    │
+    ▼
+before_model (있을 경우)
+    │
+    ▼
+model node ─── tool_calls 없음 ──→ after_agent (있을 경우) ──→ [END]
+    │
+    └── tool_calls 있음
+            │
+            ▼
+        tools node (ToolNode)
+            │  · BaseTool.invoke(ToolCall) 실행
+            │  · 결과를 ToolMessage로 반환
+            │
+            ▼
+        after_model (있을 경우)
+            │
+            └──────────────────────────────→ model node (루프)
+```
+
+**검증됨:** conditional edge는 `add_conditional_edges()`로 구현. model → tools 전환은 tool_calls 유무로 결정. tools → model 루프는 무조건 반복.
+
+### ToolNode 생성 조건
+
+```python
+tool_node = (
+    ToolNode(
+        tools=available_tools,
+        wrap_tool_call=wrap_tool_call_wrapper,
+        awrap_tool_call=awrap_tool_call_wrapper,
+    )
+    if available_tools or wrap_tool_call_wrapper or awrap_tool_call_wrapper
+    else None
+)
+```
+
+---
+
+## Tool 등록 경로 (검증됨)
+
+*Source: `langchain-source-tools-2026-05-23`*
+
+```
+@tool 데코레이터 또는 StructuredTool.from_function()
+    │
+    ├─ create_schema_from_function(name, func)
+    │       ├─ pydantic validate_arguments → inferred_model
+    │       ├─ _infer_arg_descriptions() → (description, arg_descriptions)
+    │       └─ _create_subset_model(...) → args_schema (Pydantic BaseModel)
+    │
+    └─ StructuredTool(name, func, coroutine, args_schema, description)
+            │
+            └─ .tool_call_schema (property)
+                    └─ args_schema.model_json_schema() - InjectedToolArg 필드 제외
+                       → LLM API에 전달될 JSON schema
+```
+
+---
+
+## bind_tools — tool schema → LLM API payload 변환
+
+*Source: `langchain-source-bind-tools-function-calling-2026-05-23`*
+
+**검증됨:** `BaseChatModel.bind_tools`는 추상 메서드(NotImplementedError). OpenAI provider는 다음 경로로 변환:
+
+```
+BaseTool.tool_call_schema
+    │
+    ▼
+bind_tools([tool])              ← provider 구현체 (BaseChatOpenAI 등)
+    │
+    ▼
+convert_to_openai_tool(tool)    ← langchain_core/utils/function_calling.py
+    │
+    ▼
+convert_to_openai_function(tool)
+    │
+    ▼
+_format_tool_to_openai_function(tool: BaseTool)
+    │  tool.tool_call_schema → JSON 변환
+    │
+    ▼
+{"type": "function", "function": {"name": ..., "description": ..., "parameters": {...}}}
+    │
+    ▼
+LLM API 호출 시 tools=[...] 파라미터로 전달
+```
 
 ---
 
 ## Tool 실행 경로 (검증됨)
-*Source: `langchain-source-tools-2026-05-23`*
 
-tool 실행 경로는 `BaseTool`과 `StructuredTool` 소스 코드로 완전히 추적됨:
+*Source: `langchain-source-tools-2026-05-23`*
 
 ```
 [Agent가 AIMessage.tool_calls 수신]
@@ -61,105 +197,61 @@ BaseTool.run(tool_input, tool_call_id="call_abc123")
 
 ---
 
-## Tool 등록 경로 (검증됨)
-*Source: `langchain-source-tools-2026-05-23`*
-
-```
-@tool 데코레이터 또는 StructuredTool.from_function()
-    │
-    ├─ create_schema_from_function(name, func)
-    │       ├─ pydantic validate_arguments → inferred_model
-    │       ├─ _infer_arg_descriptions() → (description, arg_descriptions)
-    │       └─ _create_subset_model(...) → args_schema (Pydantic BaseModel)
-    │
-    └─ StructuredTool(name, func, coroutine, args_schema, description)
-            │
-            └─ .tool_call_schema (property)
-                    └─ args_schema.model_json_schema() - InjectedToolArg 필드 제외
-                       → LLM API에 전달될 JSON schema
-```
-
----
-
-## Agent 생성 경로 (가설 — 소스 코드 미수집)
-
-```python
-# 현대적 방식 (tool calling agent)
-from langchain.agents import create_tool_calling_agent, AgentExecutor
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a helpful assistant."),
-    MessagesPlaceholder("chat_history", optional=True),
-    ("human", "{input}"),
-    MessagesPlaceholder("agent_scratchpad"),
-])
-
-agent = create_tool_calling_agent(llm, tools, prompt)
-executor = AgentExecutor(agent=agent, tools=tools)
-result = executor.invoke({"input": "..."})
-```
-
-**가설적 흐름 (미검증):**
-1. `create_tool_calling_agent(llm, tools, prompt)`
-   - `llm.bind_tools(tools)` → 각 tool의 `tool_call_schema`를 LLM에 바인딩
-   - `prompt | llm_with_tools | output_parser` LCEL chain 구성
-2. `AgentExecutor.invoke(input)`
-   - 입력을 포맷하여 agent chain 실행
-   - agent loop: LLM 호출 → tool_calls 파싱 → tool 실행 → ToolMessage 누적 → 반복
-   - `max_iterations` 초과 또는 tool_calls 없으면 종료
-
----
-
-## 읽어야 할 파일 (미수집)
-
-- `libs/langchain/langchain/agents/tool_calling_agent/base.py` — `create_tool_calling_agent` 구현
-- `libs/langchain/langchain/agents/agent.py` — `AgentExecutor` 구현 (루프 로직, max_iterations)
-- `langchain_core/language_models/chat_models.py` — `bind_tools()`, tool schema → API payload 변환
-
----
-
-## 다이어그램
+## 전체 흐름 다이어그램
 
 ```
 tools = [StructuredTool, ...]
-    │  각 tool.tool_call_schema → JSON schema
+    │  각 tool.tool_call_schema → convert_to_openai_tool → JSON schema
     │
     ▼
-llm.bind_tools(tools)
-    │  LLM API 호출 시 tools 파라미터에 JSON schema 전달
+create_agent(model, tools, system_prompt=...)
+    │  StateGraph 구성: model node + tools node + conditional edges
     │
     ▼
-AgentExecutor.invoke({"input": "..."})
+agent.invoke({"messages": [HumanMessage("...")]})
     │
-    ├─ format_messages(input, chat_history) → messages
-    │
-    ├─────────────── Agent Loop ────────────────┐
-    │                                           │
-    │  LLM(messages) → AIMessage               │
-    │      │                                   │
-    │      ├─ tool_calls 없음 → 최종 답변       │
-    │      │                                   │
-    │      └─ tool_calls 있음:                  │
-    │             │                            │
-    │             ▼                            │
-    │        BaseTool.invoke(ToolCall)          │
-    │             └─ ToolMessage               │
-    │                    │                     │
-    │             messages에 추가              │
-    │                    └──────────────────────┘
+    ├─────────────── Agent Loop (StateGraph) ────────────────┐
+    │                                                        │
+    │  model node: LLM(messages) → AIMessage                │
+    │      │                                                 │
+    │      ├─ tool_calls 없음 → [END] (최종 답변)            │
+    │      │                                                 │
+    │      └─ tool_calls 있음:                               │
+    │             │                                          │
+    │             ▼                                          │
+    │        tools node: BaseTool.invoke(ToolCall)           │
+    │             └─ ToolMessage                             │
+    │                    │                                   │
+    │             messages에 추가                           │
+    │                    └────────────────────────────────────┘
     │
     └─ 최종 AIMessage content 반환
 ```
 
 ---
 
+## 소스 파일 위치
+
+**검증됨:**
+- `libs/langchain_v1/langchain/agents/factory.py` — `create_agent` 구현. StateGraph 구성, middleware 조합, ToolNode 생성.
+- `libs/core/langchain_core/tools/base.py` — `BaseTool`, tool 실행 경로
+- `libs/core/langchain_core/tools/structured.py` — `StructuredTool`
+- `libs/core/langchain_core/tools/convert.py` — `@tool` 데코레이터
+- `libs/core/langchain_core/utils/function_calling.py` — `convert_to_openai_tool`, `convert_to_openai_function`, `_format_tool_to_openai_function`
+- `libs/partners/openai/langchain_openai/chat_models/base.py` — `BaseChatOpenAI.bind_tools` OpenAI 구현
+
+**구버전 경로 (현재 master에 없음):**
+- `libs/langchain/langchain/agents/tool_calling_agent/base.py` — `create_tool_calling_agent` (deprecated)
+- `libs/langchain/langchain/agents/agent.py` — `AgentExecutor` (deprecated)
+
+---
+
 ## 미해결 질문
 
-- `AgentExecutor`는 최대 반복 횟수(`max_iterations`)를 어떻게 처리하는가?
-- 메시지 히스토리는 `AgentExecutor` 내부에서 어떻게 누적되는가?
-- `create_react_agent`(ReAct, scratchpad 방식)과 `create_tool_calling_agent`(native tool calling)의 내부 구현 차이는?
-- `bind_tools()`가 `tool_call_schema`를 어떤 provider별 API payload 형태로 변환하는가?
+- `_chain_model_call_handlers()`의 구체적인 구현은? middleware 체이닝 메커니즘
+- `before_agent`, `after_agent` 훅의 시그니처와 반환 타입은?
+- `response_format` 처리 시 structured output과 tool calling의 내부 차이는?
+- `create_react_agent`(LangGraph prebuilt)과 `create_agent`(LangChain)의 구현 차이는?
 
 ---
 
@@ -168,10 +260,11 @@ AgentExecutor.invoke({"input": "..."})
 - [[LangChain]]
 - [[LangChain Code Map]]
 - [[Tool Calling]]
+- [[StateGraph]]
 - [[LangChain vs LangGraph vs Deep Agents]]
 
 ## 소스
 
 - `langchain-source-tools-2026-05-23` (tool 실행 경로 검증)
-
-*미수집: `create_agent` 진입점, `AgentExecutor` 루프 내부*
+- `langchain-source-create-agent-factory-2026-05-23` (create_agent graph 구성 검증)
+- `langchain-source-bind-tools-function-calling-2026-05-23` (bind_tools → API payload 변환 검증)
