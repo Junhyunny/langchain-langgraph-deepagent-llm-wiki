@@ -265,9 +265,7 @@ Deep Agents는 7가지 eval 카테고리와 5가지 메트릭(correctness, step_
 - Deep Agents Code (터미널 에이전트)는 SDK를 어떻게 확장하는가?
 - `langchain.agents.create_agent`의 내부 구현은? LangGraph graph를 어떻게 조립하나?
 - `PatchToolCallsMiddleware`는 어떤 tool call 패치를 수행하나?
-- `HarnessProfile`의 전체 필드 목록은? (`base_system_prompt`, `system_prompt_suffix`, `general_purpose_subagent` 외에 더 있는가?) — Source: `deepagents-docs-harness-2026-05-19`
-- Provider-level과 model-level HarnessProfile의 merge 우선순위는? — Source: `deepagents-docs-harness-2026-05-19`
-- `register_harness_profile`의 전체 시그니처 및 entry points 패키징 방법은? — Source: `deepagents-docs-harness-2026-05-19`
+- `register_harness_profile`의 entry points 패키징 방법은? — Source: `deepagents-docs-harness-2026-05-19`
 - Sandbox backend 없이 `execute` tool 호출 시 error 반환인가, tool 목록에서 제외되는가? — Source: `deepagents-docs-harness-2026-05-19`
 - Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
 
@@ -277,6 +275,8 @@ Deep Agents는 7가지 eval 카테고리와 5가지 메트릭(correctness, step_
 - ✅ "durable execution" ↔ checkpointing 연결: `checkpointer` 파라미터 + `_DeepAgentState` `DeltaChannel` (Source: `deepagents-source-graph-2026-05-19`)
 - ✅ filesystem tools 목록 확인됨: `ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`, `execute` — `FilesystemMiddleware`에서 주입 (Source: `deepagents-docs-harness-2026-05-19`)
 - ✅ `HarnessProfile` 등록 방법: `register_harness_profile(key, HarnessProfile(...))` (Source: `deepagents-docs-harness-2026-05-19`)
+- ✅ `HarnessProfile` 전체 필드: `base_system_prompt`, `system_prompt_suffix`, `tool_description_overrides`, `excluded_tools`, `excluded_middleware`, `extra_middleware`, `general_purpose_subagent` — 7개 (Source: `deepagents-source-harness-profiles-2026-05-19`)
+- ✅ Provider-level vs model-level merge 우선순위: exact merge 시 provider=base, model-level=override. scalar 필드는 override non-None 우선, set 필드는 union (Source: `deepagents-source-harness-profiles-2026-05-19`)
 
 ## Related Pages
 
@@ -295,3 +295,4 @@ Deep Agents는 7가지 eval 카테고리와 5가지 메트릭(correctness, step_
 - `deepagents-docs-context-engineering-2026-05-18`
 - `deepagents-source-graph-2026-05-19`
 - `deepagents-docs-harness-2026-05-19`
+- `deepagents-source-harness-profiles-2026-05-19`
