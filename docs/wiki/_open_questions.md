@@ -113,14 +113,19 @@
 
 ### Memory / Store
 
-### Checkpointer 종류 (소스 수집 필요)
+### Checkpointer 종류
 
-- `SQLiteSaver`와 `PostgresSaver`의 설정 방법과 `InMemorySaver`와의 실질적 차이는?
-- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가?
-- checkpointer가 있을 때 같은 `thread_id`로 재실행하면 이전 상태부터 이어서 실행되는가?
-- `config = {"configurable": {"thread_id": "..."}}` 패턴은 내부적으로 어떤 경로로 checkpointer에 전달되는가?
-- `InMemorySaver`의 `storage`, `writes`, `blobs` 딕셔너리 구조는 어떻게 되는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
+**해소됨 (2026-05-23):**
+- ✅ `MemorySaver`와 `InMemorySaver`는 동일한 클래스인가, 다른 클래스인가? → **동일. `MemorySaver = InMemorySaver` (하위 호환 alias).** (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
+- ✅ `SQLiteSaver` 설정 방법 → `SqliteSaver.from_conn_string(":memory:" | "file.sqlite")`. `setup()` 자동 호출. 단일 스레드 권장. (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
+- ✅ `PostgresSaver` 설정 방법 → `PostgresSaver.from_conn_string(DB_URI)` + **`saver.setup()` 명시 호출 필수**. `pipeline=True`로 성능 향상 가능 (단일 Connection만). `AsyncPostgresSaver`는 `asetup()` 사용. (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
+- ✅ `InMemorySaver`의 `storage/writes/blobs` 구조 → `storage`: thread→ns→checkpoint_id→(checkpoint, metadata, parent_id). `writes`: (thread, ns, checkpoint_id)→(task_id, write_idx)→(task_id, channel, value, path). `blobs`: (thread, ns, channel, version)→blob. (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
+- ✅ `MemorySaver`와 persistent saver의 운영상 차이 → InMemorySaver/MemorySaver는 테스트/디버그 전용. SqliteSaver는 소규모/단일 스레드. PostgresSaver/AsyncPostgresSaver가 프로덕션 권장. (Source: `langgraph-source-checkpoint-savers-2026-05-23`)
 
+**잔여 질문:**
+- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification
+- checkpointer가 있을 때 같은 `thread_id`로 재실행하면 이전 상태부터 이어서 실행되는가? — Source: `langgraph-docs-persistence-2026-05-20` (문서 확인 필요)
+- `config = {"configurable": {"thread_id": "..."}}` 패턴은 내부적으로 어떤 경로로 checkpointer에 전달되는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 - `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 - `libs/langgraph/langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction은 어떻게 구현되어 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 - pending writes recovery를 정의하는 canonical test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
@@ -128,8 +133,6 @@
 - `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 - checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Source: `langgraph-docs-persistence-2026-05-20`
 - `interrupt_before` / `interrupt_after`는 그래프 수준에서 어떻게 동작하는가?
-- `MemorySaver`와 persistent saver의 운영상 차이는 무엇인가? async behavior, serialization, retention/pruning API의 버전 차이를 확인해야 한다. — Source: `langgraph-reference-checkpoint-2026-05-20`
-- `MemorySaver`와 `InMemorySaver`는 동일한 클래스인가, 다른 클래스인가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 - `astream_events`와 함께 스트리밍은 어떻게 동작하는가?
 - LangGraph package version과 reference docs version의 관계는? GitHub page는 `langgraph==1.2.0`, `StateGraph.compile` reference는 v1.1.10으로 보였다. — Source: `langgraph-reference-stategraph-compile-2026-05-20`
 

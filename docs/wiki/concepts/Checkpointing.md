@@ -5,13 +5,14 @@ framework:
   - LangChain
 status: draft
 confidence: high
-last_reviewed: 2026-05-20
+last_reviewed: 2026-05-23
 sources:
   - langgraph-docs-persistence-2026-05-20
   - langgraph-docs-durable-execution-2026-05-20
   - langgraph-reference-stategraph-compile-2026-05-20
   - langgraph-reference-checkpoint-2026-05-20
   - langgraph-source-checkpoint-runtime-2026-05-20
+  - langgraph-source-checkpoint-savers-2026-05-23
 ---
 
 # Checkpointing
@@ -96,6 +97,80 @@ Checkpointing은 다음을 가능하게 한다.
 - `get_tuple`은 config로 checkpoint tuple을 가져온다. 이 tuple에는 checkpoint, config, metadata, pending writes가 포함된다. Source: `langgraph-reference-checkpoint-2026-05-20`
 - `checkpoint_ns`는 root graph와 subgraph checkpoint를 구분한다. Source: `langgraph-docs-persistence-2026-05-20`
 - 실행 메서드는 `durability="exit" | "async" | "sync"` 옵션을 받을 수 있다. Source에서 기본값은 `"async"`다. `"sync"`는 각 tick 뒤 `_put_checkpoint_fut.result()`를 기다리고, `"exit"`는 `put_writes()`의 즉시 저장을 건너뛰고 loop exit 시 `_put_checkpoint()`와 `_put_pending_writes()`를 호출한다. Source: `langgraph-docs-durable-execution-2026-05-20`, `langgraph-source-checkpoint-runtime-2026-05-20`
+
+## Checkpoint Saver 구현체 비교
+
+Source: `langgraph-source-checkpoint-savers-2026-05-23`
+
+### MemorySaver vs InMemorySaver
+
+**검증됨:** `MemorySaver`와 `InMemorySaver`는 완전히 동일한 클래스다. `MemorySaver`는 하위 호환성을 위한 alias다.
+
+```python
+# memory/__init__.py 마지막 줄:
+MemorySaver = InMemorySaver  # Kept for backwards compatibility
+```
+
+### InMemorySaver 내부 구조
+
+```
+storage: thread_id → checkpoint_ns → checkpoint_id → (serialized_checkpoint, serialized_metadata, parent_id)
+writes:  (thread_id, checkpoint_ns, checkpoint_id) → (task_id, write_idx) → (task_id, channel, serialized_value, task_path)
+blobs:   (thread_id, checkpoint_ns, channel, version) → serialized_blob
+```
+
+### Saver 선택 가이드
+
+| Saver | 패키지 | Sync | Async | 프로덕션 | 용도 |
+|-------|--------|------|-------|---------|------|
+| `InMemorySaver` | `langgraph` (내장) | ✅ | ✅ | ❌ | 테스트/디버그 |
+| `MemorySaver` | `langgraph` (내장) | ✅ | ✅ | ❌ | `InMemorySaver` alias |
+| `SqliteSaver` | `langgraph-checkpoint-sqlite` | ✅ | ⚠️ | ⚠️ | 소규모/단일 스레드 |
+| `PostgresSaver` | `langgraph-checkpoint-postgres` | ✅ | ❌ | ✅ | 프로덕션 (sync) |
+| `AsyncPostgresSaver` | `langgraph-checkpoint-postgres` | ❌ | ✅ | ✅ | 프로덕션 (async) |
+
+### SqliteSaver 설정
+
+```python
+from langgraph.checkpoint.sqlite import SqliteSaver
+
+# 인메모리 SQLite (테스트용)
+with SqliteSaver.from_conn_string(":memory:") as memory:
+    graph = builder.compile(checkpointer=memory)
+
+# 파일 기반 (소규모 앱)
+with SqliteSaver.from_conn_string("checkpoints.sqlite") as memory:
+    graph = builder.compile(checkpointer=memory)
+```
+
+- `setup()` 자동 호출됨
+- 단일 스레드 권장 (내부 lock은 있지만 multi-user 확장성 없음)
+
+### PostgresSaver 설정
+
+```python
+from langgraph.checkpoint.postgres import PostgresSaver
+
+DB_URI = "postgres://user:pass@localhost:5432/db?sslmode=disable"
+
+with PostgresSaver.from_conn_string(DB_URI) as saver:
+    saver.setup()  # 반드시 명시적으로 호출 (테이블 생성 + 마이그레이션)
+    graph = builder.compile(checkpointer=saver)
+    graph.invoke(inputs, {"configurable": {"thread_id": "1"}})
+```
+
+비동기 버전:
+
+```python
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+
+async with AsyncPostgresSaver.from_conn_string(DB_URI) as saver:
+    await saver.asetup()  # 반드시 명시적으로 호출
+    graph = builder.compile(checkpointer=saver)
+    await graph.ainvoke(inputs, {"configurable": {"thread_id": "1"}})
+```
+
+---
 
 ## Source Code References
 
