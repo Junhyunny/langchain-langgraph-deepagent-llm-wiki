@@ -6,10 +6,11 @@ framework:
   - Deep Agents
 status: draft
 confidence: medium
-last_reviewed: 2026-05-19
+last_reviewed: 2026-05-23
 sources:
   - deepagents-docs-harness-2026-05-19
   - deepagents-source-graph-2026-05-19
+  - langgraph-docs-graph-api-2026-05-23
 ---
 
 # Subagents
@@ -40,10 +41,41 @@ Subagents는 더 큰 워크플로의 일부로 부모(오케스트레이션) age
 - *소스 필요.*
 
 ### LangGraph
+*Source: `langgraph-docs-graph-api-2026-05-23`*
 
-- 서브에이전트는 노드로 호출되는 별도의 `StateGraph` 인스턴스일 수 있다
-- 또는 병렬 디스패치를 위해 `Send`로 구현할 수 있다
-- *소스 필요.*
+**서브그래프 (subgraph-as-node):**
+
+- 컴파일된 `CompiledStateGraph`를 노드로 직접 추가 가능
+- 서브그래프는 자신의 상태 스키마를 가짐 (상위 그래프와 독립)
+
+**Send API — 동적 팬아웃 (map-reduce):**
+
+```python
+from langgraph.types import Send
+
+def dispatch(state: OverallState):
+    return [Send("worker_node", {"item": item}) for item in state["items"]]
+
+builder.add_conditional_edges("dispatcher", dispatch)
+```
+
+- 각 `Send(node, state)`는 독립적인 그래프 복사본을 생성 → 병렬 실행
+- reduce 단계: 각 worker의 부분 업데이트가 OverallState의 Reducer로 집계됨
+- `Send`의 state는 worker 노드에만 전달되는 격리된 입력
+
+**Command — 크로스 그래프 네비게이션:**
+
+```python
+from langgraph.types import Command, PARENT
+
+def child_node(state) -> Command:
+    return Command(update={"result": "done"}, goto=PARENT)
+```
+
+- 서브그래프 노드에서 상위 그래프로 직접 제어를 넘길 수 있다
+- `goto` 대신 `PARENT`를 사용하면 부모 그래프의 다음 노드로 라우팅
+
+Source: `langgraph-docs-graph-api-2026-05-23`
 
 ### Deep Agents
 *Source: `deepagents-docs-harness-2026-05-19`, `deepagents-source-graph-2026-05-19`*
@@ -71,14 +103,17 @@ Subagents는 더 큰 워크플로의 일부로 부모(오케스트레이션) age
 
 ## 미해결 질문
 
-- LangChain / LangGraph에서 orchestrator → subagent 컨텍스트 전달 방식은? (소스 필요)
-- Deep Agents: `SubagentTransformer`의 scope 활용 방식은? (`_subagent_transformer.py` 확인 필요)
-- Deep Agents: subagent가 실패할 때 main agent는 어떻게 처리하는가?
-- Deep Agents: `SubAgentMiddleware` 내부에서 context isolation이 구체적으로 어떻게 구현되는가?
+- LangChain에서 orchestrator → subagent 컨텍스트 전달 방식은? — Needs Source
+- LangGraph `Send` 사용 시 각 worker의 결과를 집계하는 reduce 단계의 Reducer 설계 패턴은? — Source: `langgraph-docs-graph-api-2026-05-23`
+- LangGraph 서브그래프와 상위 그래프 간 상태 스키마 호환성 요구사항은? — Needs Source
+- Deep Agents: `SubagentTransformer`의 scope 활용 방식은? (`_subagent_transformer.py` 확인 필요) — Source: `deepagents-source-graph-2026-05-19`
+- Deep Agents: subagent가 실패할 때 main agent는 어떻게 처리하는가? — Needs Source
+- Deep Agents: `SubAgentMiddleware` 내부에서 context isolation이 구체적으로 어떻게 구현되는가? — Source: `deepagents-source-graph-2026-05-19`
 
 **해소됨:**
 - ✅ Deep Agents subagent 상태는 격리됨 — stateless, fresh context로 실행 (Source: `deepagents-docs-harness-2026-05-19`)
 - ✅ 결과 집계: 단일 최종 보고서만 반환 (Source: `deepagents-docs-harness-2026-05-19`)
+- ✅ LangGraph subagent 패턴 2가지: 서브그래프-as-노드, Send API (Source: `langgraph-docs-graph-api-2026-05-23`)
 
 ## 관련 페이지
 
@@ -94,3 +129,4 @@ Subagents는 더 큰 워크플로의 일부로 부모(오케스트레이션) age
 
 - `deepagents-docs-harness-2026-05-19`
 - `deepagents-source-graph-2026-05-19`
+- `langgraph-docs-graph-api-2026-05-23`

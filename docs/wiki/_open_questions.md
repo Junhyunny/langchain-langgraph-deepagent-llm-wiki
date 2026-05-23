@@ -13,6 +13,10 @@
 - LangGraph의 Pregel stream mode와 Event Streaming(`stream_events`)의 정확한 관계는? — Source: `langchain-docs-event-streaming-2026-05-18`
 - Custom stream transformer의 계약(contract)은 무엇인가? — Source: `langchain-docs-event-streaming-2026-05-18`
 - Deep Agents의 `create_deep_agent`도 `stream_events`를 동일하게 지원하는가? — Source: `langchain-docs-event-streaming-2026-05-18`
+- `astream_events`와 `astream_log`의 차이는? 반환 타입은? — Source: `langchain-source-runnable-2026-05-23`
+- `RunnableParallel`의 thread pool 크기 제한은? `max_concurrency` 옵션이 있는가? — Source: `langchain-source-runnable-2026-05-23`
+- `ConversationBufferMemory`, `ConversationSummaryMemory`는 현재도 권장 API인가, deprecated인가? — Needs Source
+- `MessagesPlaceholder(optional=False)`일 때 해당 변수가 없으면 KeyError가 발생하는가 확인 필요 — Source: `langchain-source-prompts-2026-05-23`
 
 ### 메시지 시스템 (소스 수집 필요)
 
@@ -74,15 +78,23 @@
 
 ## LangGraph
 
-### 그래프 기초 (소스 수집 필요)
+### 그래프 기초
 
 - LangGraph에서 cyclic graph는 내부적으로 어떻게 무한 루프를 방지하는가? (recursion_limit 메커니즘?)
-- 조건부 에지(conditional edge)의 라우팅 함수가 반환할 수 있는 값의 타입은? (문자열 이름, `Send`, `END`?)
 - `add_conditional_edges`의 두 번째 인수(path_map)는 선택인가 필수인가? 없을 때 동작 방식은?
-- 상태 업데이트 병합 시 reducer 함수는 어떻게 정의하는가? (`Annotated[list, operator.add]` 패턴의 내부 동작?)
 - `TypedDict` vs `Pydantic` 상태 스키마의 실질적인 차이는? (런타임 유효성 검사, 직렬화)
-- 노드 함수에서 상태 전체를 반환해야 하는가, 변경된 키만 반환해도 되는가?
-- `Send` API를 사용한 동적 서브그래프 분기는 어떻게 동작하는가?
+- `NodeRuntime.control`과 `NodeRuntime.heartbeat`의 구체적인 사용 사례는? — Source: `langgraph-docs-graph-api-2026-05-23`
+- `Send` 사용 시 각 worker 결과를 집계하는 reduce 단계 Reducer 설계 패턴은? — Source: `langgraph-docs-graph-api-2026-05-23`
+- LangGraph 서브그래프와 상위 그래프 간 상태 스키마 호환성 요구사항은? — Needs Source
+- `Command(resume=value, goto="...")` 패턴은 `interrupt()`와 어떻게 연동되는가? — Source: `langgraph-docs-graph-api-2026-05-23`
+
+**해소됨 (2026-05-23):**
+- ✅ 조건부 에지의 라우팅 함수가 반환할 수 있는 값 타입: 문자열, 문자열 리스트(병렬 팬아웃), `Send` 객체 리스트 (Source: `langgraph-docs-graph-api-2026-05-23`)
+- ✅ 노드 함수 반환값: 변경된 키만 포함한 **부분 업데이트** 반환 → Reducer가 상태에 병합 (Source: `langgraph-docs-graph-api-2026-05-23`)
+- ✅ `Send` API를 사용한 동적 분기: 각 `Send(node, state)`가 독립 그래프 복사본 생성 → 병렬 실행 (Source: `langgraph-docs-graph-api-2026-05-23`)
+- ✅ `recursion_limit`은 `configurable` 안이 아닌 config top-level key — `{"recursion_limit": 50}` (Source: `langgraph-docs-graph-api-2026-05-23`)
+
+### Memory / Store
 
 ### Checkpointer 종류 (소스 수집 필요)
 
@@ -100,8 +112,15 @@
 - checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Source: `langgraph-docs-persistence-2026-05-20`
 - `interrupt_before` / `interrupt_after`는 그래프 수준에서 어떻게 동작하는가?
 - `MemorySaver`와 persistent saver의 운영상 차이는 무엇인가? async behavior, serialization, retention/pruning API의 버전 차이를 확인해야 한다. — Source: `langgraph-reference-checkpoint-2026-05-20`
+- `MemorySaver`와 `InMemorySaver`는 동일한 클래스인가, 다른 클래스인가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 - `astream_events`와 함께 스트리밍은 어떻게 동작하는가?
 - LangGraph package version과 reference docs version의 관계는? GitHub page는 `langgraph==1.2.0`, `StateGraph.compile` reference는 v1.1.10으로 보였다. — Source: `langgraph-reference-stategraph-compile-2026-05-20`
+
+### Memory Store
+
+- LangGraph `Store` 인터페이스의 내부 구현은? `store.get`, `store.put` 계약은? — Needs Source
+- Store에서 관련 메모리를 검색해 컨텍스트에 주입하는 방법은? vector search 연동 방식은? — Needs Source
+- `InMemoryStore`와 production Store(Redis, PostgreSQL 등) 구현의 차이는? — Needs Source
 
 **해소됨 (2026-05-20):**
 - ✅ 체크포인팅은 무엇을 저장하고 무엇을 버릴지 어떻게 결정하는가? → LangGraph는 super-step boundary마다 `StateSnapshot` checkpoint를 저장하고, super-step 내부의 task-level writes도 pending writes로 저장한다. State에 포함되지 않은 외부 side effect나 thread 간 memory는 자동 저장 대상이 아니다. (Source: `langgraph-docs-persistence-2026-05-20`, `langgraph-reference-checkpoint-2026-05-20`)
