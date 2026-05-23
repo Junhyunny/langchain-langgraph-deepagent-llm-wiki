@@ -14,7 +14,71 @@
 - Custom stream transformer의 계약(contract)은 무엇인가? — Source: `langchain-docs-event-streaming-2026-05-18`
 - Deep Agents의 `create_deep_agent`도 `stream_events`를 동일하게 지원하는가? — Source: `langchain-docs-event-streaming-2026-05-18`
 
+### 메시지 시스템 (소스 수집 필요)
+
+- `BaseMessage` 클래스 계층은 어떻게 구성되는가? (SystemMessage/HumanMessage/AIMessage/ToolMessage 외에 14개 중 나머지 10개는 무엇인가?)
+- `ToolMessage`의 `tool_call_id`는 `AIMessage`의 `tool_calls`와 어떻게 연결되는가?
+- 채팅 모델 호출 시 메시지 리스트를 어떻게 전달하는가? (`invoke` vs `batch` vs `stream`)
+- `AIMessage`의 `tool_calls` 필드 구조는 어떻게 되는가?
+
+### PromptTemplate / OutputParser (소스 수집 필요)
+
+- `PromptTemplate`과 `ChatPromptTemplate`의 내부 구현 차이는? (단일 문자열 vs 메시지 리스트)
+- `FewShotPromptTemplate`에서 예시 선택기(`ExampleSelector`)는 어떻게 동작하는가?
+- `PipelinePromptTemplate`에서 여러 템플릿을 연결하는 내부 방식은?
+- `PydanticOutputParser`는 LLM 출력 텍스트를 Pydantic 모델로 어떻게 변환하는가?
+- `with_structured_output`과 `OutputParser`의 관계는? 내부적으로 같은 메커니즘을 사용하는가?
+- `OutputParser`의 `get_format_instructions()`는 프롬프트에 어떻게 주입되는가?
+- `with_structured_output`이 지원하는 4가지 타입(Pydantic, OpenAI function schema, JSON schema, TypedDict)은 내부적으로 어떻게 처리가 다른가?
+
+### Runnable 인터페이스 (소스 수집 필요)
+
+- `RunnableLambda`와 일반 함수를 직접 사용하는 것의 차이는? (에러 처리, 스트리밍, 배치 지원)
+- `RunnableParallel`의 결과 딕셔너리 키는 어떻게 결정되는가?
+- LCEL `|` 연산자는 내부적으로 어떤 타입을 생성하는가? (`RunnableSequence`?)
+- `Runnable` 인터페이스의 최소 계약(contract)은 무엇인가? (`invoke`, `stream`, `batch`, `astream`?)
+- `RunnableParallel`은 실제로 동시 실행되는가, 아니면 순차 실행인가?
+
+### @tool 데코레이터 (소스 수집 필요)
+
+- `@tool` 데코레이터로 만든 tool의 내부 타입은 무엇인가? (`StructuredTool`?)
+- LLM의 tool call 응답 → tool 실행 → ToolMessage 반환까지 전체 흐름은 어디에 구현되는가?
+- tool의 docstring이 실제로 어떻게 LLM에 전달되는가? (JSON Schema `description` 필드로 변환?)
+- 비동기 tool(`async def`)은 어떻게 정의하고 실행하는가?
+- tool 실행 중 예외가 발생하면 LangChain / LangGraph는 어떻게 처리하는가?
+
+### RAG / 임베딩 / 벡터 스토어 / 리트리버 (소스 수집 필요)
+
+- LangChain의 `Document` 객체 구조는? (`page_content`, `metadata` 외에 다른 필드가 있는가?)
+- `CharacterTextSplitter`와 `RecursiveCharacterTextSplitter`의 알고리즘 차이는?
+- chunk_overlap이 실제로 앞뒤 문맥을 보존하는 방식은 구체적으로 어떻게 구현되는가?
+- FAISS의 `similarity_search`는 내부적으로 어떤 알고리즘을 사용하는가? (L2 거리 기본값인가?)
+- FAISS의 거리 점수(낮을수록 유사)와 cosine similarity(높을수록 유사)의 관계는? 변환 공식은?
+- LangChain이 지원하는 embedding 모델의 기본 인터페이스(`Embeddings` 클래스)는?
+- `as_retriever()`의 `search_type` 옵션은 무엇인가? (`similarity`, `mmr`, `similarity_score_threshold`)
+- MMR(Maximal Marginal Relevance)은 무엇이며 언제 사용하는가?
+- `BaseRetriever`의 `get_relevant_documents` 메서드 계약은?
+- 프로덕션 벡터 DB(Chroma, Pinecone, Weaviate, pgvector, Qdrant) 중 LangChain과 공식 통합이 가장 잘 된 것은?
+
 ## LangGraph
+
+### 그래프 기초 (소스 수집 필요)
+
+- LangGraph에서 cyclic graph는 내부적으로 어떻게 무한 루프를 방지하는가? (recursion_limit 메커니즘?)
+- 조건부 에지(conditional edge)의 라우팅 함수가 반환할 수 있는 값의 타입은? (문자열 이름, `Send`, `END`?)
+- `add_conditional_edges`의 두 번째 인수(path_map)는 선택인가 필수인가? 없을 때 동작 방식은?
+- 상태 업데이트 병합 시 reducer 함수는 어떻게 정의하는가? (`Annotated[list, operator.add]` 패턴의 내부 동작?)
+- `TypedDict` vs `Pydantic` 상태 스키마의 실질적인 차이는? (런타임 유효성 검사, 직렬화)
+- 노드 함수에서 상태 전체를 반환해야 하는가, 변경된 키만 반환해도 되는가?
+- `Send` API를 사용한 동적 서브그래프 분기는 어떻게 동작하는가?
+
+### Checkpointer 종류 (소스 수집 필요)
+
+- `SQLiteSaver`와 `PostgresSaver`의 설정 방법과 `InMemorySaver`와의 실질적 차이는?
+- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가?
+- checkpointer가 있을 때 같은 `thread_id`로 재실행하면 이전 상태부터 이어서 실행되는가?
+- `config = {"configurable": {"thread_id": "..."}}` 패턴은 내부적으로 어떤 경로로 checkpointer에 전달되는가?
+- `InMemorySaver`의 `storage`, `writes`, `blobs` 딕셔너리 구조는 어떻게 되는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 
 - `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 - `libs/langgraph/langgraph/pregel/_checkpoint.py`의 `create_checkpoint`, `channels_from_checkpoint`, delta-channel reconstruction은 어떻게 구현되어 있는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`

@@ -160,3 +160,50 @@ sources:
     status: current
     used_by: []
     notes: "Deep Agents eval 철학: targeted evals, 7가지 eval 카테고리(file_operations/retrieval/tool_use/memory/conversation/summarization/unit_tests), 5가지 메트릭(correctness/step_ratio/tool_call_ratio/latency_ratio/solve_rate), ideal trajectory 개념, pytest+GitHub Actions 실행 방식."
+  - id: langchain-docs-messages-2026-05-23
+    title: "LangChain — Messages"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/langchain/messages"
+    local_path: "docs/raw/official/langchain/langchain-docs-messages-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/frameworks/LangChain.md"
+      - "docs/wiki/concepts/Tool Calling.md"
+    notes: "메시지 타입(SystemMessage/HumanMessage/AIMessage/ToolMessage) 정의, content/role/metadata 구조, tool_calls 필드, AIMessageChunk 스트리밍, ToolMessage.tool_call_id 연결 방식."
+  - id: langchain-docs-rag-2026-05-23
+    title: "LangChain — RAG (Retrieval-Augmented Generation)"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/langchain/rag"
+    local_path: "docs/raw/official/langchain/langchain-docs-rag-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/frameworks/LangChain.md"
+    notes: "RAG 전체 파이프라인(Load→Split→Store→Retrieve→Generate), RecursiveCharacterTextSplitter, vector store(InMemory/Chroma/Pinecone/Qdrant 등), embeddings(OpenAI/Anthropic/HuggingFace 등), RAG agent vs RAG chain 비교, indirect prompt injection 보안."
+  - id: langchain-docs-tools-2026-05-23
+    title: "LangChain — Tools"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/langchain/tools"
+    local_path: "docs/raw/official/langchain/langchain-docs-tools-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/frameworks/LangChain.md"
+      - "docs/wiki/concepts/Tool Calling.md"
+    notes: "@tool 데코레이터 사용법, docstring→tool description 변환, ToolRuntime(state/context/store/stream_writer/execution_info), 반환 타입(string/object/Command), 에러 핸들링, LCEL 페이지는 새 docs에 없음(create_agent 기반으로 재편)."
+  - id: langgraph-docs-graph-api-2026-05-23
+    title: "LangGraph — Graph API (Nodes, Edges, State)"
+    type: official_docs
+    framework: LangGraph
+    url: "https://docs.langchain.com/oss/python/langgraph/graph-api"
+    local_path: "docs/raw/official/langgraph/langgraph-docs-graph-api-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/wiki/frameworks/LangGraph.md"
+    notes: "StateGraph 핵심 개념: State(TypedDict/Pydantic/dataclass), Node(함수, state→update 반환), Edge(일반/조건부), Reducer(Annotated+operator.add), MessagesState, add_messages, START/END, Send API, Command, 재귀 제한(recursion_limit), RemainingSteps, graph migration 가이드."
+
