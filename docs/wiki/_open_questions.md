@@ -47,13 +47,17 @@
 - ✅ `RunnableParallel`은 실제로 동시 실행되는가? → sync: thread pool, async: asyncio 동시 실행. (Source: `langchain-source-runnable-2026-05-23`)
 - ✅ `RunnableParallel`의 결과 dict 키는 어떻게 결정되는가? → input mapping의 keys와 동일. (Source: `langchain-source-runnable-2026-05-23`)
 
-### @tool 데코레이터 (소스 수집 필요)
+### @tool 데코레이터
 
-- `@tool` 데코레이터로 만든 tool의 내부 타입은 무엇인가? (`StructuredTool`?)
-- LLM의 tool call 응답 → tool 실행 → ToolMessage 반환까지 전체 흐름은 어디에 구현되는가?
-- tool의 docstring이 실제로 어떻게 LLM에 전달되는가? (JSON Schema `description` 필드로 변환?)
-- 비동기 tool(`async def`)은 어떻게 정의하고 실행하는가?
-- tool 실행 중 예외가 발생하면 LangChain / LangGraph는 어떻게 처리하는가?
+**해소됨 (2026-05-23):**
+- ✅ `@tool` 데코레이터로 만든 tool의 내부 타입은? → `StructuredTool` (infer_schema=True 기본값). infer_schema=False이고 args_schema=None이면 단순 `Tool`. (Source: `langchain-source-tools-2026-05-23`)
+- ✅ LLM tool call 응답 → tool 실행 → ToolMessage 반환 흐름은? → `BaseTool.invoke(ToolCall)` → `_prep_run_args` → `run()` → `_to_args_and_kwargs` → `_run()` → `_format_output` → `ToolMessage(content, tool_call_id=id)`. (Source: `langchain-source-tools-2026-05-23`)
+- ✅ tool docstring이 LLM에 전달되는 방식은? → `create_schema_from_function` → `_infer_arg_descriptions` → `_create_subset_model(fn_description=description)` → `model_json_schema()["description"]`. (Source: `langchain-source-tools-2026-05-23`)
+- ✅ 비동기 tool 정의 방법은? → `async def`로 정의하면 `coroutine` 파라미터로 자동 처리. `StructuredTool._arun`에서 `await self.coroutine(...)` 실행. (Source: `langchain-source-tools-2026-05-23`)
+- ✅ tool 실행 중 예외 처리는? → `ToolException`은 `handle_tool_error` 설정에 따라 에러 메시지 반환 or re-raise. `ValidationError`는 `handle_validation_error`로 처리. 기타 예외는 항상 re-raise. (Source: `langchain-source-tools-2026-05-23`)
+
+**잔여 질문:**
+- `@tool`로 만든 tool의 `args_schema.model_json_schema()`가 LLM API 호출 시 어떤 payload로 변환되는가? (ChatModel `bind_tools` 경로 — 소스 미수집)
 
 ### RAG / 임베딩 / 벡터 스토어 / 리트리버 (소스 수집 필요)
 
