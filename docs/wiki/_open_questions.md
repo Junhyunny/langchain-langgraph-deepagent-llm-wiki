@@ -6,8 +6,8 @@
 
 ## 이번 주 우선순위 큐 (2026-05-24)
 
-- [ ] LangGraph checkpoint pending writes canonical test 경로/회귀 루트를 확정한다.  
-  Source: `langgraph-tests-checkpoint-recovery-2026-05-23`
+- [x] LangGraph checkpoint pending writes canonical test 경로/회귀 루트를 확정한다.  
+  → `test_pending_writes_resume`(line 876), `test_run_from_checkpoint_id_retains_previous_writes`(line 577) 확인됨. 재현 예제 작성 완료. ✓
 - [ ] Deep Agents eval에서 LLM-as-a-judge 모델 결정 경로를 확정한다 (`MODEL_GROUPS.md` 연계 포함).  
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - [ ] BFCL v3 평가가 실제 실행 경로(테스트/워크플로)에서 어떻게 연결되는지 확정한다.  
@@ -17,6 +17,8 @@
   참고: `experiments/2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과.md`
 - [ ] Deep Agents `create_deep_agent` 파라미터명 확인 (`system_prompt=` vs `instructions=`).  
   이전 위키 계획서에서 `instructions=`로 기재됐으나 LangChain은 `system_prompt=` 사용.
+- [ ] `test_pregel.py`의 `ERROR` import를 private 상수로 교체하는 PR이 이미 존재하는지 확인.  
+  (LangGraph GitHub Issues/PRs 검색 필요)
 
 ---
 
