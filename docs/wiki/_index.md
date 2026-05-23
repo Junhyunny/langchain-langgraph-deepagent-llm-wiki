@@ -40,6 +40,7 @@
 ## 실험
 - [[2026-05-23 same task 3 frameworks]] → `experiments/2026-05-23 same task 3 frameworks.md`
 - [[2026-05-23 3개 프레임워크 리서치 에이전트 비교]] → `experiments/2026-05-23 3개 프레임워크 리서치 에이전트 비교.md`
+- [[2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과]] → `experiments/2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과.md` ✅ 실행됨
 
 ## 실패 사례
 - [[LangGraph pending writes resume confusion]] → `failures/LangGraph pending writes resume confusion.md`

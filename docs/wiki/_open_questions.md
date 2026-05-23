@@ -4,7 +4,7 @@
 
 ---
 
-## 이번 주 우선순위 큐 (2026-05-23)
+## 이번 주 우선순위 큐 (2026-05-24)
 
 - [ ] LangGraph checkpoint pending writes canonical test 경로/회귀 루트를 확정한다.  
   Source: `langgraph-tests-checkpoint-recovery-2026-05-23`
@@ -12,6 +12,11 @@
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - [ ] BFCL v3 평가가 실제 실행 경로(테스트/워크플로)에서 어떻게 연결되는지 확정한다.  
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
+- [ ] `create_agent` 초기화 시간(0.262s)이 `create_react_agent`(0.004s)보다 긴 이유 파악.  
+  Source: `langchain/agents/factory.py` `_get_bound_model` 분석 필요  
+  참고: `experiments/2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과.md`
+- [ ] Deep Agents `create_deep_agent` 파라미터명 확인 (`system_prompt=` vs `instructions=`).  
+  이전 위키 계획서에서 `instructions=`로 기재됐으나 LangChain은 `system_prompt=` 사용.
 
 ---
 
@@ -239,9 +244,9 @@
 
 ### 에이전트 런타임 (Agent Runtime)
 
-- 에이전트 런타임(모델 + 오케스트레이션 + 도구)은 LangChain / LangGraph / Deep Agents에서 각각 어떤 클래스/컴포넌트로 구현되는가? — Needs Source
-- 오케스트레이션 레이어의 인스트럭션(시스템 프롬프트)은 각 프레임워크에서 어떻게 설정하며, 런타임에 동적으로 변경할 수 있는가? — Needs Source (관련: `langchain-source-dynamic-prompt-2026-05-23`)
-- `instructions`와 `system_prompt`는 같은 개념인가? 프레임워크마다 명칭이 다른 이유는? — Needs Source
+- 에이전트 런타임(모델 + 오케스트레이션 + 도구)은 LangChain / LangGraph / Deep Agents에서 각각 어떤 클래스/컴포넌트로 구현되는가? — **부분 검증됨**: LangChain = `create_agent` → CompiledStateGraph, LangGraph = `StateGraph.compile()` / `create_react_agent`, Deep Agents = Needs Source
+- 오케스트레이션 레이어의 인스트럭션(시스템 프롬프트)은 각 프레임워크에서 어떻게 설정하는가? — **검증됨**: `create_agent` → `system_prompt=`, `create_react_agent` → `prompt=`. 동적 변경 여부: Needs Source
+- `instructions`와 `system_prompt`는 같은 개념인가? — **부분 검증됨**: `create_agent`=`system_prompt=`, `create_react_agent`=`prompt=`. 명칭이 다르지만 기능 동일. Deep Agents의 파라미터명 확인 필요 — Needs Source
 
 ### 리즈닝 / 플래닝 (Reasoning / Planning)
 
