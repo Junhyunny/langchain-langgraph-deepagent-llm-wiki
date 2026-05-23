@@ -50,6 +50,10 @@
 - `register_harness_profile` entry points 패키징 방법은? — Source: `deepagents-docs-harness-2026-05-19`
 - Sandbox backend 없을 때 `execute` tool은 error 반환인가, tool 목록에서 제외되는가? — Source: `deepagents-docs-harness-2026-05-19`
 - Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
+- 외부 벤치마크(BFCL, Terminal Bench 2.0)를 "adapting"하는 구체적인 방법은? — Source: `deepagents-blog-evals-2026-05-23`
+- LLM-as-a-judge에서 어떤 judge 모델을 사용하는가? — Source: `deepagents-blog-evals-2026-05-23`
+- `libs/evals` 디렉토리의 실제 eval 구현 구조는? — Source: `deepagents-blog-evals-2026-05-23`
+- eval을 지속적으로 "줄이는(reduce)" 기준은 무엇인가? — Source: `deepagents-blog-evals-2026-05-23`
 
 **해소됨 (2026-05-19):**
 - ✅ `create_deep_agent` 내부에서 LangGraph의 어떤 graph를 생성하는가? → `langchain.agents.create_agent`에 위임 → `CompiledStateGraph` 반환 (Source: `deepagents-source-graph-2026-05-19`)

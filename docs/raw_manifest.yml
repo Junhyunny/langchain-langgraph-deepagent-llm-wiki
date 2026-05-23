@@ -150,3 +150,13 @@ sources:
     status: current
     used_by: []
     notes: "세 제품 범주 비교: Framework(LangChain), Runtime(LangGraph), Harness(Deep Agents). 각 범주 정의, 사용 시점, Feature 비교 테이블(memory/skills/subagents/HITL/streaming) 포함."
+  - id: deepagents-blog-evals-2026-05-23
+    title: "How We Build Evals for Deep Agents"
+    type: blog
+    framework: Deep Agents
+    url: "https://www.langchain.com/blog/how-we-build-evals-for-deep-agents"
+    local_path: "docs/raw/official/deep_agents/deepagents-blog-evals-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by: []
+    notes: "Deep Agents eval 철학: targeted evals, 7가지 eval 카테고리(file_operations/retrieval/tool_use/memory/conversation/summarization/unit_tests), 5가지 메트릭(correctness/step_ratio/tool_call_ratio/latency_ratio/solve_rate), ideal trajectory 개념, pytest+GitHub Actions 실행 방식."

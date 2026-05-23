@@ -247,6 +247,17 @@ Source: `deepagents-source-graph-2026-05-19`
 
 - 소스코드 확인 필요.
 
+## Evaluation
+
+*Source: `deepagents-blog-evals-2026-05-23` ⚠️ blog (medium confidence)*
+
+Deep Agents는 7가지 eval 카테고리와 5가지 메트릭(correctness, step_ratio, tool_call_ratio, latency_ratio, solve_rate)으로 품질을 측정한다.
+핵심 원칙: **"More evals ≠ better agents"** — targeted eval만 유지한다.
+
+상세 내용: [[Evaluation]]
+
+오픈소스 eval 구현: [`github.com/langchain-ai/deepagents/tree/main/libs/evals`](https://github.com/langchain-ai/deepagents/tree/main/libs/evals)
+
 ## Open Questions
 
 - subagent state isolation의 구체적 메커니즘은? (`SubagentTransformer`, `SubAgentMiddleware` 내부 확인 필요)
