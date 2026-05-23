@@ -16,6 +16,7 @@
 - [[Context Engineering]] → `concepts/Context Engineering.md`
 - [[Memory]] → `concepts/Memory.md`
 - [[Evaluation]] → `concepts/Evaluation.md`
+- [[Agent Harness]] → `concepts/Agent Harness.md`
 
 ## 코드베이스 맵
 - [[LangChain Code Map]] → `codebase/LangChain Code Map.md`

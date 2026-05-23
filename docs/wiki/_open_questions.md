@@ -66,6 +66,9 @@
 - human-in-the-loop 지원이 가장 좋은 프레임워크는 무엇인가?
 - 각 프레임워크는 컨텍스트 윈도우 한계를 어떻게 처리하는가?
 - 한 프레임워크의 체크포인트를 다른 프레임워크로 이식할 수 있는가?
+- LangChain "Skills"와 Deep Agents "Skills"는 동일한 개념인가? — Source: `langchain-docs-products-2026-05-23`
+- Temporal, Inngest가 LangGraph와 같은 Runtime 범주라면 실질적 차이는? — Source: `langchain-docs-products-2026-05-23`
+- Harness가 Runtime의 `interrupt` / checkpoint를 어떻게 추상화하는가? — Source: `langchain-docs-products-2026-05-23`
 
 ## PR 기회
 

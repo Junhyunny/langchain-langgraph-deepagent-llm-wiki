@@ -140,3 +140,13 @@ sources:
       - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
       - "docs/wiki/codebase/LangGraph Code Map.md"
     notes: "Pinned source reading for checkpoint runtime. Raw local files: state.py, pregel_main.py, pregel_loop.py, checkpoint_base_init.py, checkpoint_memory_init.py. Relevant upstream paths: libs/langgraph/langgraph/graph/state.py, libs/langgraph/langgraph/pregel/main.py, libs/langgraph/langgraph/pregel/_loop.py, libs/checkpoint/langgraph/checkpoint/base/__init__.py, libs/checkpoint/langgraph/checkpoint/memory/__init__.py."
+  - id: langchain-docs-products-2026-05-23
+    title: "LangChain — Products (Framework vs Runtime vs Harness)"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/concepts/products"
+    local_path: "docs/raw/official/langchain/langchain-docs-products-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by: []
+    notes: "세 제품 범주 비교: Framework(LangChain), Runtime(LangGraph), Harness(Deep Agents). 각 범주 정의, 사용 시점, Feature 비교 테이블(memory/skills/subagents/HITL/streaming) 포함."
