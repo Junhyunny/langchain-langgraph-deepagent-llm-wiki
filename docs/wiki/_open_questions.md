@@ -6,8 +6,6 @@
 
 ## 이번 주 우선순위 큐 (2026-05-24)
 
-- [x] LangGraph checkpoint pending writes canonical test 경로/회귀 루트를 확정한다.  
-  → `test_pending_writes_resume`(line 876), `test_run_from_checkpoint_id_retains_previous_writes`(line 577) 확인됨. 재현 예제 작성 완료. ✓
 - [ ] Deep Agents eval에서 LLM-as-a-judge 모델 결정 경로를 확정한다 (`MODEL_GROUPS.md` 연계 포함).  
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - [ ] BFCL v3 평가가 실제 실행 경로(테스트/워크플로)에서 어떻게 연결되는지 확정한다.  
@@ -17,8 +15,6 @@
   참고: `experiments/2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과.md`
 - [ ] Deep Agents `create_deep_agent` 파라미터명 확인 (`system_prompt=` vs `instructions=`).  
   이전 위키 계획서에서 `instructions=`로 기재됐으나 LangChain은 `system_prompt=` 사용.
-- [ ] `test_pregel.py`의 `ERROR` import를 private 상수로 교체하는 PR이 이미 존재하는지 확인.  
-  (LangGraph GitHub Issues/PRs 검색 필요)
 
 ---
 
@@ -70,7 +66,6 @@
 
 - `RunnableParallel`의 thread pool thread 수 제한은? `max_concurrency` 옵션이 있는가? — Needs Verification (`base.py` 전체 미수집)
 - `RunnableSequence.invoke` 내부: 각 step 간 에러 처리는 어떻게 되는가? — Needs Source (`base.py` 부분 수집만)
-- `astream_events`와 `astream_log`의 차이는? — Needs Source
 - `RunnableConfig`의 `configurable` 필드를 통해 실행 시간 설정을 주입하는 방법은? — Needs Source
 
 **해소됨 (2026-05-23):**
@@ -170,13 +165,15 @@
 **잔여 질문:**
 - `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification (문서는 "저장/resume 불가"라고만 설명, 에러 타입 미명시)
 - `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Needs Source (소스 summary에서 호출 사실만 확인, 내용 미수집)
-- pending writes recovery를 정의하는 canonical test는 어디에 있는가? — Needs Source
 - `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test는 어디에 있는가? — Needs Source
 - `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — `_checkpoint.py`에 없음, `_loop.py` 탐색 필요
 - `saver.get_delta_channel_history()` 메서드는 `BaseCheckpointSaver`에 언제 추가됐는가? — Needs Source
 - checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Needs Source
 - `astream_events`와 함께 스트리밍은 어떻게 동작하는가?
 - LangGraph package version과 reference docs version의 관계는? GitHub page는 `langgraph==1.2.0`, `StateGraph.compile` reference는 v1.1.10으로 보였다. — Source: `langgraph-reference-stategraph-compile-2026-05-20`
+
+**해소됨 (2026-05-24):**
+- ✅ pending writes recovery를 정의하는 canonical test는 어디에 있는가? → `test_pregel.py::test_pending_writes_resume`(line 876), `test_pregel_async.py::test_pending_writes_resume`(line 8074). 재현 예제: `reproductions/langgraph_checkpoint_pending_writes/`. (Source: `langgraph-tests-checkpoint-recovery-2026-05-23`)
 
 ### Memory Store
 
@@ -288,7 +285,12 @@
 - Temporal, Inngest가 LangGraph와 같은 Runtime 범주라면 실질적 차이는? — Source: `langchain-docs-products-2026-05-23`
 - Harness가 Runtime의 `interrupt` / checkpoint를 어떻게 추상화하는가? — Source: `langchain-docs-products-2026-05-23`
 
-## PR 기회
+## 기여 준비를 위한 학습 질문
 
-- 세 저장소에 테스트 없는 문서화된 이슈가 존재하는가?
-- 체크포인팅 구현에 빠진 엣지 케이스 테스트가 있는가?
+직접 PR을 작성할 수 있는 수준에 도달하기 위해 스스로 답해야 할 질문들이다.
+
+- 세 저장소의 `help wanted` 이슈 중 내가 이해한 코드 영역과 겹치는 것은 무엇인가?
+- 이슈를 재현할 최소 예제를 스스로 작성할 수 있는가?
+- 관련 테스트를 읽고 "어떤 동작을 보장하려는 것인가"를 설명할 수 있는가?
+- 기존 테스트 패턴을 참고해 새 테스트를 직접 작성할 수 있는가?
+- 체크포인팅 구현 중 내가 직접 읽은 코드 경로에서 빠진 엣지 케이스가 보이는가?

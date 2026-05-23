@@ -2,9 +2,12 @@
 type: pr_candidate
 framework:
   - LangGraph
-status: in_progress
+status: analysis_complete
 confidence: high
 last_reviewed: 2026-05-24
+notes: >
+  분석은 완료됨. 실제 PR 제출은 내가 직접 수행하는 학습 목표다.
+  이 페이지는 내가 PR을 작성할 때 참고할 분석 자료다.
 sources:
   - langgraph-tests-checkpoint-recovery-2026-05-23
   - langgraph-source-checkpoint-internals-2026-05-23
