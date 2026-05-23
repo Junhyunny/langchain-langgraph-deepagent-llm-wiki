@@ -4,6 +4,17 @@
 
 ---
 
+## 이번 주 우선순위 큐 (2026-05-23)
+
+- [ ] LangGraph checkpoint pending writes canonical test 경로/회귀 루트를 확정한다.  
+  Source: `langgraph-tests-checkpoint-recovery-2026-05-23`
+- [ ] Deep Agents eval에서 LLM-as-a-judge 모델 결정 경로를 확정한다 (`MODEL_GROUPS.md` 연계 포함).  
+  Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
+- [ ] BFCL v3 평가가 실제 실행 경로(테스트/워크플로)에서 어떻게 연결되는지 확정한다.  
+  Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
+
+---
+
 ## LangChain
 
 - `RunnableParallel`의 thread pool 크기 제한은? `max_concurrency` 옵션이 있는가? — Source: `langchain-source-runnable-2026-05-23`

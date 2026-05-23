@@ -438,3 +438,35 @@ sources:
       - "docs/wiki/frameworks/LangChain.md"
     notes: "PydanticOutputParser(JsonOutputParser 상속): get_format_instructions(JSON schema 추출+템플릿 래핑), parse() 파이프라인(텍스트→JSON→Pydantic.model_validate). JsonOutputParser: parse_json_markdown, partial/diff 스트리밍 지원. with_structured_output: BaseChatModel 추상(NotImplementedError), 4가지 입력 타입(Pydantic/TypedDict/JSON schema/OpenAI function schema), Pydantic만 검증됨. OpenAI 구현: method='function_calling'(기본, bind_tools→PydanticToolsParser), 'json_mode'(bind json_object→PydanticOutputParser), 'json_schema'(bind response_format→RunnableLambda). include_raw 파라미터: True시 raw/parsed/parsing_error dict 반환."
 
+  - id: langgraph-tests-checkpoint-recovery-2026-05-23
+    title: "LangGraph tests — checkpoint recovery and pending writes"
+    type: source_code
+    framework: LangGraph
+    url: "https://raw.githubusercontent.com/langchain-ai/langgraph/main/libs/langgraph/tests/test_pregel.py"
+    local_path: "docs/raw/official/langgraph/langgraph-tests-checkpoint-recovery-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/source_summaries/langgraph-tests-checkpoint-recovery-2026-05-23.md"
+      - "docs/wiki/experiments/2026-05-23 same task 3 frameworks.md"
+      - "docs/wiki/failures/LangGraph pending writes resume confusion.md"
+      - "docs/wiki/prs/LangGraph checkpoint pending writes tests documentation PR candidate.md"
+      - "docs/wiki/_open_questions.md"
+    notes: "LangGraph checkpoint/pending writes canonical tests. Includes test_pending_writes_resume, test_run_from_checkpoint_id_retains_previous_writes, test_invoke_checkpoint_two in libs/langgraph/tests/test_pregel.py."
+
+  - id: deepagents-evals-model-groups-harbor-bfcl-2026-05-23
+    title: "Deep Agents evals — MODEL_GROUPS and Harbor/BFCL references"
+    type: source_code
+    framework: Deep Agents
+    urls:
+      - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/MODEL_GROUPS.md"
+      - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/README.md"
+      - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/CONTRIBUTING.md"
+    local_path: "docs/raw/official/deepagents/deepagents-evals-model-groups-harbor-bfcl-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: current
+    used_by:
+      - "docs/source_summaries/deepagents-evals-model-groups-harbor-bfcl-2026-05-23.md"
+      - "docs/wiki/experiments/2026-05-23 same task 3 frameworks.md"
+      - "docs/wiki/_open_questions.md"
+    notes: "Evidence for Deep Agents eval model groups catalog, Harbor integration, and BFCL v3 coverage in external benchmarks docs."
