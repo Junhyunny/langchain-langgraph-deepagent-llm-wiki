@@ -118,9 +118,17 @@
 
 ### Memory Store
 
-- LangGraph `Store` 인터페이스의 내부 구현은? `store.get`, `store.put` 계약은? — Needs Source
-- Store에서 관련 메모리를 검색해 컨텍스트에 주입하는 방법은? vector search 연동 방식은? — Needs Source
-- `InMemoryStore`와 production Store(Redis, PostgreSQL 등) 구현의 차이는? — Needs Source
+**해소됨 (2026-05-23):**
+- ✅ `BaseStore` 인터페이스의 핵심 계약: `batch`/`abatch` 추상 메서드 2개. 나머지(`get`, `put`, `search`, `delete`, `list_namespaces`)는 모두 이것의 래퍼. (Source: `langgraph-store-base-2026-05-23`)
+- ✅ `store.get(namespace, key)` 반환: `Item | None`. `store.put(namespace, key, value)` 반환: `None`. `value=None` → 삭제. (Source: `langgraph-store-base-2026-05-23`)
+- ✅ namespace 개념: `tuple[str, ...]` 계층 경로 — `("user", "123", "memories")` 형식. (Source: `langgraph-store-base-2026-05-23`)
+- ✅ `Item` 필드: `value: dict`, `key: str`, `namespace: tuple[str, ...]`, `created_at`, `updated_at`. (Source: `langgraph-store-base-2026-05-23`)
+- ✅ `search`의 `query` 파라미터: semantic search용 (구현체가 vector store 지원 시에만 의미 있음). (Source: `langgraph-store-base-2026-05-23`)
+
+**잔여 질문:**
+- `InMemoryStore`의 구체적 구현은? vector search를 지원하는가? — Source: `langgraph-store-base-2026-05-23`
+- 프로덕션용 Store 구현체(Redis, PostgreSQL)는 어떤 패키지에 있는가? — Needs Source
+- `create_deep_agent`에서 Store는 어떤 middleware가 어떻게 활용하는가? (`MemoryMiddleware`와의 관계?) — Needs Source
 
 **해소됨 (2026-05-20):**
 - ✅ 체크포인팅은 무엇을 저장하고 무엇을 버릴지 어떻게 결정하는가? → LangGraph는 super-step boundary마다 `StateSnapshot` checkpoint를 저장하고, super-step 내부의 task-level writes도 pending writes로 저장한다. State에 포함되지 않은 외부 side effect나 thread 간 memory는 자동 저장 대상이 아니다. (Source: `langgraph-docs-persistence-2026-05-20`, `langgraph-reference-checkpoint-2026-05-20`)
@@ -136,7 +144,7 @@
 - `langchain.agents.create_agent`의 내부 구현은? LangGraph `StateGraph`를 어떻게 조립하나? — Source: `deepagents-source-graph-2026-05-19`
 - `HarnessProfile`은 어떤 모델에 어떤 profile을 매핑하나? (`harness_profiles.py` 수집 필요) — Source: `deepagents-source-graph-2026-05-19`
 - `PatchToolCallsMiddleware`는 어떤 tool call 패치를 수행하나? — Source: `deepagents-source-graph-2026-05-19`
-- `DeltaChannel`의 `snapshot_frequency=50`은 정확히 무엇을 의미하나? — Source: `deepagents-source-graph-2026-05-19`
+- `DeltaChannel`의 `snapshot_frequency=50`은 정확히 무엇을 의미하나? 50 super-step인가 50 message인가? full snapshot과 delta 사이 재구성 비용은? — Source: `deepagents-source-graph-2026-05-19` (소스코드 직접 확인 필요: `_messages_reducer.py` + LangGraph `DeltaChannel` 구현)
 - Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가? — Source: `deepagents-docs-context-engineering-2026-05-18`
 - `@dynamic_prompt` 데코레이터의 정확한 시그니처와 사용 패턴은? — Source: `deepagents-docs-context-engineering-2026-05-18`
 

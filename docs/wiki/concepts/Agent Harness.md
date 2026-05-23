@@ -3,12 +3,14 @@ type: concept
 framework:
   - Deep Agents
   - LangChain
-status: draft
+status: partial
 confidence: high
 last_reviewed: 2026-05-23
 sources:
   - langchain-docs-products-2026-05-23
   - deepagents-source-harness-profiles-2026-05-19
+  - deepagents-docs-harness-2026-05-19
+  - deepagents-source-graph-2026-05-19
 ---
 
 # Agent Harness
@@ -33,16 +35,75 @@ Source: `langchain-docs-products-2026-05-23`
 - [[Context Engineering]] — token management, 히스토리 요약 등
 - [[Memory]] — long-term memory 지원
 
-## Harness의 특성 (Verified)
+## Harness 8가지 구성요소 (Verified)
 
-| 기능 | 설명 |
-|------|------|
-| **Planning capabilities** | to-do list 기반 멀티 태스크 추적 |
-| **Task delegation** | subagents로 작업을 위임하고 컨텍스트를 격리 |
-| **File system** | pluggable storage backends를 통한 파일 읽기/쓰기 |
-| **Token management** | 대화 히스토리 요약 + 대형 tool result eviction |
+*Source: `deepagents-docs-harness-2026-05-19`, `langchain-docs-products-2026-05-23`*
 
-Source: `langchain-docs-products-2026-05-23`
+| 구성요소 | 핵심 역할 |
+|---------|----------|
+| **Planning** | `write_todos` tool — 상태(`pending`/`in_progress`/`completed`) 태스크 목록, agent state에 영속 |
+| **Virtual filesystem** | 7 built-in tools (`ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`, `execute`) |
+| **Filesystem permissions** | declarative rule 목록, first-match-wins, 기본 허용 |
+| **Task delegation** | `task` tool → subagent 위임, **stateless**, fresh context, 단일 최종 보고서 반환 |
+| **Context management** | offloading + summarization 자동 압축, subagent context isolation |
+| **Code execution** | Sandbox → `execute` tool / Interpreter → `eval` tool (QuickJS) |
+| **Human-in-the-loop** | `interrupt_on={"tool_name": True}` — tool 호출 전 pause |
+| **Harness profiles** | `HarnessProfile` + `register_harness_profile` — 모델별 declarative 설정 번들 |
+
+> Skills와 Memory는 이 8가지와 별도로 "alongside" 제공됨 (구성요소 목록에 포함 안 됨).
+> Source: `deepagents-docs-harness-2026-05-19`
+
+## Skills (alongside 제공)
+
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+- **표준**: Agent Skills standard (agentskills.io) 준수
+- **형식**: 각 skill = directory + `SKILL.md` 파일 (instructions + metadata)
+- **Progressive disclosure** (핵심 설계): startup 시 frontmatter만 로드 → 관련성 판단 시 전체 로드
+  - 목적: 토큰 효율성 — 불필요한 skill 내용을 context에 올리지 않음
+- 추가 리소스 포함 가능: scripts, reference docs, templates
+- `skills=` 파라미터로 경로 목록 전달
+
+## Memory (alongside 제공)
+
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+- **표준**: `AGENTS.md` 파일 (agents.md 표준) 사용
+- **항상 로드**: skills와 달리 progressive disclosure 없음
+  - 목적: 필수 규칙·선호도·제약은 매 실행마다 context에 포함되어야 함
+- `memory=` 파라미터로 파일 경로 목록 전달
+- backend에 저장됨 (StateBackend / StoreBackend / FilesystemBackend)
+- agent가 interaction/feedback 기반으로 memory 직접 업데이트 가능
+
+**Skills vs Memory 비교:**
+
+| | Skills | Memory |
+|--|--------|--------|
+| 로딩 방식 | Progressive disclosure (frontmatter → 필요시 전체) | 항상 전체 로드 |
+| 용도 | 상황별 특화 워크플로우 | 필수 규칙, 선호도, 상시 context |
+| 표준 | agentskills.io | agents.md |
+
+## Code Execution
+
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+| 방식 | Tool | 환경 | 특징 |
+|------|------|------|------|
+| **Sandbox** | `execute` | `SandboxBackendProtocolV2` 구현체 필요 | shell 명령, 의존성 설치, OS filesystem, 임의 명령 실행 |
+| **Interpreter** | `eval` | 내장 QuickJS runtime | JavaScript, shell·filesystem·network 접근 없음, 결정론적 데이터 변환 |
+
+- Sandbox backend 없으면 `execute` tool 목록에서 **제외됨** (error 반환이 아님)
+- Interpreter는 루프, 배칭, programmatic tool calling에 적합
+
+## Task Delegation (Subagents) 상세
+
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+- Subagent는 **fresh context**로 실행됨 (parent context 미전달)
+- **stateless**: 단방향 위임 + 단일 최종 보고서 구조 (중간 보고 불가)
+- 이점: context isolation, 병렬 실행, specialization, token efficiency
+- 기본 `general-purpose` subagent 자동 추가됨
+- Subagent → parent 중간 결과 전달 방법: **filesystem 활용** (stateless 제약 우회)
 
 ## 현존하는 Harness 구현체 (Verified)
 
