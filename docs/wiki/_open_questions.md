@@ -63,18 +63,32 @@
 **해소됨 (2026-05-23):**
 - ✅ `@tool`로 만든 tool의 `args_schema.model_json_schema()`가 LLM API 호출 시 어떤 payload로 변환되는가? → `BaseTool.tool_call_schema` → `bind_tools([tool])` (provider 구현체) → `convert_to_openai_tool` → `convert_to_openai_function` → `_format_tool_to_openai_function` → `{"type": "function", "function": {...}}` OpenAI API 형식. `BaseChatModel.bind_tools`는 추상(NotImplementedError)이므로 provider별 구현 필요. (Source: `langchain-source-bind-tools-function-calling-2026-05-23`)
 
-### RAG / 임베딩 / 벡터 스토어 / 리트리버 (소스 수집 필요)
+### RAG / 임베딩 / 벡터 스토어 / 리트리버
 
-- LangChain의 `Document` 객체 구조는? (`page_content`, `metadata` 외에 다른 필드가 있는가?)
-- `CharacterTextSplitter`와 `RecursiveCharacterTextSplitter`의 알고리즘 차이는?
-- chunk_overlap이 실제로 앞뒤 문맥을 보존하는 방식은 구체적으로 어떻게 구현되는가?
-- FAISS의 `similarity_search`는 내부적으로 어떤 알고리즘을 사용하는가? (L2 거리 기본값인가?)
-- FAISS의 거리 점수(낮을수록 유사)와 cosine similarity(높을수록 유사)의 관계는? 변환 공식은?
-- LangChain이 지원하는 embedding 모델의 기본 인터페이스(`Embeddings` 클래스)는?
-- `as_retriever()`의 `search_type` 옵션은 무엇인가? (`similarity`, `mmr`, `similarity_score_threshold`)
-- MMR(Maximal Marginal Relevance)은 무엇이며 언제 사용하는가?
-- `BaseRetriever`의 `get_relevant_documents` 메서드 계약은?
-- 프로덕션 벡터 DB(Chroma, Pinecone, Weaviate, pgvector, Qdrant) 중 LangChain과 공식 통합이 가장 잘 된 것은?
+**해소됨 (2026-05-23):**
+- ✅ `RecursiveCharacterTextSplitter`가 권장 text splitter: 단락 → 문장 → 단어 → 문자 순서로 분할. `chunk_overlap`으로 경계 문맥 보존. (Source: `langchain-docs-rag-2026-05-23`)
+- ✅ `RecursiveCharacterTextSplitter` 내부 알고리즘: separators 리스트를 순서대로 시도, 첫 매칭 구분자로 분할, 초과 청크 재귀 분할, `_merge_splits()`로 병합. `keep_separator=True` 기본값 (CharacterTextSplitter의 False와 다름). (Source: `langchain-source-text-splitters-2026-05-23`)
+- ✅ `CharacterTextSplitter` vs `RecursiveCharacterTextSplitter` 차이: 전자는 단일 구분자(기본 `\n\n`) + keep_separator=False, 후자는 구분자 리스트 + keep_separator=True + 재귀 분할. (Source: `langchain-source-text-splitters-2026-05-23`)
+- ✅ `from_language()` classmethod: 30+ 언어 지원, is_separator_regex=True로 자동 설정. Python: `["\nclass ", "\ndef ", "\n\tdef ", "\n\n", "\n", " ", ""]`. (Source: `langchain-source-text-splitters-2026-05-23`)
+- ✅ RAG 두 가지 패턴: RAG agent (동적, LLM이 검색 시점 결정) vs RAG chain (결정적 파이프라인). (Source: `langchain-docs-rag-2026-05-23`)
+- ✅ 지원 벡터 스토어: `InMemoryVectorStore`(개발), Chroma, FAISS, Pinecone, Qdrant, pgvector, Weaviate, Elasticsearch. (Source: `langchain-docs-rag-2026-05-23`)
+- ✅ 추가 리트리버 타입: `MultiQueryRetriever`, `ContextualCompressionRetriever`, `BM25Retriever`, `EnsembleRetriever`. (Source: `langchain-docs-rag-2026-05-23`)
+- ✅ RAG 보안 위협: Indirect Prompt Injection — 검색 문서에 악성 지시 삽입. 완화: 콘텐츠 정제, 명시적 구분자, 가드레일. (Source: `langchain-docs-rag-2026-05-23`)
+- ✅ `@dynamic_prompt` 정체: `langchain.agents.middleware.types`의 AgentMiddleware 생성 데코레이터. 서명 `(request: ModelRequest) -> str | SystemMessage`. wrap_model_call 인터셉트로 시스템 프롬프트 동적 교체. (Source: `langchain-source-dynamic-prompt-2026-05-23`)
+
+**잔여 질문:**
+- ⚠️ RAG 문서의 `@dynamic_prompt(user_query: str) -> list` 패턴 — 실제 API와 불일치. 문서 오류인가, 다른 decorator인가? — Source: `langchain-docs-rag-2026-05-23`, `langchain-source-dynamic-prompt-2026-05-23`
+- LangChain의 `Document` 객체 구조는? (`page_content`, `metadata` 외에 다른 필드가 있는가?) — Needs Source
+- FAISS의 `similarity_search`는 내부적으로 어떤 알고리즘을 사용하는가? (L2 거리 기본값인가?) — Needs Source
+- FAISS의 거리 점수(낮을수록 유사)와 cosine similarity(높을수록 유사)의 관계는? 변환 공식은? — Needs Source
+- LangChain이 지원하는 embedding 모델의 기본 인터페이스(`Embeddings` 클래스)는? — Needs Source
+- `as_retriever()`의 `search_type` 옵션 차이: `similarity`, `mmr`, `similarity_score_threshold` — Needs Source
+- MMR(Maximal Marginal Relevance)의 구체적인 작동 방식은? — Needs Source
+- `BaseRetriever`의 `get_relevant_documents` 메서드 계약은? — Needs Source
+- `init_embeddings("openai:text-embedding-3-small")` 형식은 새로운 API인가? 구버전 `OpenAIEmbeddings()`와의 차이는? — Source: `langchain-docs-rag-2026-05-23`
+- `response_format="content_and_artifact"` 옵션의 정확한 의미는? — Source: `langchain-docs-rag-2026-05-23`
+- `_merge_splits()`의 `chunk_overlap` 구현 방식은? 슬라이딩 윈도우인가? — Source: `langchain-source-text-splitters-2026-05-23`
+- `wrap_model_call` 데코레이터의 전체 서명과 `before_model` hook과의 차이는? — Source: `langchain-source-dynamic-prompt-2026-05-23`
 
 ## LangGraph
 
