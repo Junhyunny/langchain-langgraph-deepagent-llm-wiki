@@ -258,14 +258,15 @@
 
 ### 핸드오프 (Handoffs)
 
-- 핸드오프가 "특별한 도구 호출"로 구현된다면, 각 프레임워크에서 어떤 API/클래스를 사용하는가? — Needs Source
-- 핸드오프 시 메시지 히스토리와 상태는 대상 에이전트로 전달되는가, 전달되지 않는가? Deep Agents의 `_EXCLUDED_STATE_KEYS` 패턴과의 관계는? — Needs Source (관련: `deepagents-source-subagents-2026-05-23`)
-- 핸드오프(단방향 제어 이전)와 서브에이전트 도구 호출(결과 반환)의 실질적 차이는 무엇인가? — Needs Source
+- 핸드오프가 "특별한 도구 호출"로 구현된다면, 각 프레임워크에서 어떤 API/클래스를 사용하는가? — **OpenAI Agents SDK: `handoff()` 함수, tool name `transfer_to_<agent_name>`으로 노출됨** (Source: `openai-agents-sdk-handoffs-2026-05-23`) / LangGraph/Deep Agents: Needs Source
+- 핸드오프 시 메시지 히스토리와 상태는 대상 에이전트로 전달되는가, 전달되지 않는가? Deep Agents의 `_EXCLUDED_STATE_KEYS` 패턴과의 관계는? — **OpenAI SDK: 기본 전달, `input_filter` / `RunConfig.nest_handoff_history`로 제어** (Source: `openai-agents-sdk-handoffs-2026-05-23`) / Deep Agents: Needs Source
+- 핸드오프(단방향 제어 이전)와 서브에이전트 도구 호출(결과 반환)의 실질적 차이는 무엇인가? — **부분 검증됨**: 핸드오프=단방향(돌아오지 않음), 서브에이전트=결과 반환. OpenAI SDK에서는 `Agent.as_tool()`이 서브에이전트 도구 호출 패턴. (Source: `openai-agents-sdk-handoffs-2026-05-23`)
 - LangGraph의 `Command(goto=...)` 패턴이 핸드오프로 사용될 수 있는가? — Needs Source (관련: `langgraph-docs-graph-api-2026-05-23`)
+- LangGraph에서 LLM이 tool call로 핸드오프를 트리거하는 패턴이 존재하는가? — Needs Source
 
 ### 트레이싱 (Tracing)
 
-- LangChain / LangGraph / Deep Agents의 트레이싱 기능은 각각 어떤 API로 제공되는가? 내장인가, 외부 도구(LangSmith) 연동인가? — Needs Source
+- LangChain / LangGraph / Deep Agents의 트레이싱 기능은 각각 어떤 API로 제공되는가? 내장인가, 외부 도구(LangSmith) 연동인가? — **OpenAI Agents SDK: 기본 내장 (`trace()`, `agent_span()` 등), `platform.openai.com/traces` 대시보드** (Source: `openai-agents-sdk-tracing-2026-05-23`) / LangChain/LangGraph: LangSmith — Needs Source
 - LangSmith는 LangChain / LangGraph / Deep Agents와 어떻게 통합되는가? (자동 instrumenting vs 명시 설정?) — Needs Source
 - 그래프 스텝별 input/output을 프로그래밍 방식으로 접근하는 API는? (`stream_mode="debug"` 등?) — Needs Source (관련: `langgraph-source-streaming-2026-05-23`)
 - Deep Agents의 트레이싱 구현체는 별도로 존재하는가, LangGraph Pregel 기반인가? — Needs Source

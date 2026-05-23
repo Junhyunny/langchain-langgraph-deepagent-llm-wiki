@@ -470,3 +470,59 @@ sources:
       - "docs/wiki/experiments/2026-05-23 same task 3 frameworks.md"
       - "docs/wiki/_open_questions.md"
     notes: "Evidence for Deep Agents eval model groups catalog, Harbor integration, and BFCL v3 coverage in external benchmarks docs."
+
+  - id: openai-agents-sdk-agent-overview-2026-05-23
+    title: "OpenAI Agents SDK — Agent Overview"
+    type: official_docs
+    framework: OpenAI Agents SDK
+    url: "https://openai.github.io/openai-agents-python/agents/"
+    local_path: "docs/raw/official/openai_agents_sdk/openai-agents-sdk-agent-overview-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Agent Runtime.md"
+    notes: "Agent 구성 속성 전체 목록(instructions, tools, handoffs, guardrails, output_type, hooks 등), context DI 패턴."
+  - id: openai-agents-sdk-guardrails-2026-05-23
+    title: "OpenAI Agents SDK — Guardrails"
+    type: official_docs
+    framework: OpenAI Agents SDK
+    url: "https://openai.github.io/openai-agents-python/guardrails/"
+    local_path: "docs/raw/official/openai_agents_sdk/openai-agents-sdk-guardrails-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Guardrails.md"
+    notes: "Input/Output/Tool guardrail 종류, 실행 모드(parallel/blocking), tripwire 메커니즘, 구현 예시."
+  - id: openai-agents-sdk-handoffs-2026-05-23
+    title: "OpenAI Agents SDK — Handoffs"
+    type: official_docs
+    framework: OpenAI Agents SDK
+    url: "https://openai.github.io/openai-agents-python/handoffs/"
+    local_path: "docs/raw/official/openai_agents_sdk/openai-agents-sdk-handoffs-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Handoffs.md"
+    notes: "handoff()함수 파라미터, input_type, input_filter, on_handoff 콜백, 핸드오프 vs Agent.as_tool() 비교."
+  - id: openai-agents-sdk-tracing-2026-05-23
+    title: "OpenAI Agents SDK — Tracing"
+    type: official_docs
+    framework: OpenAI Agents SDK
+    url: "https://openai.github.io/openai-agents-python/tracing/"
+    local_path: "docs/raw/official/openai_agents_sdk/openai-agents-sdk-tracing-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Tracing.md"
+    notes: "Trace/Span 구조, 기본 tracing 대상(generation/tool/handoff/guardrail span), BatchTraceProcessor, flush_traces(), custom span."
+  - id: openai-agents-sdk-running-agents-2026-05-23
+    title: "OpenAI Agents SDK — Running Agents"
+    type: official_docs
+    framework: OpenAI Agents SDK
+    url: "https://openai.github.io/openai-agents-python/running_agents/"
+    local_path: "docs/raw/official/openai_agents_sdk/openai-agents-sdk-running-agents-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Agent Runtime.md"
+    notes: "Runner 클래스 3가지 메서드(run/run_sync/run_streamed), agent loop(LLM→final_output|handoff|tool_calls), RunConfig 파라미터."
