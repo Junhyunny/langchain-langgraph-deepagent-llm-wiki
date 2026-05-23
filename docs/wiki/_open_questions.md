@@ -79,15 +79,17 @@
 - ✅ RAG 보안 위협: Indirect Prompt Injection — 검색 문서에 악성 지시 삽입. 완화: 콘텐츠 정제, 명시적 구분자, 가드레일. (Source: `langchain-docs-rag-2026-05-23`)
 - ✅ `@dynamic_prompt` 정체: `langchain.agents.middleware.types`의 AgentMiddleware 생성 데코레이터. 서명 `(request: ModelRequest) -> str | SystemMessage`. wrap_model_call 인터셉트로 시스템 프롬프트 동적 교체. (Source: `langchain-source-dynamic-prompt-2026-05-23`)
 
+**해소됨 (2026-05-23):**
+- ✅ `LangChain Document 객체 구조` → `page_content: str`, `metadata: dict`, `id: str | None`, `type: Literal["Document"]`. (Source: `langchain-source-vectorstore-embeddings-2026-05-23`)
+- ✅ `Embeddings 기반 클래스 인터페이스` → `embed_documents(list[str]) -> list[list[float]]`, `embed_query(str) -> list[float]` abstract. async 버전은 기본 sync wrapper. (Source: `langchain-source-vectorstore-embeddings-2026-05-23`)
+- ✅ `as_retriever()` search_type 옵션 → `similarity`(k=4), `mmr`(k/fetch_k=20/lambda_mult=0.5), `similarity_score_threshold`(score_threshold). (Source: `langchain-source-vectorstore-embeddings-2026-05-23`)
+- ✅ `MMR 작동 방식` → fetch_k 후보 → `maximal_marginal_relevance(embedding, candidates, k, lambda_mult)`. lambda_mult: 1.0=관련성, 0.0=다양성, 0.5=기본. (Source: `langchain-source-vectorstore-embeddings-2026-05-23`)
+- ✅ `BaseRetriever.get_relevant_documents 계약` → deprecated. 현재 `invoke()` 사용. 구현 시 `_get_relevant_documents()` override. (Source: `langchain-source-vectorstore-embeddings-2026-05-23`)
+
 **잔여 질문:**
 - ⚠️ RAG 문서의 `@dynamic_prompt(user_query: str) -> list` 패턴 — 실제 API와 불일치. 문서 오류인가, 다른 decorator인가? — Source: `langchain-docs-rag-2026-05-23`, `langchain-source-dynamic-prompt-2026-05-23`
-- LangChain의 `Document` 객체 구조는? (`page_content`, `metadata` 외에 다른 필드가 있는가?) — Needs Source
-- FAISS의 `similarity_search`는 내부적으로 어떤 알고리즘을 사용하는가? (L2 거리 기본값인가?) — Needs Source
-- FAISS의 거리 점수(낮을수록 유사)와 cosine similarity(높을수록 유사)의 관계는? 변환 공식은? — Needs Source
-- LangChain이 지원하는 embedding 모델의 기본 인터페이스(`Embeddings` 클래스)는? — Needs Source
-- `as_retriever()`의 `search_type` 옵션 차이: `similarity`, `mmr`, `similarity_score_threshold` — Needs Source
-- MMR(Maximal Marginal Relevance)의 구체적인 작동 방식은? — Needs Source
-- `BaseRetriever`의 `get_relevant_documents` 메서드 계약은? — Needs Source
+- ⚠️ FAISS `similarity_search`의 내부 알고리즘 (L2 거리 기본값인가?) — Needs Source (GitHub 파일 접근 실패)
+- ⚠️ FAISS 거리 점수와 cosine similarity 관계, 변환 공식 — Needs Source
 - `init_embeddings("openai:text-embedding-3-small")` 형식은 새로운 API인가? 구버전 `OpenAIEmbeddings()`와의 차이는? — Source: `langchain-docs-rag-2026-05-23`
 - `response_format="content_and_artifact"` 옵션의 정확한 의미는? — Source: `langchain-docs-rag-2026-05-23`
 - `_merge_splits()`의 `chunk_overlap` 구현 방식은? 슬라이딩 윈도우인가? — Source: `langchain-source-text-splitters-2026-05-23`

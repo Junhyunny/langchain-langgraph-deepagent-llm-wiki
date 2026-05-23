@@ -9,6 +9,7 @@ sources:
   - langchain-docs-rag-2026-05-23
   - langchain-source-text-splitters-2026-05-23
   - langchain-source-dynamic-prompt-2026-05-23
+  - langchain-source-vectorstore-embeddings-2026-05-23
 ---
 
 # RAG (Retrieval-Augmented Generation)
@@ -193,6 +194,30 @@ retriever = vector_store.as_retriever(
 docs = retriever.invoke("What is LangChain?")
 ```
 
+**search_type 옵션 (소스 검증됨):**
+
+| search_type | 파라미터 | 내부 메서드 | 설명 |
+|-------------|----------|------------|------|
+| `"similarity"` (기본) | `k=4` | `similarity_search()` | 상위 k개 유사 문서 |
+| `"mmr"` | `k=4`, `fetch_k=20`, `lambda_mult=0.5` | `max_marginal_relevance_search()` | 관련성 + 다양성 균형 |
+| `"similarity_score_threshold"` | `score_threshold` | `similarity_search_with_relevance_scores()` | 임계값 이상인 문서만 |
+
+**MMR (Maximal Marginal Relevance):**
+- `fetch_k`개 후보 검색 → `maximal_marginal_relevance()` 알고리즘으로 `k`개 선택
+- `lambda_mult`: 1.0 = 순수 관련성, 0.0 = 순수 다양성, 0.5 = 균형 (기본)
+- 유사하지만 서로 다른 문서를 선택해 검색 결과 다양성 향상
+
+Source: `langchain-source-vectorstore-embeddings-2026-05-23`
+
+**BaseRetriever 계약:**
+```python
+# 구현 시 필요한 메서드:
+def _get_relevant_documents(self, query: str, *, run_manager, **kwargs) -> list[Document]: ...
+# 공개 API: retriever.invoke(query)  (get_relevant_documents는 deprecated)
+```
+
+Source: `langchain-source-vectorstore-embeddings-2026-05-23`
+
 **추가 리트리버 타입:**
 - `MultiQueryRetriever` — 다양한 쿼리 변형으로 recall 향상
 - `ContextualCompressionRetriever` — 관련 부분만 압축
@@ -200,6 +225,30 @@ docs = retriever.invoke("What is LangChain?")
 - `EnsembleRetriever` — 여러 리트리버 결합
 
 Source: `langchain-docs-rag-2026-05-23`
+
+### Document 구조
+
+```python
+class Document:
+    page_content: str       # 문서 텍스트
+    metadata: dict          # 임의 메타데이터 (source, page 등)
+    id: str | None          # 선택적 식별자
+```
+
+Source: `langchain-source-vectorstore-embeddings-2026-05-23`
+
+### Embeddings 인터페이스
+
+```python
+class Embeddings(ABC):
+    def embed_documents(self, texts: list[str]) -> list[list[float]]: ...
+    def embed_query(self, text: str) -> list[float]: ...
+    # async 버전은 기본적으로 sync wrapper (native async 구현체도 있음)
+```
+
+`InMemoryVectorStore`의 기본 거리 메트릭: **cosine similarity** (높을수록 유사)
+
+Source: `langchain-source-vectorstore-embeddings-2026-05-23`
 
 ## 보안: Indirect Prompt Injection
 
