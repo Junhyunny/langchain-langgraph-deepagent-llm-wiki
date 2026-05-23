@@ -83,6 +83,7 @@
 - `BaseRetriever`의 `get_relevant_documents` 메서드 계약은? — Needs Source
 - `init_embeddings("openai:text-embedding-3-small")` 형식은 새로운 API인가? 구버전 `OpenAIEmbeddings()`와의 차이는? — Source: `langchain-docs-rag-2026-05-23`
 - `@dynamic_prompt` 데코레이터는 무엇인가? LCEL chain을 대체하는 새 패턴인가? — Source: `langchain-docs-rag-2026-05-23`
+  **⚠️ 불일치 발견:** 소스코드(`langchain-source-dynamic-prompt-2026-05-23`)에서 확인된 실제 API는 `(request: ModelRequest) -> str | SystemMessage` 서명을 요구한다. RAG 문서에서 보여준 `(user_query: str) -> list[SystemMessage, HumanMessage]` 패턴과 시그니처가 다르다. RAG 문서 예제가 오래되거나 다른 decorator를 쓴 것인지 확인 필요.
 - `response_format="content_and_artifact"` 옵션의 정확한 의미는? — Source: `langchain-docs-rag-2026-05-23`
 
 ## LangGraph
