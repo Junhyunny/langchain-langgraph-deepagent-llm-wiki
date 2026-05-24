@@ -55,7 +55,7 @@
 - `NodeRuntime.control`과 `NodeRuntime.heartbeat`의 구체적인 사용 사례는? — Source: `langgraph-docs-graph-api-2026-05-23`
 - `Send` 사용 시 각 worker 결과를 집계하는 reduce 단계 Reducer 설계 패턴은? — Source: `langgraph-docs-graph-api-2026-05-23`
 - LangGraph 서브그래프와 상위 그래프 간 상태 스키마 호환성 요구사항은? — Needs Source
-- `Command(resume=value, goto="...")` 패턴은 `interrupt()`와 어떻게 연동되는가? — Source: `langgraph-docs-graph-api-2026-05-23`
+- `Command(resume=value, goto="...")` 패턴은 `interrupt()`와 어떻게 연동되는가? — ✅ 해소 (2026-05-24, `_loop.py` + `types.py` 직접 확인) → `HumanInTheLoop.md` 참조. Source: `langgraph-venv-types-py-hitl-2026-05-24`, `langgraph-venv-loop-py-2026-05-24`
 
 ### Checkpointer
 

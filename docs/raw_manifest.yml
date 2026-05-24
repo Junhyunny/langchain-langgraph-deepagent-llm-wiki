@@ -612,3 +612,27 @@ sources:
     used_by:
       - "docs/wiki/concepts/DeltaChannel.md"
     notes: "InMemorySaver 전체(704줄). get_delta_channel_history(line 142): chain 1회 구성, direct blob 조회, _DeltaSnapshot vs plain-value 분기, 채널 독립 종료. BaseCheckpointSaver.get_delta_channel_history(base/__init__.py line 582): get_tuple() N번 호출 fallback. DeltaChannelHistory TypedDict 정의."
+  - id: langgraph-venv-types-py-hitl-2026-05-24
+    title: "LangGraph types.py — interrupt(), Interrupt, Command 구현"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langgraph/types.py"
+    retrieved_at: "2026-05-24"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/HumanInTheLoop.md"
+    notes: "interrupt() (line 801): GraphInterrupt 발생 / scratchpad.resume 반환. Interrupt dataclass (line 525): value + id(xxh3_128). Command dataclass (line 749): graph/update/resume/goto."
+  - id: langgraph-venv-loop-py-2026-05-24
+    title: "LangGraph pregel/_loop.py — is_resuming, Command(resume=) 처리, _suppress_interrupt"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langgraph/pregel/_loop.py"
+    retrieved_at: "2026-05-24"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/HumanInTheLoop.md"
+    notes: "is_resuming 감지 (line 839), is_time_traveling (line 857), Command(resume=) → resume_is_map 분기 (line 882), versions_seen[INTERRUPT] 업데이트 (line 925), _suppress_interrupt (line 1304)."

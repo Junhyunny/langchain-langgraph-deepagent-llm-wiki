@@ -26,6 +26,7 @@
 - [[Store]] → `concepts/Store.md`
 - [[RAG]] → `concepts/RAG.md`
 - [[PromptTemplate]] → `concepts/PromptTemplate.md`
+- [[Human-in-the-Loop]] → `concepts/HumanInTheLoop.md`
 - [[DeltaChannel]] → `concepts/DeltaChannel.md`
 
 ## 코드베이스 맵
