@@ -10,6 +10,7 @@ sources:
   - langgraph-source-checkpoint-runtime-2026-05-20
   - langgraph-docs-graph-api-2026-05-23
   - langgraph-store-base-2026-05-23
+  - langgraph-tests-pregel-2026-05-24
 ---
 
 # LangGraph Code Map
@@ -243,10 +244,50 @@ Source: `langgraph-store-base-2026-05-23`
 
 ## 읽어야 할 테스트
 
-- checkpoint saver tests: 추후 작성
-- pending writes recovery tests: 추후 작성
-- interrupt/resume tests: 추후 작성
-- Store vector search tests: 추후 작성
+`test_pregel.py` — GitHub에서 직접 읽음 (2026-05-24)
+
+### test_checkpoint_errors (line 182)
+*소스: `https://github.com/langchain-ai/langgraph/blob/main/libs/langgraph/tests/test_pregel.py#L182`*
+
+**검증 내용:**
+- `get_tuple()` 실패 → `invoke` 시 즉시 `ValueError` 전파
+- `put()` 실패 → 노드 실행 후 `ValueError` 전파 (노드는 실행되고 저장에서 실패)
+- `get_next_version()` 실패 → `invoke` 시 즉시 `ValueError` 전파
+- `put_writes()` 실패 → `durability="async"` + 병렬 노드일 때만 `ValueError` 전파
+
+**의미:** checkpoint 연산 호출 순서 = `get_next_version` → `get_tuple` → 노드 실행 → `put_writes` (async/병렬) → `put`
+
+---
+
+### test_invoke_checkpoint_two (line 805)
+*소스: `https://github.com/langchain-ai/langgraph/blob/main/libs/langgraph/tests/test_pregel.py#L805`*
+
+**검증 내용:**
+- `BinaryOperatorAggregate` 상태가 `thread_id` 기준으로 누적됨 (0→2→7)
+- `RetryPolicy` 동작: `ConnectionError` → 재시도 후 계속
+- 치명적 에러(`ValueError`) 시: checkpoint 미갱신, `pending_writes`에 에러 기록 — `(task_id, "__error__", "ValueError(...)")`
+- 다른 `thread_id`는 상태 완전 독립 (thread "2"는 total=0부터 시작)
+
+---
+
+### test_pending_writes_resume (line 876)
+*소스: `https://github.com/langchain-ai/langgraph/blob/main/libs/langgraph/tests/test_pregel.py#L876`*
+
+**검증 내용:**
+- 병렬 노드 "one"(성공)/"two"(실패) 상황:
+  - `state.values = {"value": 3}` — 성공 노드 write(2)는 누적됨
+  - `state.next = ("two",)` — 실패한 노드만 재시도 대상
+  - `checkpoint.pending_writes` = `[(task_id, "value", 2), (task_id, ERROR, "ConnectionError...")]`
+- `get_state(specific checkpoint_id)` → pending_writes **미적용** (raw checkpoint 값만 반환)
+- `invoke(None, thread_id)` (None input) = resume → 성공한 "one"은 **재실행 안됨**, "two"만 재시도
+- retry 후 "two" 또 실패 → checkpoint 미갱신 (동일 step 유지)
+- "two" 성공 시: 최종값 = 1(초기) + 2("one" write) + 3("two" write) = 6
+- `durability="exit"` → 중간 실패 checkpoint 저장 안됨 (총 2개만 저장)
+
+**DeltaChannel 관련 테스트:**
+- `test_delta_channel_benchmark.py` — K개 DeltaChannel, 혼합 snapshot frequency, 다양한 turn count 시나리오에서 read/write latency, storage, 메모리 사용량 벤치마크
+- `test_delta_channel_migration.py` (24KB), `test_delta_channel_exit_mode.py` (13KB) — DeltaChannel 재구성/migration 검증 테스트 (아직 미읽음)
+
 
 ## 불명확한 영역 (잔여)
 
@@ -279,3 +320,4 @@ Source: `langgraph-store-base-2026-05-23`
 - `langgraph-source-checkpoint-runtime-2026-05-20`
 - `langgraph-docs-graph-api-2026-05-23`
 - `langgraph-store-base-2026-05-23`
+- `langgraph-tests-pregel-2026-05-24`

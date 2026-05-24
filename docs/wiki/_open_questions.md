@@ -10,11 +10,8 @@
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - [ ] BFCL v3 평가가 실제 실행 경로(테스트/워크플로)에서 어떻게 연결되는지 확정한다.  
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
-- [ ] `create_agent` 초기화 시간(0.262s)이 `create_react_agent`(0.004s)보다 긴 이유 파악.  
-  Source: `langchain/agents/factory.py` `_get_bound_model` 분석 필요  
-  참고: `experiments/2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과.md`
-- [ ] Deep Agents `create_deep_agent` 파라미터명 확인 (`system_prompt=` vs `instructions=`).  
-  이전 위키 계획서에서 `instructions=`로 기재됐으나 LangChain은 `system_prompt=` 사용.
+- ✅ `create_agent` 초기화 시간(0.262s)이 `create_react_agent`(0.004s)보다 긴 이유: factory.py `.venv` 직접 확인(2026-05-24). 원인: model이 string이면 `init_chat_model()` 호출(provider import), middleware hook 감지(클래스 비교 전체 순회), `_resolve_schemas()`, `StateGraph` 구성, `graph.compile()`. `bind_tools()`는 **init이 아닌 매 model 호출 시** `_get_bound_model()` 내에서 실행됨. Source: `langchain-venv-factory-read-2026-05-24`
+- ✅ Deep Agents `create_deep_agent` 파라미터명 확인: `system_prompt=` (`instructions=` 아님). `.venv` 직접 실행으로 확인 (2026-05-24). Source: `deepagents-venv-read-2026-05-24`
 
 ---
 
@@ -64,7 +61,7 @@
 
 - `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification (문서는 "저장/resume 불가"라고만 설명, 에러 타입 미명시)
 - `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — ✅ 해소 (2026-05-24): `_validate.py validate_graph()` 직접 확인. RESERVED 충돌, 구독 channel 존재, input/output/stream channel 존재, interrupt 노드 존재 검사.
-- `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test는 어디에 있는가? — Needs Source
+- `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test: `test_delta_channel_migration.py` (24KB), `test_delta_channel_exit_mode.py` (13KB) — 파일 확인됨, 아직 내용 미읽음. Source: `langgraph-tests-pregel-2026-05-24`
 - `DeltaChannel`의 `snapshot_frequency` 의미: `.venv/_checkpoint.py` 직접 확인 결과 update count ≥ `snapshot_frequency` OR supersteps ≥ `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`이면 스냅샷. 50이면 50 updates(write 횟수)다. ✅ 부분 해소.
 - `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — `_checkpoint.py`에 없음, `_loop.py` 탐색 필요
 - `saver.get_delta_channel_history()` 메서드는 `BaseCheckpointSaver`에 언제 추가됐는가? — Needs Source

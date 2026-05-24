@@ -1,14 +1,15 @@
 ---
 type: framework
 framework: Deep Agents
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-19
+last_reviewed: 2026-05-24
 sources:
   - deepagents-docs-overview-2026-05-18
   - deepagents-docs-context-engineering-2026-05-18
   - deepagents-source-graph-2026-05-19
   - deepagents-docs-harness-2026-05-19
+  - deepagents-venv-read-2026-05-24
 ---
 
 # Deep Agents
@@ -195,7 +196,28 @@ Source: `deepagents-source-graph-2026-05-19`
 
 **Long-term Memory:** 기본은 단일 스레드. 스레드 간 영속은 `CompositeBackend` + `StoreBackend` 필요
 
-## Interpretation
+## 예제 (실행 가능)
+
+`examples/deepagents_core/` 디렉터리에 실행 가능한 예제가 있다.
+
+```bash
+# API 키 없이 구조 검사만 수행
+python examples/deepagents_core/01_basic_deep_agent.py   # 시그니처, 상태, 프롬프트 조립 확인
+python examples/deepagents_core/02_middleware_stack.py   # 미들웨어 스택, 상태 필드 확인
+
+# 실제 에이전트 실행 (API 키 필요)
+ANTHROPIC_API_KEY=<key> python examples/deepagents_core/01_basic_deep_agent.py
+```
+
+**실행 중 확인된 사실 (v0.6.3, .venv 직접 읽기):**
+- `system_prompt=` — `instructions=`이 아님 (파라미터명 직접 확인)
+- `_DeepAgentState` 상속 필드: `messages`(오버라이드), `jump_to`(EphemeralValue), `structured_response`
+- `checkpointer` 타입: `None | bool | BaseCheckpointSaver` — `bool` 허용 (True = MemorySaver 자동 생성 가설)
+- 반환 타입: `CompiledStateGraph.with_config(recursion_limit=9_999, metadata={...})`
+
+Source: `deepagents-venv-read-2026-05-24`
+
+
 - Deep Agents는 LangGraph + LangChain의 기능을 직접 조합하는 대신, 공통 패턴을 미리 구성해 둔 고수준 래퍼로 이해할 수 있다.
 - "agent harness"라는 정의는 framework보다 좁은 개념 — 기존 runtime(LangGraph) 위에서 동작하는 조립품이다.
 - 세밀한 그래프 제어가 필요할 때는 LangGraph를 직접 쓰는 것이 더 적합할 수 있다.
@@ -268,6 +290,7 @@ Deep Agents는 7가지 eval 카테고리와 5가지 메트릭(correctness, step_
 - `register_harness_profile`의 entry points 패키징 방법은? — Source: `deepagents-docs-harness-2026-05-19`
 - Sandbox backend 없이 `execute` tool 호출 시 error 반환인가, tool 목록에서 제외되는가? — Source: `deepagents-docs-harness-2026-05-19`
 - Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
+- `checkpointer=True` 전달 시 자동으로 `MemorySaver` 생성되는가? — Needs Verification (`langchain.agents.create_agent` 소스 확인 필요)
 
 **해소된 질문:**
 - ✅ `create_deep_agent`는 `langchain.agents.create_agent`에 위임 → `CompiledStateGraph` 반환 (Source: `deepagents-source-graph-2026-05-19`)
@@ -277,6 +300,8 @@ Deep Agents는 7가지 eval 카테고리와 5가지 메트릭(correctness, step_
 - ✅ `HarnessProfile` 등록 방법: `register_harness_profile(key, HarnessProfile(...))` (Source: `deepagents-docs-harness-2026-05-19`)
 - ✅ `HarnessProfile` 전체 필드: `base_system_prompt`, `system_prompt_suffix`, `tool_description_overrides`, `excluded_tools`, `excluded_middleware`, `extra_middleware`, `general_purpose_subagent` — 7개 (Source: `deepagents-source-harness-profiles-2026-05-19`)
 - ✅ Provider-level vs model-level merge 우선순위: exact merge 시 provider=base, model-level=override. scalar 필드는 override non-None 우선, set 필드는 union (Source: `deepagents-source-harness-profiles-2026-05-19`)
+- ✅ `system_prompt=` 파라미터명 확인 (`instructions=` 아님) — `.venv` 직접 실행으로 확인 (Source: `deepagents-venv-read-2026-05-24`)
+- ✅ `_DeepAgentState` 전체 필드: `messages`(DeltaChannel 오버라이드), `jump_to`(EphemeralValue), `structured_response` — `.venv` 직접 실행으로 확인 (Source: `deepagents-venv-read-2026-05-24`)
 
 ## Related Pages
 

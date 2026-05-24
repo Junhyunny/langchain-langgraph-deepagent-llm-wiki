@@ -1,15 +1,16 @@
 ---
 type: code_map
 framework: LangChain
-status: draft
+status: partial
 confidence: medium
-last_reviewed: 2026-05-23
+last_reviewed: 2026-05-24
 sources:
   - langchain-source-prompts-2026-05-23
   - langchain-source-runnable-2026-05-23
   - langchain-source-tools-2026-05-23
   - langchain-source-create-agent-factory-2026-05-23
   - langchain-source-bind-tools-function-calling-2026-05-23
+  - langchain-venv-factory-read-2026-05-24
 ---
 
 # LangChain Code Map
@@ -127,15 +128,48 @@ libs/
 ```
 
 ### `langchain_v1/langchain/agents/factory.py`
-*Source: `langchain-source-create-agent-factory-2026-05-23`*
+*Source: `langchain-source-create-agent-factory-2026-05-23`, `.venv` 직접 확인 2026-05-24*
 
 | 심볼 | 역할 |
 |------|------|
-| `create_agent` | 현재 공식 agent 생성 API. StateGraph 동적 구성 |
-| `_chain_model_call_handlers` | middleware model call handler 체이닝 |
+| `create_agent` | 현재 공식 agent 생성 API. StateGraph 동적 구성 후 compile 반환 |
+| `_get_bound_model` | 매 model 호출 시 `bind_tools()` 실행 + AutoStrategy 처리 (런타임) |
+| `_execute_model_sync` | 동기 model 호출. `_get_bound_model` → `model_.invoke` |
+| `_execute_model_async` | 비동기 model 호출. `_get_bound_model` → `model_.ainvoke` |
+| `model_node` | graph에 추가되는 model 노드 함수 |
+| `_chain_model_call_handlers` | middleware model call handler 체이닝 (sync) |
+| `_chain_async_model_call_handlers` | middleware model call handler 체이닝 (async) |
 | `_chain_tool_call_wrappers` | middleware tool call wrapper 체이닝 |
+| `_resolve_schemas` | middleware state schema + base_state 병합 |
+| `ResponseFormat` | `ToolStrategy | ProviderStrategy | AutoStrategy` 유형 |
 
-**검증됨:** `create_agent`는 `StateGraph`를 직접 구성한다. model node + ToolNode + conditional edges = agent loop. `create_tool_calling_agent` + `AgentExecutor` 패턴은 deprecated이며 현재 master에 없다.
+**검증됨 (v0.6.3 .venv 직접 확인):**
+
+1. **초기화 시점 작업 (create_agent 호출 시):**
+   - `init_chat_model(model)` — model이 string일 때만 실행 (provider 패키지 import 포함)
+   - middleware hook 감지 (클래스 비교 방식, 전체 middleware 순회)
+   - `ToolNode` 생성 (available_tools + middleware_tools 결합)
+   - `_resolve_schemas(state_schemas)` — middleware schema 병합
+   - `StateGraph` 생성 + 모든 노드/엣지 추가
+   - `graph.compile()` — LangGraph compile (edge 검증, Pregel 생성)
+   - `.with_config(recursion_limit=9_999)` 래핑
+
+2. **런타임 시점 작업 (매 model 호출 시):**
+   - `_get_bound_model(request)` 호출
+   - `bind_tools(final_tools, ...)` 실행 — **bind_tools는 init에서 하지 않음**
+   - AutoStrategy → ProviderStrategy/ToolStrategy 자동 결정 (model capability 기반)
+
+3. **초기화 시간 차이 원인:**
+   - `model` 인수가 **string**이면 `init_chat_model()` 호출 → provider 패키지 import 발생 (느림)
+   - `model` 인수가 **BaseChatModel 인스턴스**이면 skip (빠름)
+   - **middleware 수가 많을수록** hook 감지, schema 병합, 노드 추가 작업 증가
+   - `create_deep_agent` = `create_agent` + 13개 middleware → compile 시 노드 수 대폭 증가
+
+4. **recursion_limit=9_999:**
+   - `create_agent` 자체가 line 1665에서 직접 설정 (Deep Agents 전용이 아님)
+   - Deep Agents는 `create_agent` 반환값에 `.with_config(recursion_limit=9_999)`를 한 번 더 적용 (동일 값)
+
+5. **`create_tool_calling_agent` + `AgentExecutor` 패턴**: deprecated, 현재 master에 없음
 
 ### `langchain_core/utils/function_calling.py`
 *Source: `langchain-source-bind-tools-function-calling-2026-05-23`*
@@ -187,6 +221,7 @@ libs/
 - `_chain_model_call_handlers()`의 구체적인 체이닝 구현은?
 - `create_react_agent`(LangGraph prebuilt)과 `create_agent`(LangChain)의 차이는?
 - Anthropic provider `bind_tools`의 변환 경로는?
+- `init_chat_model("provider:model_name")` 형식의 문자열 파싱 규칙은?
 
 ## 관련 페이지
 
@@ -201,3 +236,4 @@ libs/
 - `langchain-source-prompts-2026-05-23`
 - `langchain-source-create-agent-factory-2026-05-23`
 - `langchain-source-bind-tools-function-calling-2026-05-23`
+- `langchain-venv-factory-read-2026-05-24`

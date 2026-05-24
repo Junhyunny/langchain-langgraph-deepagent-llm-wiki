@@ -526,3 +526,27 @@ sources:
     used_by:
       - "docs/wiki/concepts/Agent Runtime.md"
     notes: "Runner 클래스 3가지 메서드(run/run_sync/run_streamed), agent loop(LLM→final_output|handoff|tool_calls), RunConfig 파라미터."
+  - id: langgraph-tests-pregel-2026-05-24
+    title: "LangGraph test_pregel.py — checkpoint errors, invoke_checkpoint_two, pending_writes_resume"
+    type: test_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: "N/A (read via GitHub raw API)"
+    retrieved_at: "2026-05-24"
+    status: public
+    used_by:
+      - "docs/wiki/codebase/LangGraph Code Map.md"
+    notes: "test_checkpoint_errors(L182), test_invoke_checkpoint_two(L805), test_pending_writes_resume(L876) 직접 읽음. checkpoint 연산 순서, RetryPolicy, pending_writes resume 메커니즘 확인."
+  - id: langchain-venv-factory-read-2026-05-24
+    title: "LangChain langchain/agents/factory.py — create_agent 전체 구조"
+    type: source_code
+    framework: LangChain
+    repo: "https://github.com/langchain-ai/langchain"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langchain/agents/factory.py"
+    retrieved_at: "2026-05-24"
+    status: public
+    used_by:
+      - "docs/wiki/codebase/LangChain Code Map.md"
+    notes: "create_agent 초기화 흐름 전체 확인. init 시점 vs 런타임 시점 bind_tools 호출 위치, init_chat_model, _get_bound_model, middleware hook 감지 로직."
