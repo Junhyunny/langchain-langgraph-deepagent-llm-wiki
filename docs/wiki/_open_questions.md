@@ -49,7 +49,7 @@
 
 ### 그래프 기초
 
-- LangGraph에서 cyclic graph는 내부적으로 어떻게 무한 루프를 방지하는가? (recursion_limit 메커니즘?)
+- LangGraph에서 cyclic graph는 내부적으로 어떻게 무한 루프를 방지하는가? — ✅ 해소 (2026-05-24, `_loop.py` 직접 확인). `stop = step + recursion_limit + 1`. 매 superstep마다 `step += 1`. `step > stop` 이면 `status="out_of_steps"`. `main.py`에서 `GraphRecursionError` 발생. 기본값 `recursion_limit=25` (`ensure_config()` 확인). Source: `langgraph-venv-loop-py-2026-05-24`
 - `add_conditional_edges`의 두 번째 인수(path_map)는 선택인가 필수인가? 없을 때 동작 방식은?
 - `TypedDict` vs `Pydantic` 상태 스키마의 실질적인 차이는? (런타임 유효성 검사, 직렬화)
 - `NodeRuntime.control`과 `NodeRuntime.heartbeat`의 구체적인 사용 사례는? — Source: `langgraph-docs-graph-api-2026-05-23`
@@ -67,7 +67,7 @@
 - `saver.get_delta_channel_history()` 메서드의 `InMemorySaver` 최적화 override vs `BaseCheckpointSaver` fallback 구현 상세: ✅ 해소 (2026-05-24) — InMemorySaver는 chain 1회 구성 + direct blob 조회 + `_DeltaSnapshot` 분기. fallback은 `get_tuple()` N번 호출. 양쪽 동일 결과.
 - `DeltaChannel` 자체 구현: ✅ 해소 (2026-05-24, `channels/delta.py` 전체 읽음) — `from_checkpoint(3분기)`, `replay_writes(Overwrite handling)`, `update()`, `checkpoint()=항상 MISSING`
 - checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Needs Source
-- `astream_events`와 함께 스트리밍은 어떻게 동작하는가?
+- `astream_events`와 함께 스트리밍은 어떻게 동작하는가? — ✅ 부분 해소 (2026-05-24, `main.py` line 3605 확인). v1/v2는 langchain_core `Runnable.stream_events` 위임. v3는 LangGraph-native `GraphRunStream` (실험적). `stream(stream_mode="updates")` 로 interrupt 이벤트 확인 가능 (`__interrupt__` 키). Source: `langgraph-venv-loop-py-2026-05-24`
 - LangGraph package version과 reference docs version의 관계는? GitHub page는 `langgraph==1.2.0`, `StateGraph.compile` reference는 v1.1.10으로 보였다. — Source: `langgraph-reference-stategraph-compile-2026-05-20`
 
 ### Memory Store

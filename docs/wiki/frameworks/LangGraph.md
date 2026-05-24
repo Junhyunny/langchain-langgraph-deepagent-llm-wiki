@@ -187,8 +187,12 @@ def human_review(state: State):
 
 ### 7. 재귀 제한 (recursion_limit)
 
-- 기본값: **1000** (LangGraph v1.0.6 이후)
-- 초과 시 `GraphRecursionError` 발생
+**검증됨** (`_loop.py` + `ensure_config()` 직접 확인, 2026-05-24):
+
+- 기본값: **25** (`langchain_core.ensure_config()` 기준)
+- 내부 구현: `stop = step + recursion_limit + 1`. 매 superstep마다 `step += 1`
+- `step > stop` 되면 `status = "out_of_steps"` → `main.py`에서 `GraphRecursionError` 발생
+- 에러 메시지: `"Recursion limit of {n} reached without hitting a stop condition."`
 - 설정: `config`의 **top-level key** (configurable 내부 ❌)
 
 ```python
@@ -312,7 +316,8 @@ for chunk in graph.stream(input, config, stream_mode="updates"):
 |------|----------|
 | `01_stategraph_basics.py` | `StateGraph` 정의 → `compile` → `invoke`, 전체 흐름 |
 | `02_checkpointing_history.py` | `InMemorySaver`, `thread_id`, `get_state_history()` |
-| `03_interrupt_resume.py` | `interrupt()`, `Command(resume=...)`, human-in-the-loop |
+| `03_interrupt_resume.py` | `interrupt()`, `Command(resume=...)`, human-in-the-loop 기본 |
+| `04_hitl_advanced.py` | 순차 interrupt 3회 invoke, stream interrupt 이벤트, `interrupt_before` 비교 |
 
 ```bash
 source .venv/bin/activate
@@ -327,7 +332,10 @@ python examples/langgraph_core/01_stategraph_basics.py
   → **✅ 해소 (2026-05-24):** `CompiledStateGraph(Pregel 상속)` 생성. 상세 흐름은 [[LangGraph Code Map]], [[LangGraph StateGraph compile invoke flow]] 참고.
 - `NodeRuntime.control`과 `NodeRuntime.heartbeat`의 구체적인 사용 사례는? — Needs Source
 - `interrupt()`와 `Command(resume=value, ...)` 패턴은 내부적으로 어떻게 연동되는가?
-  → 부분 확인: `interrupt()`는 `GraphInterrupt` 예외. `scratchpad.resume` 인덱스로 멱등 재개. 완전 검증 필요.
+  → **✅ 해소 (2026-05-24):** `types.py` + `_loop.py` 직접 확인. 상세는 [[Human-in-the-Loop]] 참고.
+  - 단일 노드 내 순차 interrupt N개 → N+1회 invoke 필요 (매 interrupt마다 즉시 중단)
+  - 병렬 노드 각 interrupt → 동시 pending → `{id: value}` dict로 1회 resume 가능
+  - `interrupt_before`: `tasks[0].interrupts == ()`, `interrupt()`: Interrupt 객체 있음
 - `Send` 사용 시 독립 그래프 복사본의 결과를 어떻게 집계하는가 (reduce 단계)? — Needs Source
 - Input/Output/Private State 스키마 분리가 성능에 미치는 영향은? — Needs Source
 

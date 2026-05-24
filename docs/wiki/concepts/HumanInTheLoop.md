@@ -227,27 +227,44 @@ Command(
 
 ## 다중 interrupt 패턴
 
+### 단일 노드 내 순차 interrupt (실행으로 검증됨)
+
+**검증됨** (`examples/langgraph_core/04_hitl_advanced.py` 실행 2026-05-24):
+
 ```python
 def review_node(state):
-    action = state["proposed_action"]
-    
-    # 첫 번째 interrupt: 작업 내용 확인
-    approval = interrupt({"action": action, "step": 1})
-    
-    if approval == "yes":
-        # 두 번째 interrupt: 최종 확인
-        final = interrupt({"message": "정말 실행할까요?", "step": 2})
-        return {"approved": final == "yes"}
-    return {"approved": False}
+    # 첫 번째 interrupt: 즉시 GraphInterrupt → pending 1개
+    security = interrupt({"question": "보안 승인?", "code": state["code"]})
+    # 두 번째 interrupt: 첫 resume 후 재실행 시 도달 → 또 pending 1개
+    style = interrupt({"question": "스타일 승인?", "code": state["code"]})
+    return {"security_ok": security, "style_ok": style}
+```
 
-# 재개: 단일 invoke로 여러 interrupt 모두 처리
-result = graph.invoke(
-    Command(resume={"interrupt_id_1": "yes", "interrupt_id_2": "yes"}),
+각 `interrupt()` 호출은 즉시 실행 중단 → **항상 pending 1개**.
+노드 내 2개의 interrupt = **3회의 invoke 필요**:
+
+```
+invoke(input)              → pause at interrupt 1  (next=('review',))
+invoke(Command(resume=T))  → pause at interrupt 2  (next=())
+invoke(Command(resume=T))  → node completes
+```
+
+**`next=()` 주의**: 두 번째 resume 후 `get_state().next == ()` 이지만 `tasks[0].interrupts` 에 interrupt가 있으면 아직 중단 상태. 마지막 resume이 아님.
+
+### 병렬 노드 각각 interrupt (이때 `{id: value}` dict 사용)
+
+여러 노드가 **동일 superstep**에서 병렬 실행 → 각각 interrupt 발생 → 동시에 pending 2개 이상:
+
+```python
+# 이 경우 단일 값으로 resume 불가 → RuntimeError
+# 반드시 {interrupt_id: value} dict 사용
+graph.invoke(
+    Command(resume={"id_from_node_a": "yes", "id_from_node_b": True}),
     config
 )
 ```
 
-**주의**: pending interrupt가 2개 이상이면 단일 값으로 resume 불가 → `{id: value}` dict 필수.
+**`_loop.py` line 895 검증**: `len(self._pending_interrupts()) > 1` 이면 단일 값 → RuntimeError.
 
 ---
 

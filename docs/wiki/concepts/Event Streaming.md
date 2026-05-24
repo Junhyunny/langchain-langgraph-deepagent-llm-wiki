@@ -181,10 +181,28 @@ Source: `langgraph-source-streaming-2026-05-23`
 
 ## 미해결 질문
 
-- `_collect_stream_modes(mux)` 함수의 정확한 구현 — Needs Source
+- `_collect_stream_modes(mux)` 함수의 정확한 구현 — ✅ 해소 (2026-05-24, `main.py` line 396 직접 확인). 등록된 모든 Transformer의 `required_stream_modes` 합집합 반환. Source: `langgraph-venv-loop-py-2026-05-24`
 - `ToolCallTransformer` 전체 구현 — Needs Source
 - Custom stream transformer의 정확한 계약(contract)은 무엇인가? — Needs Source
 - `SubgraphTransformer`가 `stream.subgraphs`에서 subagent handle을 어떻게 식별하는지 — Needs Source
+
+## interrupt 이벤트 스트리밍 (검증됨)
+
+**검증됨** (`examples/langgraph_core/04_hitl_advanced.py` 실행 2026-05-24):
+
+`stream(stream_mode="updates")` 사용 시 interrupt 이벤트 형식:
+
+```python
+# interrupt 발생 시 chunk 형식:
+{'__interrupt__': (Interrupt(value="...", id='...'),)}
+
+# resume 후 노드 완료 시 정상 chunk:
+{'node_name': {'key': 'value', ...}}
+```
+
+`stream_mode="values"` 사용 시: interrupt 발생하면 현재 state 전체 + `__interrupt__` 키 포함.
+
+Source: `langgraph-venv-loop-py-2026-05-24`
 
 ## 관련 페이지
 
