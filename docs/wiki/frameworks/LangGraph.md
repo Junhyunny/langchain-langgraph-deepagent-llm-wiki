@@ -1,14 +1,18 @@
 ---
 type: framework
 framework: LangGraph
-status: draft
-confidence: medium
-last_reviewed: 2026-05-23
+status: partial
+confidence: high
+last_reviewed: 2026-05-24
 sources:
   - langgraph-docs-graph-api-2026-05-23
   - langgraph-docs-persistence-2026-05-20
+  - langgraph-docs-durable-execution-2026-05-20
   - langgraph-reference-stategraph-compile-2026-05-20
   - langgraph-source-checkpoint-runtime-2026-05-20
+  - langgraph-source-checkpoint-savers-2026-05-23
+  - langgraph-source-pregel-interrupts-2026-05-23
+  - langgraph-store-base-2026-05-23
 ---
 
 # LangGraph
@@ -216,7 +220,56 @@ result = graph.invoke({"question": "What is LangGraph?"}, config=config)
 
 ---
 
-## 체크포인팅
+## 내부 구현 맵 (검증됨)
+
+→ 상세 내용: [[LangGraph Code Map]], [[LangGraph StateGraph compile invoke flow]]
+
+핵심 파일 경로 (`.venv` 설치본 및 commit `aa322c13cd5f16a3f6254a931a4104e412cd687c` 직접 확인):
+
+| 관심 주제 | 파일 |
+|---------|------|
+| StateGraph 정의, `compile()` | `libs/langgraph/langgraph/graph/state.py` |
+| 실행 엔진 (Pregel), `stream()`, `_defaults()` | `libs/langgraph/langgraph/pregel/main.py` |
+| super-step 루프, checkpoint commit | `libs/langgraph/langgraph/pregel/_loop.py` |
+| `apply_writes()` — reducer 적용 지점 | `libs/langgraph/langgraph/pregel/_algo.py` |
+| `validate_graph()` — 그래프 구조 검사 | `libs/langgraph/langgraph/pregel/_validate.py` |
+| `create_checkpoint()`, `channels_from_checkpoint()` | `libs/langgraph/langgraph/pregel/_checkpoint.py` |
+| `BaseCheckpointSaver` 인터페이스 | `libs/checkpoint/langgraph/checkpoint/base/__init__.py` |
+| `InMemorySaver` (`MemorySaver`는 별칭) | `libs/checkpoint/langgraph/checkpoint/memory/__init__.py` |
+| `BaseStore`, `Item`, `SearchItem` | `libs/checkpoint/langgraph/store/base/__init__.py` |
+
+**compile() 내부 흐름 (검증됨):**
+
+`StateGraph.compile()` → `CompiledStateGraph(Pregel 상속)` 생성 → `ensure_valid_checkpointer()` → nodes/edges/checkpointer attach → `compiled.validate()` 반환.
+
+`Pregel.validate()`는 `_validate.py validate_graph()`를 호출해 RESERVED 충돌, 구독 channel 존재, input/output channel 존재, interrupt 노드 존재를 검사하고 `trigger_to_nodes` 역방향 맵을 빌드한다.
+
+Reducer는 `state.py`가 아닌 **`_algo.py apply_writes()` → `ch.update()` 내부**에서 실행된다.
+
+---
+
+## StreamMode
+
+**검증됨** (`.venv/langgraph/types.py` 직접 확인):
+
+```python
+StreamMode = Literal[
+    "values",       # 각 super-step 후 전체 state 방출 (기본값)
+    "updates",      # node/task 이름 + 반환 값만 방출
+    "checkpoints",  # checkpoint 생성 시 StateSnapshot 방출
+    "tasks",        # task 시작/완료 이벤트 방출
+    "debug",        # "checkpoints" + "tasks" 동시
+    "messages",     # LLM 메시지 토큰 단위 스트리밍
+    "custom",       # 노드 내부에서 StreamWriter로 직접 방출
+]
+```
+
+```python
+for chunk in graph.stream(input, config, stream_mode="updates"):
+    print(chunk)  # {"node_name": {"field": "value"}}
+```
+
+---
 *Source: `langgraph-docs-persistence-2026-05-20`, `langgraph-reference-stategraph-compile-2026-05-20`*
 
 체크포인터는 그래프 실행 중 각 노드의 상태를 저장하는 영속화 시스템이다.
@@ -241,20 +294,42 @@ result = graph.invoke({"question": "What is LangGraph?"}, config=config)
 - `graph.add_node(name, fn)`
 - `graph.add_edge(from, to)`
 - `graph.add_conditional_edges(from, fn, map)`
-- `graph.compile(checkpointer=...)`
+- `graph.compile(checkpointer=...)` → `CompiledStateGraph` (Pregel 상속)
 - `compiled.invoke(input, config)`
-- `compiled.stream(input, config)`
-- `compiled.astream_events(input, config)`
+- `compiled.stream(input, config, stream_mode=...)` — 7종 StreamMode 지원
+- `compiled.get_state(config)` → `StateSnapshot`
+- `compiled.get_state_history(config)` → checkpoint 이력 순회
+- `compiled.update_state(config, values)` — 외부에서 state 수정
+- `compiled.astream_events(input, config, version="v3")`
+
+---
+
+## 예제 (실행 가능)
+
+→ `examples/langgraph_core/`
+
+| 파일 | 확인할 것 |
+|------|----------|
+| `01_stategraph_basics.py` | `StateGraph` 정의 → `compile` → `invoke`, 전체 흐름 |
+| `02_checkpointing_history.py` | `InMemorySaver`, `thread_id`, `get_state_history()` |
+| `03_interrupt_resume.py` | `interrupt()`, `Command(resume=...)`, human-in-the-loop |
+
+```bash
+source .venv/bin/activate
+python examples/langgraph_core/01_stategraph_basics.py
+```
 
 ---
 
 ## 미해결 질문
 
 - `StateGraph.compile()`은 runnable을 내부적으로 어떻게 생성하는가?
-- `NodeRuntime.control`과 `NodeRuntime.heartbeat`의 구체적인 사용 사례는?
+  → **✅ 해소 (2026-05-24):** `CompiledStateGraph(Pregel 상속)` 생성. 상세 흐름은 [[LangGraph Code Map]], [[LangGraph StateGraph compile invoke flow]] 참고.
+- `NodeRuntime.control`과 `NodeRuntime.heartbeat`의 구체적인 사용 사례는? — Needs Source
 - `interrupt()`와 `Command(resume=value, ...)` 패턴은 내부적으로 어떻게 연동되는가?
-- `Send` 사용 시 독립 그래프 복사본의 결과를 어떻게 집계하는가 (reduce 단계)?
-- Input/Output/Private State 스키마 분리가 성능에 미치는 영향은?
+  → 부분 확인: `interrupt()`는 `GraphInterrupt` 예외. `scratchpad.resume` 인덱스로 멱등 재개. 완전 검증 필요.
+- `Send` 사용 시 독립 그래프 복사본의 결과를 어떻게 집계하는가 (reduce 단계)? — Needs Source
+- Input/Output/Private State 스키마 분리가 성능에 미치는 영향은? — Needs Source
 
 ## 관련 페이지
 
@@ -272,5 +347,9 @@ result = graph.invoke({"question": "What is LangGraph?"}, config=config)
 
 - `langgraph-docs-graph-api-2026-05-23`
 - `langgraph-docs-persistence-2026-05-20`
+- `langgraph-docs-durable-execution-2026-05-20`
 - `langgraph-reference-stategraph-compile-2026-05-20`
 - `langgraph-source-checkpoint-runtime-2026-05-20`
+- `langgraph-source-checkpoint-savers-2026-05-23`
+- `langgraph-source-pregel-interrupts-2026-05-23`
+- `langgraph-store-base-2026-05-23`
