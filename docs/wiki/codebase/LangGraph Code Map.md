@@ -11,6 +11,7 @@ sources:
   - langgraph-docs-graph-api-2026-05-23
   - langgraph-store-base-2026-05-23
   - langgraph-tests-pregel-2026-05-24
+  - langgraph-venv-loop-py-2026-05-24
 ---
 
 # LangGraph Code Map
@@ -19,7 +20,7 @@ sources:
 
 이 페이지는 LangGraph 저장소 구조를 매핑한다. 소스 코드를 읽을 때 탐색 가이드로 사용한다.
 
-*상태: checkpointing 관련 경로는 commit `aa322c13cd5f16a3f6254a931a4104e412cd687c` 기준으로 검증. Graph API 및 Store 인터페이스 섹션은 2026-05-23 공식 docs 기준으로 추가됨. validate/stream/reducer/MemorySaver 관련 불명확한 영역 일부 해소 (2026-05-24, .venv 설치본 직접 읽음).*
+*상태: checkpointing 관련 경로는 commit `aa322c13cd5f16a3f6254a931a4104e412cd687c` 기준으로 검증. Graph API 및 Store 인터페이스 섹션은 2026-05-23 공식 docs 기준으로 추가됨. validate/stream/reducer/MemorySaver 관련 불명확한 영역 일부 해소 (2026-05-24, .venv 설치본 직접 읽음). `_loop.py` PregelLoop 전체 흐름 검증 완료 (2026-05-24).*
 
 ## 저장소
 
@@ -155,7 +156,60 @@ Source: `langgraph-docs-graph-api-2026-05-23`
     - channel 버전 bump 후 `ch.update()` 호출 → **reducer 적용 지점**
 
 - `libs/langgraph/langgraph/pregel/_loop.py`
-  - 확인됨: `put_writes()`, `after_tick()`, `_put_checkpoint()`, `_first()`, `_put_pending_writes()`, exit-mode checkpoint persistence
+  - 확인됨 (2026-05-24, `.venv` 전체 읽기): PregelLoop 전체 실행 흐름
+  - **클래스 계층:**
+    - `PregelLoop` (base): 공통 로직 전체
+    - `SyncPregelLoop(PregelLoop, AbstractContextManager)`: `with` 문으로 사용
+    - `AsyncPregelLoop(PregelLoop, AbstractAsyncContextManager)`: `async with` 문으로 사용
+  - **status 라이프사이클:**
+    - `"input"` → `_first()` 호출 → `"pending"`
+    - `"pending"` → `tick()` True 반환 → 노드 실행 → `after_tick()` → step++
+    - `"pending"` → `tick()` False → `"done"` | `"out_of_steps"` | `"interrupt_before"` | `"interrupt_after"` | `"draining"`
+  - **tick() 흐름 (line 583):**
+    1. `step > stop` → `"out_of_steps"`, return False
+    2. `prepare_next_tasks()` → `self.tasks` 설정
+    3. tasks 없으면 `"done"`, return False
+    4. `control.drain_requested` → `"draining"`, return False
+    5. `_reapply_writes_to_succeeded_nodes()` — resume 시 성공한 pending_writes 복원
+    6. `_resume_error_handlers_if_applicable()` — 이전 실패 노드에 error handler 스케줄
+    7. `interrupt_before` 체크 → `GraphInterrupt` 발생 가능
+    8. return True (노드 실행 허가)
+  - **after_tick() 흐름 (line 667):**
+    1. `apply_writes()` → `self.updated_channels` 갱신
+    2. `_exit_delta_writes` 캡처 (durability="exit"일 때)
+    3. `checkpoint_pending_writes.clear()`
+    4. `is_replaying = False`
+    5. `_put_checkpoint({"source": "loop"})` — 비동기 저장
+    6. `interrupt_after` 체크
+  - **_first() resume 판정 (line 827):**
+    - `is_resuming = channel_versions 존재 AND (input is None OR input is Command OR same run_id OR CONFIG_KEY_RESUMING)`
+    - resume 시: `versions_seen[INTERRUPT]` = 현재 버전 → interrupt 노드들 "이미 처리됨"으로 표시
+    - time-travel: stale RESUME writes 제거 + `source="fork"` checkpoint 생성
+    - `input is None` = interrupt 후 resume (`invoke(None, config)` 패턴)
+  - **put_writes() (line 407):**
+    - `checkpoint_pending_writes`에 `(task_id, channel, value)` 추가
+    - `durability != "exit"` 이면 `checkpointer.put_writes()` 즉시 비동기 호출
+    - DeltaChannel write면 future를 `_delta_write_futs`에 추가
+  - **_put_checkpoint() (line 1055):**
+    - `delta_channels_to_snapshot()` 호출로 이번 step 스냅샷 대상 결정
+    - `create_checkpoint()` → `_checkpointer_put_after_previous` submit
+  - **_checkpointer_put_after_previous (sync, line 1498):**
+    - `_delta_write_futs` 전체 드레인 → 이전 put future 완료 대기 → `checkpointer.put()` 호출
+    - **의미:** DeltaChannel writes가 반드시 checkpoint보다 먼저 저장됨 (durability invariant)
+  - **durability="exit" 동작:**
+    - `put_writes()`: `checkpointer_put_writes` 호출 건너뜀
+    - `after_tick()`: DeltaChannel writes를 `_exit_delta_writes`에 누적
+    - `_suppress_interrupt()`: exit 시 `_put_exit_delta_writes()` + `_put_checkpoint()` 일괄 저장
+  - **_reapply_writes_to_succeeded_nodes():**
+    - `checkpoint_pending_writes` 순회, `ERROR/ERROR_SOURCE_NODE/INTERRUPT/RESUME` 채널 skip
+    - 나머지 writes → `task.writes` 복원 → task.writes 비어있지 않으면 runner가 재실행 skip
+    - 이것이 partial failure resume에서 성공 노드를 재실행하지 않는 메커니즘
+  - **stop = step + recursion_limit + 1** — recursion_limit 초과 보호
+  - **SyncPregelLoop.__enter__ (line 1597):**
+    - `checkpointer.get_tuple()` 또는 `empty_checkpoint()` 로드
+    - `channels_from_checkpoint()` 채널 초기화
+    - `step = checkpoint_metadata["step"] + 1`, `stop = step + recursion_limit + 1`
+    - `_first()` 호출 → status `"input"` → `"pending"`
 
 - `libs/langgraph/langgraph/pregel/_checkpoint.py`
   - 확인됨: `LATEST_VERSION = 4`
@@ -286,7 +340,14 @@ Source: `langgraph-store-base-2026-05-23`
 
 **DeltaChannel 관련 테스트:**
 - `test_delta_channel_benchmark.py` — K개 DeltaChannel, 혼합 snapshot frequency, 다양한 turn count 시나리오에서 read/write latency, storage, 메모리 사용량 벤치마크
-- `test_delta_channel_migration.py` (24KB), `test_delta_channel_exit_mode.py` (13KB) — DeltaChannel 재구성/migration 검증 테스트 (아직 미읽음)
+- `test_delta_channel_migration.py` ✅ 읽음 (2026-05-24) — BinaryOperatorAggregate → DeltaChannel migration 경로, 9개 시나리오:
+  - basic migration 전후 settled boundary 값 보존
+  - time travel, invoke(None) resume, base-saver fallback, thread isolation
+  - tip hydration (실제 값 있으면 ancestor walk skip), update_state 후 blob 직접 사용, fork 시나리오
+  - `add_messages → DeltaChannel(_messages_delta_reducer)` (real-world primary use case)
+  - 핵심: `get_delta_channel_history()` is thread-scoped; `DeltaChannel.from_checkpoint(seed)` + `replay_writes(writes)` 로 재구성
+  - Source: `langgraph-tests-delta-migration-2026-05-24`
+- `test_delta_channel_exit_mode.py` (13KB) — exit mode + DeltaChannel 저장 순서 검증 (아직 미읽음)
 
 
 ## 불명확한 영역 (잔여)
@@ -320,4 +381,5 @@ Source: `langgraph-store-base-2026-05-23`
 - `langgraph-source-checkpoint-runtime-2026-05-20`
 - `langgraph-docs-graph-api-2026-05-23`
 - `langgraph-store-base-2026-05-23`
-- `langgraph-tests-pregel-2026-05-24`
+- `langgraph-tests-delta-migration-2026-05-24`
+- `langgraph-venv-loop-py-2026-05-24`

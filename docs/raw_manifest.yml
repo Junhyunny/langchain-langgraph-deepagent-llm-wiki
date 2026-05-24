@@ -550,3 +550,29 @@ sources:
     used_by:
       - "docs/wiki/codebase/LangChain Code Map.md"
     notes: "create_agent 초기화 흐름 전체 확인. init 시점 vs 런타임 시점 bind_tools 호출 위치, init_chat_model, _get_bound_model, middleware hook 감지 로직."
+  - id: langgraph-venv-loop-py-2026-05-24
+    title: "LangGraph pregel/_loop.py — PregelLoop 전체 실행 흐름"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langgraph/pregel/_loop.py"
+    retrieved_at: "2026-05-24"
+    status: public
+    used_by:
+      - "docs/wiki/codebase/LangGraph Code Map.md"
+      - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
+      - "docs/wiki/concepts/DeltaChannel.md"
+    notes: "PregelLoop 클래스 계층(Base/Sync/Async), status 라이프사이클, tick/after_tick/_first/_put_checkpoint/_checkpointer_put_after_previous/put_writes 흐름, durability='exit' 동작, DeltaChannel durability invariant, _reapply_writes_to_succeeded_nodes 메커니즘, SyncPregelLoop.__enter__ 전체 읽음 (lines 1~1690)."
+  - id: langgraph-tests-delta-migration-2026-05-24
+    title: "LangGraph test_delta_channel_migration.py — BinaryOperatorAggregate→DeltaChannel migration 검증"
+    type: test_code
+    framework: LangGraph
+    url: "https://github.com/langchain-ai/langgraph/blob/main/libs/langgraph/tests/test_delta_channel_migration.py"
+    local_path: "REMOTE_ONLY"
+    retrieved_at: "2026-05-24"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/DeltaChannel.md"
+      - "docs/wiki/codebase/LangGraph Code Map.md"
+    notes: "9개 시나리오: basic migration(sync/async), time travel, invoke(None) resume, base-saver fallback, thread isolation, tip hydration, update_state, fork, add_messages migration. DeltaChannel.from_checkpoint(seed) + replay_writes(writes) 메커니즘, get_delta_channel_history thread-scope invariant 확인."

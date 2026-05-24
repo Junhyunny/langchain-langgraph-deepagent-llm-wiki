@@ -13,6 +13,7 @@ sources:
   - langgraph-source-checkpoint-savers-2026-05-23
   - langgraph-source-pregel-interrupts-2026-05-23
   - langgraph-docs-graph-api-2026-05-23
+  - langgraph-venv-loop-py-2026-05-24
 ---
 
 # LangGraph StateGraph compile invoke flow
@@ -83,6 +84,16 @@ Source: `langgraph-docs-persistence-2026-05-20`
 
 **검증됨:** source 기준 runtime loop는 `while loop.tick()` 안에서 cached writes를 출력하고, unfinished tasks를 runner로 실행한 뒤, `loop.after_tick()`을 호출한다. `after_tick()`은 `apply_writes()`로 task writes를 checkpoint에 적용하고 `_put_checkpoint({"source": "loop"})`를 호출한다. Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 
+**검증됨 (`_loop.py` 직접 확인 2026-05-24):** `PregelLoop` 세부 구조:
+- `status` 전이: `"input"` → `"pending"` → `"done" | "interrupt_before" | "interrupt_after" | "out_of_steps" | "draining"`
+- `stop = step + recursion_limit + 1` — recursion_limit이 loop 종료 조건
+- `tick()`: step > stop 이면 `"out_of_steps"` 즉시 반환. `prepare_next_tasks()` → tasks 없으면 `"done"`. interrupt_before 조건 충족 시 `GraphInterrupt` raise
+- `after_tick()`: `apply_writes()` → `updated_channels` 계산 → `checkpoint_pending_writes.clear()` → `_put_checkpoint({"source": "loop"})` → interrupt_after 검사 → `CONFIG_KEY_RESUMING` 플래그 제거
+- `SyncPregelLoop.__enter__`: `checkpointer.get_tuple()` → channels 초기화 → `_first()` 호출 → `status = "input"`
+- `SyncPregelLoop._checkpointer_put_after_previous`: delta_write_futs 드레인 후 이전 checkpoint fut 대기 → `checkpointer.put()` 호출 (순서 보장)
+
+Source: `langgraph-venv-loop-py-2026-05-24`
+
 **검증됨:** persistence timing은 실행 시 `durability` 옵션에 따라 달라진다. `"async"`는 기본값이다. `"sync"`는 tick 뒤 `_put_checkpoint_fut.result()`를 기다린다. `"exit"`는 `put_writes()`의 즉시 저장을 건너뛰고 loop exit 시 checkpoint와 pending writes를 저장한다. Source: `langgraph-docs-durable-execution-2026-05-20`, `langgraph-source-checkpoint-runtime-2026-05-20`
 
 Sequential graph `START -> A -> B -> END`의 checkpoint sequence:
@@ -98,6 +109,18 @@ Sequential graph `START -> A -> B -> END`의 checkpoint sequence:
 
 **검증됨:** `PregelLoop.put_writes()`는 writes를 `checkpoint_pending_writes`에 추가한다. `durability != "exit"`이고 saver가 있으면 `checkpointer.put_writes()`를 호출한다. Tick 시작 시 pending writes가 있고 replay 중이 아니면 `_reapply_writes_to_succeeded_nodes()`가 호출된다. Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 
+**검증됨 (`_loop.py` 직접 확인 2026-05-24):** `_reapply_writes_to_succeeded_nodes()` 상세:
+- `checkpoint_pending_writes` 순회하며 `ERROR`, `ERROR_SOURCE_NODE`, `INTERRUPT`, `RESUME` 채널은 **건너뜀**
+- 나머지 writes는 해당 `task.writes`에 복원 → `task.writes`가 비어있지 않으므로 runner가 재실행 skip
+- 이것이 partial failure 후 resume에서 성공한 노드가 재실행되지 않는 메커니즘
+
+**검증됨 (`_loop.py` 직접 확인 2026-05-24):** Error handler 흐름:
+- `commit()` 시 ERROR_SOURCE_NODE 마커가 `checkpoint_pending_writes`에 기록됨
+- Resume 시 `_resume_error_handlers_if_applicable()`: ERROR_SOURCE_NODE+ERROR 쌍 감지 → 원래 task에 `(ERROR, error)` write 추가 (runner skip) → 새 error handler task 준비 + 추가
+- `schedule_error_handler()`: `_error_handler_write_futs` 드레인 후 handler task 반환
+
+Source: `langgraph-venv-loop-py-2026-05-24`
+
 ### 5. State inspection
 
 **검증됨:** `graph.get_state(config)`는 최신 `StateSnapshot` 또는 특정 `checkpoint_id`의 snapshot을 반환한다. `graph.get_state_history(config)`는 thread의 checkpoint history를 최신순으로 반환한다. Source: `langgraph-docs-persistence-2026-05-20`
@@ -111,6 +134,15 @@ Sequential graph `START -> A -> B -> END`의 checkpoint sequence:
 **검증됨:** 과거 `checkpoint_id`로 replay하면 checkpoint 이전 node는 skipped 처리되고 이후 node는 다시 실행된다. 이때 LLM call, API request, interrupt도 다시 발생할 수 있다. Source: `langgraph-docs-persistence-2026-05-20`
 
 **검증됨:** source 기준 `_first()`는 기존 checkpoint의 `channel_versions`와 입력 형태(`None`, `Command`, same `run_id`, `CONFIG_KEY_RESUMING`)로 resume 여부를 판정한다. time-travel replay에서는 stale `RESUME` write를 제거하고 필요하면 `source="fork"` checkpoint를 만든다. Source: `langgraph-source-checkpoint-runtime-2026-05-20`
+
+**검증됨 (`_loop.py` 직접 확인 2026-05-24):** `_first()` resume 판정 로직 상세:
+- `is_resuming = checkpoint["channel_versions"] 존재 AND (input is None OR input is Command OR same run_id OR CONFIG_KEY_RESUMING)`
+- resume 시: `versions_seen[INTERRUPT]` = 현재 채널 버전 → interrupt 노드들이 "이미 처리됨"으로 표시 → 해당 노드들을 건너뜀
+- time-travel 감지: `is_replaying AND NOT (Command(resume=...) OR CONFIG_KEY_RESUMING)` → stale RESUME writes 제거 + fork checkpoint 생성
+- `input is None` → resume after interrupt (= `invoke(None, config)` 패턴)
+- `input is Command` → Command(goto=...) 또는 Command(resume=...) — Command(goto=...) 도 resuming
+
+Source: `langgraph-venv-loop-py-2026-05-24`
 
 ### 7. Interrupt 처리
 
@@ -181,7 +213,12 @@ Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 
 ## Tests
 
-- TBD. 다음 단계에서 checkpoint tests를 찾아야 한다.
+**읽은 테스트 (2026-05-24):**
+- `test_checkpoint_errors` (`test_pregel.py` L182): checkpoint 연산 실패 에러 전파 패턴 확인
+- `test_invoke_checkpoint_two` (`test_pregel.py` L805): RetryPolicy, 치명적 에러 시 pending_writes 기록 패턴
+- `test_pending_writes_resume` (`test_pregel.py` L876): 병렬 노드 부분 실패 후 `invoke(None, ...)` resume 메커니즘
+
+Source: `langgraph-tests-pregel-2026-05-24`
 
 ## Diagram
 
@@ -233,3 +270,8 @@ flowchart TD
 - `langgraph-reference-stategraph-compile-2026-05-20`
 - `langgraph-reference-checkpoint-2026-05-20`
 - `langgraph-source-checkpoint-runtime-2026-05-20`
+- `langgraph-source-checkpoint-savers-2026-05-23`
+- `langgraph-source-pregel-interrupts-2026-05-23`
+- `langgraph-docs-graph-api-2026-05-23`
+- `langgraph-venv-loop-py-2026-05-24`
+- `langgraph-tests-pregel-2026-05-24`
