@@ -2,13 +2,15 @@
 type: concept
 framework:
   - LangGraph
-status: partial
-confidence: medium
+status: verified
+confidence: high
 last_reviewed: 2026-05-24
 sources:
   - langgraph-venv-loop-py-2026-05-24
+  - langgraph-venv-channels-delta-py-2026-05-24
   - langgraph-source-checkpoint-runtime-2026-05-20
   - langgraph-tests-delta-migration-2026-05-24
+  - langgraph-tests-delta-channel-exit-mode-2026-05-24
 ---
 
 # DeltaChannel
@@ -16,6 +18,8 @@ sources:
 ## Summary
 
 `DeltaChannel`은 LangGraph v4 checkpoint 형식에서 도입된 채널 유형으로, 매 super-step마다 전체 상태 스냅샷을 저장하는 대신 **증분(delta) writes만 저장**한다. 긴 대화에서 대형 state 채널의 저장 비용을 줄이는 데 사용된다.
+
+> ⚠️ **Beta**: API와 on-disk 표현이 향후 변경될 수 있다. 현재 thread는 계속 읽을 수 있지만, 주변 계약(`get_delta_channel_history`, `_DeltaSnapshot`, `counters_since_delta_snapshot`)은 아직 stable하지 않다.
 
 ## Why It Matters
 
@@ -30,14 +34,102 @@ sources:
 
 ## Details
 
+### 생성자 및 사용법
+
+**검증됨** (`channels/delta.py` 직접 확인):
+
+```python
+from langgraph.channels.delta import DeltaChannel
+
+# 생성자 시그니처
+DeltaChannel(
+    reducer: Callable[[Any, Sequence[Any]], Any],
+    typ: type | None = None,           # Annotated로 자동 추론
+    snapshot_frequency: int = 1000,    # 기본값 1000
+)
+
+# 사용 패턴 (TypedDict + Annotated)
+class State(TypedDict):
+    items: Annotated[list, DeltaChannel(_list_concat)]
+    messages: Annotated[list, DeltaChannel(_messages_delta_reducer)]
+```
+
+**Reducer 제약 조건 (docstring)**:
+- 결정론적이어야 한다
+- batching-invariant(결합 법칙 성립)이어야 한다:
+  `reducer(reducer(state, xs), ys) == reducer(state, xs + ys)`
+- 두 배치를 따로 적용한 결과 = 한 번에 붙여서 적용한 결과
+
 ### 일반 채널 vs DeltaChannel 저장 전략
 
 | | 일반 채널 | DeltaChannel |
 |---|---|---|
 | 저장 단위 | 매 super-step: `channel_values`에 전체 값 | 매 write: delta만 별도 저장 |
+| `checkpoint()` 반환값 | 현재 값 | **항상 `MISSING`** |
 | hydrate 경로 | `spec.from_checkpoint(stored)` 직접 호출 | ancestor walk + `replay_writes()` |
 | snapshot | 항상 전체 스냅샷 | `snapshot_frequency` 또는 `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` 조건 시 `_DeltaSnapshot` 생성 |
 | 저장 비용 | O(n × size) | O(delta 크기) — snapshot 없을 때 |
+
+**핵심**: `DeltaChannel.checkpoint()`는 **항상 `MISSING`을 반환**한다. `_DeltaSnapshot` 블롭은 `create_checkpoint()`가 직접 `channel_values`에 쓴다.
+
+```python
+# channels/delta.py line 195
+def checkpoint(self) -> Any:
+    return MISSING  # 항상 MISSING — 스냅샷은 _checkpoint.py가 직접 처리
+```
+
+### `from_checkpoint(checkpoint)` — 세 가지 분기
+
+**검증됨** (`channels/delta.py` line 118 직접 확인):
+
+```python
+def from_checkpoint(self, checkpoint: Any) -> Self:
+    if checkpoint is MISSING:
+        new.value = self.typ()           # 빈 컨테이너 (ancestor walk 후 replay_writes 예정)
+    elif isinstance(checkpoint, _DeltaSnapshot):
+        new.value = checkpoint.value     # 스냅샷에서 직접 복원
+    else:
+        new.value = checkpoint           # 구형 BinaryOperatorAggregate blob 직접 사용 (migration)
+```
+
+| 입력 | 의미 | 처리 |
+|------|------|------|
+| `MISSING` | 스냅샷 없음 → ancestor walk 필요 | 빈 컨테이너 초기화 후 `replay_writes()` |
+| `_DeltaSnapshot(v)` | 전체 스냅샷 존재 | 값 직접 복원 |
+| plain value | 구형 `BinaryOperatorAggregate` blob (migration 경로) | 값 직접 사용 |
+
+### `replay_writes(writes)` — delta 재생
+
+**검증됨** (`channels/delta.py` line 139 직접 확인):
+
+```python
+def replay_writes(self, writes: Sequence[PendingWrite]) -> None:
+    values = [v for _, _, v in writes]
+    if not values:
+        return
+    base = self.value
+    start = 0
+    for i, v in enumerate(values):
+        is_ow, ow_value = _get_overwrite(v)
+        if is_ow:
+            base = _copy.copy(ow_value) if ow_value is not None else self.typ()
+            start = i + 1
+    remaining = values[start:]
+    self.value = self.reducer(base, remaining) if remaining else base
+```
+
+**핵심 동작**:
+- `Overwrite` 값이 있으면: **마지막 Overwrite 이후** 의 writes만 reducer에 적용
+- 마지막 Overwrite가 reset point — 이전 값을 버리고 새 base 설정
+- 정상 writes: `self.reducer(base, remaining)` 한 번에 일괄 적용 (batching-invariant 활용)
+
+### `update(values)` — live 실행 시 (per super-step)
+
+**검증됨** (`channels/delta.py` line 159 직접 확인):
+
+- 한 super-step에서 `Overwrite`는 **최대 1개** (위반 시 `InvalidUpdateError`)
+- Overwrite 있으면: `base = overwrite_value`, 나머지 values를 reducer에 적용
+- 정상: `self.reducer(base, list(values))`
 
 ### 스냅샷 트리거 조건 (`delta_channels_to_snapshot()`)
 
@@ -45,12 +137,13 @@ sources:
 
 ```python
 # 두 조건 중 하나를 충족하면 이번 step에서 전체 스냅샷 생성
-updates >= snapshot_frequency  # 누적 update 횟수가 threshold 도달
-supersteps >= DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT  # 마지막 snapshot 이후 super-step 수 초과
+updates >= snapshot_frequency              # 기본값 1000
+supersteps >= DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT  # 기본값 5000
 ```
 
+- `snapshot_frequency` 기본값: **1000** (update/write 횟수 기준)
+- `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` 기본값: **5000** (writes가 없는 채널도 anchor)
 - `counters_since_delta_snapshot`: `checkpoint_metadata`에 `(updates, supersteps)` 쌍으로 관리
-- `_put_checkpoint()` 호출마다 카운터 갱신 후 snapshot 대상 결정
 - snapshot 생성 시: `create_checkpoint()`에서 `_DeltaSnapshot(ch.get())` blob 저장
 
 ### channels_from_checkpoint() 에서의 DeltaChannel 처리
@@ -78,21 +171,44 @@ DeltaChannel write → checkpoint 저장 순서 보장이 중요하다.
 
 **이유:** DeltaChannel은 ancestor walk 방식으로 복구하므로, checkpoint 저장 전에 해당 step의 delta writes가 먼저 저장되어 있어야 한다. 순서가 역전되면 ancestor walk 시 최신 delta가 누락될 수 있다.
 
+**추가 확인** (`test_exit_count_parity_sync_vs_exit`): sync와 exit durability는 동일한 `counters_since_delta_snapshot`를 생성한다. durability mode는 저장 타이밍만 다르고 카운터 논리는 동일하다.
+
 ### durability="exit" 에서의 DeltaChannel 동작
 
-**검증됨** (`_loop.py` 직접 확인):
+**검증됨** (`_loop.py` 직접 확인 + `test_delta_channel_exit_mode.py` 전체 읽음):
 
 - `put_writes()`: `checkpointer_put_writes` 호출 건너뜀 (delta writes 즉시 저장 안 함)
 - `after_tick()`: DeltaChannel writes를 `_exit_delta_writes` 리스트에 누적
 - 루프 종료 시 `_suppress_interrupt()` → `_put_exit_delta_writes()` + `_put_checkpoint()` 일괄 처리
   - `_put_exit_delta_writes()`: synthetic step-prefixed task_id로 누적된 delta writes 저장
-  - 부모 checkpoint가 없으면 lazy stub 생성 후 저장
+  - 부모 checkpoint가 없으면 **lazy stub** (step=-2) 생성 후 저장
+
+**lazy stub** 생성 조건 (테스트에서 확인):
+
+| 조건 | stub 생성 여부 |
+|------|--------------|
+| DeltaChannel write 없음 | ❌ 생성 안 함 |
+| `snapshot_frequency=1` (매 run 스냅샷) | ❌ 생성 안 함 — `_DeltaSnapshot`이 직접 저장됨 |
+| 첫 run, writes 있음, 스냅샷 threshold 미달 | ✅ **생성** (step=-2) |
+| 두 번째 이후 run | ❌ 생성 안 함 — 첫 run의 final_checkpoint에 앵커 |
+
+**스냅샷 카운터 동작 (exit mode)**:
+- 각 invoke에서 `messages` 채널: **2 updates** 발생 (input write + respond node write)
+- `snapshot_frequency=3`이면 2번째 invoke 후 누적=4 → 스냅샷 발동 → counter 리셋=0
+- 스냅샷 발동 후: `channel_values["messages"] = _DeltaSnapshot(...)`, counter = 0
+- 스냅샷 없을 때: `"messages"` 키가 `channel_values`에 없음 (버전만 있음)
 
 ## Source Code References
 
 - Repo: `https://github.com/langchain-ai/langgraph`
 - Commit: UNKNOWN (`.venv` 설치본 기준)
 - Files:
+  - `.venv/lib/python3.14/site-packages/langgraph/channels/delta.py` ✅ 전체 읽음 (2026-05-24)
+    - `DeltaChannel.__init__`: reducer, typ, snapshot_frequency (기본값 1000)
+    - `from_checkpoint()`: MISSING / _DeltaSnapshot / plain value 3분기
+    - `replay_writes()`: Overwrite handling, 일괄 reducer 적용
+    - `update()`: live 실행 시 Overwrite 1개 제한, reducer 적용
+    - `checkpoint()`: 항상 MISSING 반환 (스냅샷은 `_checkpoint.py`가 처리)
   - `.venv/lib/python3.14/site-packages/langgraph/pregel/_checkpoint.py`
     - `create_checkpoint()`: DeltaChannel + `_DeltaSnapshot` 저장 경로
     - `channels_from_checkpoint()`: DeltaChannel ancestor walk 경로
@@ -159,6 +275,44 @@ replay_writes(writes)               # fold deltas onto current state
 
 Source: `langgraph-tests-delta-migration-2026-05-24`
 
+---
+
+**읽은 테스트: `test_delta_channel_exit_mode.py` (2026-05-24)**
+
+GitHub: `https://github.com/langchain-ai/langgraph/blob/main/libs/langgraph/tests/test_delta_channel_exit_mode.py`
+
+docstring: "Validates that `durability="exit"` correctly persists delta-channel writes using count-based snapshot decisions (rather than force-snapshotting every channel), lazy stub creation when no parent exists, and proper read-path reconstruction via ancestor walks."
+
+### Write-path 테스트 (8a)
+
+| # | 테스트명 | 검증 내용 |
+|---|---------|----------|
+| 1 | `test_exit_first_run_no_delta_writes` | DeltaChannel에 writes 없으면 stub 생성 없음, checkpoint 1개 |
+| 2 | `test_exit_first_run_all_snapshot` (freq=1) | 모든 채널 스냅샷 → stub 없음, `_DeltaSnapshot` 직접 저장 |
+| 3 | `test_exit_first_run_sub_freq_with_writes` (freq=1000) | writes 있고 threshold 미달 → **stub 1개** 생성, `channel_values`에 `"messages"` 키 없음 |
+| 4 | `test_exit_resumed_run_sub_freq` | 2번 연속 run → stub 1개만 유지 (2번째 run은 1번째 checkpoint에 앵커) |
+| 5 | `test_exit_count_parity_sync_vs_exit` | sync/exit durability 동일한 `counters_since_delta_snapshot` 생성 (updates=2, supersteps≥2) |
+| 6 | `test_exit_snapshot_fires_at_frequency` (freq=3) | 2번째 invoke 후 누적 updates=4≥3 → 스냅샷 발동, counter=0으로 리셋 |
+| 7 | `test_exit_mixed_snapshot_and_non_snapshot` | 두 채널(freq=1, freq=1000) 혼합 → fast만 스냅샷, slow는 ancestor walk |
+
+### Read-path 테스트 (8b)
+
+| # | 테스트명 | 검증 내용 |
+|---|---------|----------|
+| 8 | `test_exit_multi_run_replay_chain` | K=4 run, 매 run 후 `get_state`가 전체 순서 보존 |
+| 9 | `test_exit_metadata_round_trip` (freq=5) | counters 단조 증가, freq 초과 시 리셋 |
+| 10 | `test_exit_mixed_durability_round_trip` | sync/exit 교대 사용 → 상태 단조 누적 |
+| 11 | `test_exit_snapshot_then_tail_deltas` | run1(freq=1) 스냅샷 → run2(freq=1000) tail deltas → 합산 올바름 |
+
+### 핵심 발견 (exit mode)
+
+- **per-invoke update count**: 각 invoke마다 `messages` 채널에 **2 updates** — input write(1) + respond node write(1)
+- **lazy stub**: step=-2, 첫 run에서만 생성, 이후 run은 첫 run의 final_checkpoint에 앵커
+- **스냅샷 없을 때**: `channel_values`에 키 없음, `channel_versions`에만 버전 기록
+- **sync/exit 카운터 동등성**: durability mode는 저장 타이밍만 다를 뿐, 카운터 로직은 완전히 동일
+
+Source: `langgraph-tests-delta-channel-exit-mode-2026-05-24`
+
 ## Related Pages
 
 - [[Checkpointing]]
@@ -168,17 +322,16 @@ Source: `langgraph-tests-delta-migration-2026-05-24`
 
 ## Open Questions
 
-- `DeltaChannel` 객체 자체의 구현(`channel/delta.py` 또는 유사)은 어디에 있는가? `replay_writes()` 내부는?
-  → `langgraph/channels/delta.py`에 있는 것으로 확인됨 (import: `from langgraph.channels.delta import DeltaChannel`). 내부 구현은 **Needs Source** — `.venv` 직접 읽기 필요
-- `snapshot_frequency`의 기본값은 얼마인가?
-  → **Needs Source** — `delta_channels_to_snapshot()`에서 파라미터로 전달됨
-- `get_delta_channel_history()`가 `InMemorySaver`에 어떻게 구현되어 있는가?
-  → 테스트 4에서 `InMemorySaver`에 optimized override가 있음을 확인. `BaseCheckpointSaver`에도 fallback 구현 있음. 내부 코드는 **Needs Source**
-- `test_delta_channel_exit_mode.py` 읽기 — exit mode durability invariant 검증
+- `DeltaChannel` 자체 구현: ✅ 해소 (2026-05-24, `channels/delta.py` 전체 읽음)
+- `snapshot_frequency`의 기본값: ✅ 해소 — **1000** (update/write 횟수 기준). `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` = **5000**
+- `test_delta_channel_exit_mode.py` 읽기: ✅ 해소 (2026-05-24) — 11개 시나리오, lazy stub(step=-2), per-invoke 2 updates, sync/exit 카운터 동등성 확인
+- `get_delta_channel_history()`의 `InMemorySaver` 최적화 override vs `BaseCheckpointSaver` fallback 구현 상세
+  → `test_delta_channel_migration.py` test 4에서 두 경로 동일 결과 확인됨. 내부 코드는 **Needs Source** — `memory/__init__.py` 읽기 필요
 
 ## Sources
 
 - `langgraph-venv-loop-py-2026-05-24`
+- `langgraph-venv-channels-delta-py-2026-05-24`
 - `langgraph-source-checkpoint-runtime-2026-05-20`
-- `langgraph-tests-pregel-2026-05-24`
 - `langgraph-tests-delta-migration-2026-05-24`
+- `langgraph-tests-delta-channel-exit-mode-2026-05-24`

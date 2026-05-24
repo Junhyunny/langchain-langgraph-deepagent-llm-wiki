@@ -576,3 +576,27 @@ sources:
       - "docs/wiki/concepts/DeltaChannel.md"
       - "docs/wiki/codebase/LangGraph Code Map.md"
     notes: "9개 시나리오: basic migration(sync/async), time travel, invoke(None) resume, base-saver fallback, thread isolation, tip hydration, update_state, fork, add_messages migration. DeltaChannel.from_checkpoint(seed) + replay_writes(writes) 메커니즘, get_delta_channel_history thread-scope invariant 확인."
+  - id: langgraph-venv-channels-delta-py-2026-05-24
+    title: "LangGraph channels/delta.py — DeltaChannel 전체 구현"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langgraph/channels/delta.py"
+    retrieved_at: "2026-05-24"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/DeltaChannel.md"
+    notes: "DeltaChannel 전체 소스(205줄). from_checkpoint(3분기: MISSING/DeltaSnapshot/plain), replay_writes(Overwrite handling), update(1개 Overwrite 제한), checkpoint()=항상 MISSING, snapshot_frequency 기본값=1000, DELTA_MAX_SUPERSTEPS=5000. Reducer batching-invariant 제약 조건 문서화."
+  - id: langgraph-tests-delta-channel-exit-mode-2026-05-24
+    title: "LangGraph test_delta_channel_exit_mode.py — durability=exit DeltaChannel 저장 검증"
+    type: test_code
+    framework: LangGraph
+    url: "https://github.com/langchain-ai/langgraph/blob/main/libs/langgraph/tests/test_delta_channel_exit_mode.py"
+    local_path: "REMOTE_ONLY"
+    retrieved_at: "2026-05-24"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/DeltaChannel.md"
+      - "docs/wiki/codebase/LangGraph Code Map.md"
+    notes: "11개 시나리오(write-path 7개, read-path 4개). lazy stub(step=-2) 생성 조건, count-based snapshot 결정, per-invoke 2 updates(input+respond), sync/exit 카운터 동등성, snapshot_fires_at_frequency 확인."

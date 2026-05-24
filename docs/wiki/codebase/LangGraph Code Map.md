@@ -347,7 +347,7 @@ Source: `langgraph-store-base-2026-05-23`
   - `add_messages → DeltaChannel(_messages_delta_reducer)` (real-world primary use case)
   - 핵심: `get_delta_channel_history()` is thread-scoped; `DeltaChannel.from_checkpoint(seed)` + `replay_writes(writes)` 로 재구성
   - Source: `langgraph-tests-delta-migration-2026-05-24`
-- `test_delta_channel_exit_mode.py` (13KB) — exit mode + DeltaChannel 저장 순서 검증 (아직 미읽음)
+- `test_delta_channel_exit_mode.py` (13KB) — exit mode + DeltaChannel 저장 순서 검증 ✅ 읽음 (2026-05-24) — 11개 시나리오, lazy stub(step=-2), per-invoke 2 updates, sync/exit 카운터 동등성
 
 
 ## 불명확한 영역 (잔여)

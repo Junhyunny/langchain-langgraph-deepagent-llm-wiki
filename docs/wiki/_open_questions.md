@@ -61,11 +61,11 @@
 
 - `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification (문서는 "저장/resume 불가"라고만 설명, 에러 타입 미명시)
 - `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — ✅ 해소 (2026-05-24): `_validate.py validate_graph()` 직접 확인. RESERVED 충돌, 구독 channel 존재, input/output/stream channel 존재, interrupt 노드 존재 검사.
-- `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test: `test_delta_channel_migration.py` ✅ 읽음 (2026-05-24) — 9개 시나리오로 migration/hydration 검증. `test_delta_channel_exit_mode.py` (13KB) 아직 미읽음.
-- `DeltaChannel`의 `snapshot_frequency` 의미: `.venv/_checkpoint.py` 직접 확인 결과 update count ≥ `snapshot_frequency` OR supersteps ≥ `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT`이면 스냅샷. 50이면 50 updates(write 횟수)다. ✅ 부분 해소.
-- `exit` durability에서 `_put_exit_delta_writes()`를 검증하는 test는 어디에 있는가? — `test_delta_channel_exit_mode.py`로 확인됨, 아직 미읽음
-- `saver.get_delta_channel_history()` 메서드의 `InMemorySaver` 최적화 override vs `BaseCheckpointSaver` fallback 구현 상세 — `test_delta_channel_migration.py` test 4에서 두 경로 동일 결과 확인됨. 내부 코드는 Needs Source
-- `DeltaChannel` 자체 구현: `langgraph/channels/delta.py` — `from_checkpoint(seed)`, `replay_writes(writes)` 내부 아직 미읽음. Needs Source
+- `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test: `test_delta_channel_migration.py` ✅ 읽음 (2026-05-24) — 9개 시나리오. `test_delta_channel_exit_mode.py` ✅ 읽음 (2026-05-24) — 11개 시나리오, lazy stub(step=-2), per-invoke 2 updates.
+- `DeltaChannel`의 `snapshot_frequency` 기본값: ✅ 해소 (2026-05-24, `channels/delta.py` 직접 확인) — **1000** (update 횟수 기준). `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` = **5000**.
+- `exit` durability에서 `_put_exit_delta_writes()` 검증: ✅ 해소 (2026-05-24, `test_delta_channel_exit_mode.py`) — lazy stub(step=-2), count-based snapshot, sync/exit 카운터 동등성 확인
+- `saver.get_delta_channel_history()` 메서드의 `InMemorySaver` 최적화 override vs `BaseCheckpointSaver` fallback 구현 상세 — 두 경로 동일 결과 확인됨 (test 4). 내부 코드는 Needs Source
+- `DeltaChannel` 자체 구현: ✅ 해소 (2026-05-24, `channels/delta.py` 전체 읽음) — `from_checkpoint(3분기)`, `replay_writes(Overwrite handling)`, `update()`, `checkpoint()=항상 MISSING`
 - checkpoint schema migration 또는 state schema 변경 대응은 공식적으로 어떻게 권장되는가? — Needs Source
 - `astream_events`와 함께 스트리밍은 어떻게 동작하는가?
 - LangGraph package version과 reference docs version의 관계는? GitHub page는 `langgraph==1.2.0`, `StateGraph.compile` reference는 v1.1.10으로 보였다. — Source: `langgraph-reference-stategraph-compile-2026-05-20`
