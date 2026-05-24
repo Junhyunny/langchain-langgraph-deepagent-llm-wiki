@@ -600,3 +600,15 @@ sources:
       - "docs/wiki/concepts/DeltaChannel.md"
       - "docs/wiki/codebase/LangGraph Code Map.md"
     notes: "11개 시나리오(write-path 7개, read-path 4개). lazy stub(step=-2) 생성 조건, count-based snapshot 결정, per-invoke 2 updates(input+respond), sync/exit 카운터 동등성, snapshot_fires_at_frequency 확인."
+  - id: langgraph-venv-checkpoint-memory-init-py-2026-05-24
+    title: "LangGraph checkpoint/memory/__init__.py — InMemorySaver.get_delta_channel_history 구현"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langgraph/checkpoint/memory/__init__.py"
+    retrieved_at: "2026-05-24"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/DeltaChannel.md"
+    notes: "InMemorySaver 전체(704줄). get_delta_channel_history(line 142): chain 1회 구성, direct blob 조회, _DeltaSnapshot vs plain-value 분기, 채널 독립 종료. BaseCheckpointSaver.get_delta_channel_history(base/__init__.py line 582): get_tuple() N번 호출 fallback. DeltaChannelHistory TypedDict 정의."

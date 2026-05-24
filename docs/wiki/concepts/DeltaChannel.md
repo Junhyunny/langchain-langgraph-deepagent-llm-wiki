@@ -11,6 +11,7 @@ sources:
   - langgraph-source-checkpoint-runtime-2026-05-20
   - langgraph-tests-delta-migration-2026-05-24
   - langgraph-tests-delta-channel-exit-mode-2026-05-24
+  - langgraph-venv-checkpoint-memory-init-py-2026-05-24
 ---
 
 # DeltaChannel
@@ -156,6 +157,70 @@ supersteps >= DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT  # 기본값 5000
    - `replay_writes(writes)` 호출 — 수집한 delta writes를 순서대로 재생하여 현재 값 재구성
    - **의미:** 스냅샷 없이 hydrate하려면 checkpointer가 `get_delta_channel_history()`를 구현해야 함
 
+### get_delta_channel_history() 구현 상세
+
+**검증됨** (`checkpoint/memory/__init__.py` + `checkpoint/base/__init__.py` 직접 확인, 2026-05-24):
+
+#### `DeltaChannelHistory` TypedDict
+
+```python
+class DeltaChannelHistory(TypedDict):
+    writes: list[PendingWrite]   # on-path deltas, oldest→newest. target checkpoint 자체 writes 제외
+    seed: NotRequired[Any]       # 가장 가까운 ancestor의 channel_values[ch] 값. 없으면 "start empty"
+```
+
+- `seed` 부재 = 루트까지 walk해도 stored value 없음 → 빈 컨테이너에서 시작
+- `seed`가 `_DeltaSnapshot(v)` 이면: `from_checkpoint`가 `v` 직접 복원 → `writes` replay
+- `seed`가 plain value 이면: `from_checkpoint`가 직접 사용 (migration 경로)
+
+#### `InMemorySaver.get_delta_channel_history()` — 최적화 override
+
+**핵심 알고리즘** (완전히 읽음):
+
+1. **체인 구성 (1회 pass)**: target checkpoint의 parent부터 root까지 `chain: list[str]` 구성
+2. **각 ancestor 순회**: `collected_by_ch`, `seed_by_ch`, `remaining` 추적
+3. **블롭 접근**: `self.blobs[(thread_id, ns, ch, ver)]` 직접 조회 (역직렬화 O(1))
+4. **`_DeltaSnapshot` 구분 로직**:
+   - plain-value blob → writes 수집 건너뜀 (`not isinstance(blob, _DeltaSnapshot)` = True)
+   - `_DeltaSnapshot` blob → writes 수집 계속 (snapshot은 writes BEFORE 해당 step의 상태)
+5. **채널 독립 종료**: 채널마다 blob 발견 시 `remaining`에서 제거, 전체 종료 시 조기 탈출
+
+```
+plain-value at cp_id → "이 값 = 현재 step 포함 모든 이력" → writes 불필요
+_DeltaSnapshot at cp_id → "이 값 = 이 step 이전 상태" → cp_id의 writes 재생 필요
+```
+
+**저장소 구조**:
+```python
+self.storage[thread_id][checkpoint_ns][checkpoint_id] = (
+    (ckpt_type, ckpt_bytes),    # [0]
+    (meta_type, meta_bytes),    # [1]
+    parent_id,                  # [2] ← 체인 탐색에 사용
+)
+self.blobs[(thread_id, ns, channel, version)] = (type_str, bytes)
+self.writes[(thread_id, ns, checkpoint_id)] = {(task_id, idx): (tid, ch, serialized, _)}
+```
+
+#### `BaseCheckpointSaver.get_delta_channel_history()` — 공개 API 기반 fallback
+
+**알고리즘** (완전히 읽음):
+
+1. `get_tuple(config)` → target tuple의 `parent_config` 에서 시작
+2. `get_tuple(cursor_config)` 반복 호출 → N개 ancestor = N번 `get_tuple` 호출
+3. `tup.pending_writes` → 해당 checkpoint에서 발생한 writes 수집
+4. `ch in tup.checkpoint["channel_values"]` → seed 발견 시 종료
+
+**차이점 요약**:
+
+| | `InMemorySaver` (override) | `BaseCheckpointSaver` (fallback) |
+|---|---|---|
+| ancestor 접근 방식 | 직접 dict 조회 | `get_tuple()` N번 호출 |
+| `_DeltaSnapshot` 처리 | 명시적 분기 처리 | 단순 `ch in channel_values` |
+| 성능 | O(chain_len × channels) dict | O(chain_len) 외부 호출 |
+| 사용 대상 | in-memory, 테스트 | DB-backed savers (PostgreSQL 등) |
+
+> **검증**: `test_delta_channel_migration.py` test 4에서 두 구현이 동일한 결과 생성 확인됨
+
 ### DeltaChannel durability invariant (`_loop.py` 확인)
 
 **검증됨** (`_loop.py` 직접 확인):
@@ -218,6 +283,12 @@ DeltaChannel write → checkpoint 저장 순서 보장이 중요하다.
     - `after_tick()`: `_exit_delta_writes` 누적 (exit mode)
     - `_put_checkpoint()`: `counters_since_delta_snapshot` 갱신 (line ~1055)
     - `_checkpointer_put_after_previous`: `_delta_write_futs` 드레인 (line ~1498, sync)
+  - `.venv/lib/python3.14/site-packages/langgraph/checkpoint/memory/__init__.py` ✅ 전체 관련 부분 읽음 (2026-05-24)
+    - `InMemorySaver.get_delta_channel_history()` (line 142): chain 1회 구성 + direct blob 조회 + _DeltaSnapshot 분기
+    - `DeltaChannelHistory` TypedDict: `writes: list[PendingWrite]` + `seed: NotRequired[Any]`
+  - `.venv/lib/python3.14/site-packages/langgraph/checkpoint/base/__init__.py`
+    - `BaseCheckpointSaver.get_delta_channel_history()` (line 582): `get_tuple()` N번 호출하는 fallback
+    - `DeltaChannelHistory` 정의 (line 149)
 
 ## Tests
 
@@ -325,8 +396,7 @@ Source: `langgraph-tests-delta-channel-exit-mode-2026-05-24`
 - `DeltaChannel` 자체 구현: ✅ 해소 (2026-05-24, `channels/delta.py` 전체 읽음)
 - `snapshot_frequency`의 기본값: ✅ 해소 — **1000** (update/write 횟수 기준). `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` = **5000**
 - `test_delta_channel_exit_mode.py` 읽기: ✅ 해소 (2026-05-24) — 11개 시나리오, lazy stub(step=-2), per-invoke 2 updates, sync/exit 카운터 동등성 확인
-- `get_delta_channel_history()`의 `InMemorySaver` 최적화 override vs `BaseCheckpointSaver` fallback 구현 상세
-  → `test_delta_channel_migration.py` test 4에서 두 경로 동일 결과 확인됨. 내부 코드는 **Needs Source** — `memory/__init__.py` 읽기 필요
+- `get_delta_channel_history()`의 `InMemorySaver` 최적화 override vs `BaseCheckpointSaver` fallback 구현 상세: ✅ 해소 (2026-05-24, `memory/__init__.py` + `base/__init__.py` 직접 확인) — InMemorySaver는 chain 1회 구성 + direct blob 조회, fallback은 get_tuple() N번 호출. `_DeltaSnapshot` 분기 처리 포함. 양쪽 동일 결과 생성.
 
 ## Sources
 
@@ -335,3 +405,4 @@ Source: `langgraph-tests-delta-channel-exit-mode-2026-05-24`
 - `langgraph-source-checkpoint-runtime-2026-05-20`
 - `langgraph-tests-delta-migration-2026-05-24`
 - `langgraph-tests-delta-channel-exit-mode-2026-05-24`
+- `langgraph-venv-checkpoint-memory-init-py-2026-05-24`
