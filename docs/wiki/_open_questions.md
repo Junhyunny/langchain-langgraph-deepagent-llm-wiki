@@ -59,7 +59,7 @@
 
 ### Checkpointer
 
-- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — Needs Verification (문서는 "저장/resume 불가"라고만 설명, 에러 타입 미명시)
+- `thread_id` 없이 `invoke`를 호출하면 어떤 에러가 발생하는가? — ✅ 해소 (2026-05-25, 직접 실행 확인). **checkpointer 없으면 thread_id 유무에 무관하게 정상 동작**. checkpointer 있고 thread_id 없으면 `ValueError: Checkpointer requires one or more of the following 'configurable' keys: thread_id, checkpoint_ns, checkpoint_id`. Source: 직접 실행
 - `StateGraph.compile()` 이후 `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — ✅ 해소 (2026-05-24): `_validate.py validate_graph()` 직접 확인. RESERVED 충돌, 구독 channel 존재, input/output/stream channel 존재, interrupt 노드 존재 검사.
 - `DeltaChannel` reconstruction/pruning/copying safety를 검증하는 test: `test_delta_channel_migration.py` ✅ 읽음 (2026-05-24) — 9개 시나리오. `test_delta_channel_exit_mode.py` ✅ 읽음 (2026-05-24) — 11개 시나리오, lazy stub(step=-2), per-invoke 2 updates.
 - `DeltaChannel`의 `snapshot_frequency` 기본값: ✅ 해소 (2026-05-24, `channels/delta.py` 직접 확인) — **1000** (update 횟수 기준). `DELTA_MAX_SUPERSTEPS_SINCE_SNAPSHOT` = **5000**.

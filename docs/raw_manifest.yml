@@ -661,3 +661,29 @@ sources:
     used_by:
       - "docs/wiki/concepts/Store.md"
     notes: "_data(dict)/vectors(dict) 이중 저장. batch()→PutOp/GetOp/SearchOp. cosine similarity 기반 vector search. ThreadPoolExecutor로 쿼리 임베딩 병렬 처리. index 파라미터로 vector search 활성화."
+  - id: langgraph-venv-fields-py-2026-05-25
+    title: "LangGraph _internal/_fields.py — get_field_default 내부 구현"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langgraph/_internal/_fields.py"
+    retrieved_at: "2026-05-25"
+    status: public
+    used_by:
+      - "docs/wiki/issues/LangGraph issue 5225 pydantic default factory.md"
+      - "docs/wiki/prs/LangGraph pydantic default factory reducer bug.md"
+    notes: "get_field_default() line 79-122. TypedDict/dataclass 처리 있음, Pydantic BaseModel 처리 없음. Issue #5225 근본 원인 파일."
+  - id: langgraph-venv-binop-py-2026-05-25
+    title: "LangGraph channels/binop.py — BinaryOperatorAggregate 내부"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langgraph/channels/binop.py"
+    retrieved_at: "2026-05-25"
+    status: public
+    used_by:
+      - "docs/wiki/issues/LangGraph issue 5225 pydantic default factory.md"
+      - "docs/wiki/prs/LangGraph pydantic default factory reducer bug.md"
+    notes: "BinaryOperatorAggregate.__init__ line 63-78. self.value = typ() 로 초기화 (Pydantic default_factory 무시). Issue #5225 버그 발생 위치."
