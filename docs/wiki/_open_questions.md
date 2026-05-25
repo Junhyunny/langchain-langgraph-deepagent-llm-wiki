@@ -44,6 +44,9 @@
 - `wrap_model_call` 데코레이터의 전체 서명과 `before_model` hook과의 차이는? — ✅ **검증됨** (2026-05-28): `wrap_model_call`은 handler를 직접 감싸 모델 호출 자체를 가로채는 반면, `before_model`은 상태/메시지 변환만 함. [[LLMToolSelectorMiddleware]] = wrap_model_call, [[SummarizationMiddleware]] = before_model 참고. Source: `langchain-source-builtin-middleware-2026-05-25`
 - 빌트인 미들웨어(`summarization.py`, `pii.py`, `tool_selection.py` 등) 내부 구현은? — ✅ **해소됨** (2026-05-26): [[SummarizationMiddleware]], [[LLMToolSelectorMiddleware]], [[PIIMiddleware]] 위키 페이지 작성 완료. Source: `langchain-source-builtin-middleware-2026-05-25`
 - `wrap_tool_call`이 `Command`를 반환할 때 어떤 상태 변화가 가능한가? — Needs Source
+- `ModelRetryMiddleware` + `ModelFallbackMiddleware` 조합 시 어떤 미들웨어의 `wrap_model_call`이 외부를 감싸는가? (등록 순서에 따라 다름인지 확인 필요) — Needs Verification
+- `request.override(model=...)` 내부 구현: `ModelRequest`의 immutable copy 패턴인가, shallow copy인가? — Needs Source (`langchain/agents/middleware/types.py` 확인 필요)
+- `ToolRetryMiddleware`가 `Command` 반환 도구와 함께 동작할 때 재시도 후 `Command` 반환은 어떻게 처리되는가? — Needs Source
 
 ---
 

@@ -31,6 +31,8 @@
 - [[SummarizationMiddleware]] → `concepts/SummarizationMiddleware.md`
 - [[LLMToolSelectorMiddleware]] → `concepts/LLMToolSelectorMiddleware.md`
 - [[PIIMiddleware]] → `concepts/PIIMiddleware.md`
+- [[RetryMiddleware]] → `concepts/RetryMiddleware.md` (ModelRetryMiddleware + ToolRetryMiddleware)
+- [[ModelFallbackMiddleware]] → `concepts/ModelFallbackMiddleware.md`
 
 ## 코드베이스 맵
 - [[LangChain Code Map]] → `codebase/LangChain Code Map.md`
