@@ -699,3 +699,15 @@ sources:
     used_by:
       - "docs/wiki/tests/test_langchain_tool_calling_map.md"
     notes: "libs/core/tests/unit_tests/test_tools.py (3743 lines). @tool 데코레이터, StructuredTool, InjectedToolArg, InjectedToolCallId, handle_tool_error, handle_validation_error, ToolOutputMixin 패턴 분석."
+  - id: langgraph-prebuilt-tool-node-2026-05-27
+    title: "LangGraph prebuilt/tool_node.py 소스 분석"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langgraph/prebuilt/tool_node.py"
+    retrieved_at: "2026-05-27"
+    status: public
+    used_by:
+      - "docs/wiki/flows/LangGraph ToolNode flow.md"
+    notes: "2030 lines. ToolNode, InjectedState, InjectedStore, ToolRuntime, tools_condition, _InjectedArgs, _get_all_injected_args, _inject_tool_args. 병렬 실행(ThreadPoolExecutor), LLM 위조 방지(stripped_args), InjectedToolCallId 연결 포인트."
