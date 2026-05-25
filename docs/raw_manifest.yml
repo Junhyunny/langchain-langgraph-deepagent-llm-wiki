@@ -723,3 +723,27 @@ sources:
     used_by:
       - "docs/wiki/flows/LangGraph create_react_agent flow.md"
     notes: "1015 lines. create_react_agent(deprecated), StateGraph 조립, v1/v2 ToolNode dispatch 차이, should_continue, call_model, remaining_steps 안전 종료, pre/post_model_hook, response_format, 동적 모델."
+  - id: langchain-agents-factory-2026-05-28
+    title: "LangChain agents/factory.py — create_agent 소스 분석"
+    type: source_code
+    framework: LangChain
+    repo: "https://github.com/langchain-ai/langchain"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langchain/agents/factory.py"
+    retrieved_at: "2026-05-28"
+    status: public
+    used_by:
+      - "docs/wiki/flows/LangChain create_agent flow.md"
+    notes: "1885 lines. create_agent(L697), _chain_model_call_handlers(L221), _get_bound_model(L1162), model_node(L1318), 동적 노드/엣지 조립(L1477-1679), recursion_limit 9999(L1665). Middleware 시스템, entry/loop_entry/loop_exit/exit_node 구조."
+  - id: langchain-agents-middleware-types-2026-05-28
+    title: "LangChain agents/middleware/types.py — AgentMiddleware 타입 정의"
+    type: source_code
+    framework: LangChain
+    repo: "https://github.com/langchain-ai/langchain"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langchain/agents/middleware/types.py"
+    retrieved_at: "2026-05-28"
+    status: public
+    used_by:
+      - "docs/wiki/flows/LangChain create_agent flow.md"
+    notes: "600+ lines. AgentMiddleware(L380) 6종 훅 시그니처, ModelRequest(L89) override() 불변 패턴, ModelResponse(L271), ExtendedModelResponse(L289), AgentState(L350) jump_to EphemeralValue, OmitFromSchema(L329), JumpTo Literal."

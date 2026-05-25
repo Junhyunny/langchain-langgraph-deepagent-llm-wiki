@@ -41,7 +41,9 @@
 - `init_embeddings("openai:text-embedding-3-small")` 형식은 새로운 API인가? 구버전 `OpenAIEmbeddings()`와의 차이는? — Source: `langchain-docs-rag-2026-05-23`
 - `response_format="content_and_artifact"` 옵션의 정확한 의미는? — Source: `langchain-docs-rag-2026-05-23`
 - `_merge_splits()`의 `chunk_overlap` 구현 방식은? 슬라이딩 윈도우인가? — Source: `langchain-source-text-splitters-2026-05-23`
-- `wrap_model_call` 데코레이터의 전체 서명과 `before_model` hook과의 차이는? — Source: `langchain-source-dynamic-prompt-2026-05-23`
+- `wrap_model_call` 데코레이터의 전체 서명과 `before_model` hook과의 차이는? — ✅ **검증됨** (2026-05-28): `wrap_model_call`은 handler를 직접 감싸 모델 호출 자체를 가로채는 반면, `before_model`은 상태/메시지 변환만 함. 각 미들웨어의 실제 구현은 Needs Source
+- 빌트인 미들웨어(`summarization.py`, `pii.py`, `tool_selection.py` 등) 내부 구현은? — Needs Source (`langchain/agents/middleware/` 각 파일 읽기 필요)
+- `wrap_tool_call`이 `Command`를 반환할 때 어떤 상태 변화가 가능한가? — Needs Source
 
 ---
 

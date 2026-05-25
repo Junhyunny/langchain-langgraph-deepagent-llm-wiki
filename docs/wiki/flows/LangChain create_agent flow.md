@@ -1,108 +1,254 @@
 ---
 type: flow
-framework: LangChain
-status: draft
-confidence: medium
-last_reviewed: 2026-05-23
+framework:
+  - LangChain
+  - LangGraph
+status: verified
+confidence: high
+last_reviewed: 2026-05-28
 sources:
   - langchain-source-tools-2026-05-23
   - langchain-source-create-agent-factory-2026-05-23
   - langchain-source-bind-tools-function-calling-2026-05-23
+  - langchain-agents-factory-2026-05-28
+  - langchain-agents-middleware-types-2026-05-28
 ---
 
 # LangChain create_agent flow
 
-## 요약
+## Summary
 
-이 페이지는 LangChain에서 tool calling agent를 생성하고 실행하는 흐름을 추적한다.
-`create_agent` 진입점은 소스 코드 기반으로 검증됨. tool 실행 경로(`BaseTool` 이하)도 소스 코드 기반으로 검증됨.
+`create_agent`는 `langchain.agents.factory.py`에 정의된 현재 공식 API로,
+deprecated된 `create_react_agent` + `AgentExecutor` 조합의 후속이다.
+**미들웨어(Middleware) 시스템**을 도입해 에이전트 동작을 모듈식으로 확장할 수 있다.
 
-**중요:** `create_tool_calling_agent` + `AgentExecutor`는 구버전 API. 현재 공식 API는 `create_agent`이며 LangGraph `StateGraph` 기반으로 구현됨.
+**핵심 차이**: `create_react_agent`가 `pre_model_hook`/`post_model_hook` 2개 확장점을 제공하는 반면,
+`create_agent`는 최대 6가지 훅 포인트를 가진 `AgentMiddleware` 플러그인 시스템을 제공한다.
+
+- 파일 위치: `langchain/agents/factory.py` (1,885 lines), `langchain/agents/middleware/types.py` (600+ lines)
+- Repo: `langchain-ai/langchain`, Commit: UNKNOWN (.venv에서 읽음)
 
 ---
 
-## create_agent 전체 흐름
-
-*Source: `langchain-source-create-agent-factory-2026-05-23`*
+## 진입점
 
 ```python
 from langchain.agents import create_agent
 
 agent = create_agent(
-    model="anthropic:claude-sonnet-4-6",
-    tools=[search_db, send_email],
-    system_prompt="You are a helpful assistant.",
+    model="anthropic:claude-sonnet-4-5",
+    tools=[...],
+    system_prompt="...",                          # optional
+    middleware=[SummarizationMiddleware(), ...],  # optional
+    response_format=MySchema,                    # optional
 )
 result = agent.invoke({"messages": [HumanMessage("...")]})
 ```
 
-**검증됨:** `create_agent`는 `libs/langchain_v1/langchain/agents/factory.py`에 구현됨. `StateGraph`를 동적으로 구성하는 팩토리 함수다.
+**검증됨:** `create_agent`는 `langchain/agents/factory.py` L697에 구현됨. `StateGraph`를 동적으로 구성하는 팩토리 함수다.
 
 ---
 
-## create_agent Graph 구성
+## AgentMiddleware 훅 시스템
 
-*Source: `langchain-source-create-agent-factory-2026-05-23`*
+*Source: `langchain-agents-middleware-types-2026-05-28`*
 
-**검증됨:** `create_agent`는 내부에서 `StateGraph`를 구성한다. 노드와 엣지 구성:
+### 6가지 훅 포인트
 
-### 노드
+| 훅 | 실행 시점 | 루프 내/외 |
+|----|-----------|-----------|
+| `before_agent` | 에이전트 전체 시작 전 (1회) | **루프 외** |
+| `before_model` | 매 모델 호출 전 | **루프 내** |
+| `wrap_model_call` | 모델 실행 자체를 래핑 (retry/cache 등) | **루프 내** |
+| `after_model` | 매 모델 호출 후 | **루프 내** |
+| `wrap_tool_call` | 각 도구 실행을 래핑 | **루프 내** |
+| `after_agent` | 에이전트 전체 종료 후 (1회) | **루프 외** |
 
-| 노드 | 역할 | 조건 |
-|------|------|------|
-| model node | LLM 호출. middleware가 있으면 `_chain_model_call_handlers()`로 래핑 | 항상 존재 |
-| tools node | `ToolNode(tools=available_tools)` | client-side tools 있거나 middleware가 wrap_tool_call 정의 시 |
-| before_agent | middleware 훅 | middleware 등록 시 |
-| before_model | middleware 훅 | middleware 등록 시 |
-| after_model | middleware 훅 | middleware 등록 시 |
-| after_agent | middleware 훅 | middleware 등록 시 |
+모든 훅은 `async` 버전(`a` 접두사)도 제공된다.
 
-### 실행 루프 (graph edges)
+### AgentMiddleware 기본 클래스 (types.py L380)
+
+```python
+class AgentMiddleware(Generic[StateT, ContextT, ResponseT]):
+    state_schema: type[StateT]  # 미들웨어 전용 상태 스키마
+    tools: Sequence[BaseTool]   # 미들웨어가 추가하는 도구
+
+    def before_agent(state, runtime) -> dict | None: ...
+    def before_model(state, runtime) -> dict | None: ...
+    def wrap_model_call(request, handler) -> ModelCallResult: ...
+    def after_model(state, runtime) -> dict | None: ...
+    def wrap_tool_call(request, handler) -> ToolMessage | Command: ...
+    def after_agent(state, runtime) -> dict | None: ...
+```
+
+---
+
+## 그래프 구조 (동적 노드 조립)
+
+*Source: `langchain-agents-factory-2026-05-28` L1477–1679*
+
+미들웨어가 어떤 훅을 구현했는지에 따라 노드가 동적으로 추가된다.
 
 ```
 [START]
-    │
-    ▼
-before_agent (있을 경우)
-    │
-    ▼
-before_model (있을 경우)
-    │
-    ▼
-model node ─── tool_calls 없음 ──→ after_agent (있을 경우) ──→ [END]
-    │
-    └── tool_calls 있음
-            │
-            ▼
-        tools node (ToolNode)
-            │  · BaseTool.invoke(ToolCall) 실행
-            │  · 결과를 ToolMessage로 반환
-            │
-            ▼
-        after_model (있을 경우)
-            │
-            └──────────────────────────────→ model node (루프)
+  ↓
+{middleware}.before_agent   ← 구현된 미들웨어에만 추가 (1회)
+  ↓
+{middleware}.before_model   ← 구현된 미들웨어에만 추가 (루프마다)
+  ↓
+model                       ← 항상 존재
+  ↓
+{middleware}.after_model    ← 구현된 미들웨어에만 추가 (루프마다)
+  ↓
+[조건 분기]
+  ├─ tool_calls 있음 → tools → loop_entry_node
+  └─ tool_calls 없음 → {middleware}.after_agent → [END]
 ```
 
-**검증됨:** conditional edge는 `add_conditional_edges()`로 구현. model → tools 전환은 tool_calls 유무로 결정. tools → model 루프는 무조건 반복.
+### 3가지 특수 노드 그룹
 
-### ToolNode 생성 조건
+| 노드 | 역할 |
+|------|------|
+| `entry_node` | 시작 시 1회 진입 — before_agent 포함 |
+| `loop_entry_node` | tools → 루프 재진입 시 — before_agent 제외 |
+| `loop_exit_node` | 루프 각 이터레이션 끝 (after_model 또는 model) |
+| `exit_node` | after_agent → END |
+
+### `jump_to` 흐름 제어 (types.py L350)
+
+`AgentState`의 `jump_to: JumpTo | None` 필드 — `EphemeralValue` (매 스텝 초기화):
 
 ```python
-tool_node = (
-    ToolNode(
-        tools=available_tools,
-        wrap_tool_call=wrap_tool_call_wrapper,
-        awrap_tool_call=awrap_tool_call_wrapper,
-    )
-    if available_tools or wrap_tool_call_wrapper or awrap_tool_call_wrapper
-    else None
-)
+JumpTo = Literal["tools", "model", "end"]
+```
+
+미들웨어가 `before_model`/`after_model`에서 `{"jump_to": "end"}` 등을 반환해 흐름을 강제로 리디렉션 가능.
+
+---
+
+## create_react_agent vs create_agent 핵심 차이
+
+| 항목 | `create_react_agent` (LangGraph) | `create_agent` (LangChain) |
+|------|----------------------------------|---------------------------|
+| 상태 | `remaining_steps` | `jump_to` (EphemeralValue) |
+| 안전 종료 | `remaining_steps < 2` 조기 반환 | `recursion_limit: 9_999` |
+| 확장점 | `pre_model_hook`, `post_model_hook` | 6가지 미들웨어 훅 |
+| `bind_tools` 시점 | 에이전트 생성 시 (1회) | **매 모델 호출 시** (`_get_bound_model`) |
+| v1/v2 Send API | Send("tools", ToolCallWithContext) | 없음 (단순 ToolNode) |
+| deprecated | LangGraph v1.0부터 | 현재 활성 API |
+
+---
+
+## bind_tools 지연 바인딩
+
+*Source: `langchain-agents-factory-2026-05-28` L1162*
+
+`create_agent`는 **매 모델 호출 시** `_get_bound_model(request)` 내에서 `bind_tools()` 실행:
+
+```python
+def _get_bound_model(request):
+    # request.tools: 미들웨어가 override() 로 수정 가능
+    # request.response_format: 미들웨어가 수정 가능
+    return model.bind_tools(final_tools), effective_response_format
+```
+
+**의미**: `wrap_model_call` 미들웨어가 `request.override(tools=[...])` 로 도구 목록을 런타임에 변경 가능.
+→ `tool_selection`, `tool_emulator` 미들웨어가 이 방식으로 동적 도구 관리.
+
+---
+
+## ModelRequest / ModelResponse (types.py)
+
+### ModelRequest (불변, override() 패턴) — L89
+
+```python
+@dataclass
+class ModelRequest[ContextT]:
+    model: BaseChatModel
+    messages: list[AnyMessage]
+    system_message: SystemMessage | None
+    tools: list[BaseTool | dict]
+    response_format: ResponseFormat | None
+    tool_choice: Any | None
+    state: AgentState
+    runtime: Runtime[ContextT]
+    model_settings: dict
+
+    def override(self, **kwargs) -> ModelRequest:  # 새 인스턴스 반환
+        ...
+```
+
+**직접 속성 할당 deprecated**: `request.tools = [...]` 대신 `request.override(tools=[...])` 사용.
+
+### wrap_model_call 반환 타입 (L271, L289)
+
+```python
+# 단순 모델 응답
+ModelResponse  → result: list[BaseMessage], structured_response: ...
+
+# 추가 상태 업데이트 포함
+ExtendedModelResponse → model_response + command: Command | None
+  # command.goto / command.resume / command.graph 는 NotImplementedError
 ```
 
 ---
 
-## Tool 등록 경로 (검증됨)
+## wrap_model_call 미들웨어 체이닝
+
+*Source: `langchain-agents-factory-2026-05-28` L221*
+
+`_chain_model_call_handlers()`: right-to-left 합성 → 첫 번째 미들웨어가 outermost (양파 모델):
+
+```
+Request:  [mw1] → [mw2] → [mw3] → model
+Response: model → [mw3] → [mw2] → [mw1]
+```
+
+---
+
+## AutoStrategy (response_format 자동 감지)
+
+실행 시점(`_get_bound_model`)에서:
+1. 모델이 `ProviderStrategy` 지원 → `model.with_structured_output()` 사용
+2. 미지원 → `ToolStrategy` (도구 호출 방식으로 구조화 출력 유도)
+3. Gemini < 3-series: 도구와 structured output 동시 불가 → ToolStrategy 강제
+
+---
+
+## 빌트인 미들웨어 목록
+
+`langchain/agents/middleware/` 에서 확인됨 (⚠️ 내부 구현은 아직 읽지 않음):
+
+| 파일 | 역할 |
+|------|------|
+| `summarization.py` | 메시지 히스토리 요약 |
+| `human_in_the_loop.py` | HITL (사람 개입) |
+| `pii.py` | PII 감지/제거 |
+| `_redaction.py` | 내용 리덱션 |
+| `model_retry.py` | 모델 호출 재시도 |
+| `model_fallback.py` | 모델 폴백 |
+| `model_call_limit.py` | 모델 호출 횟수 제한 |
+| `tool_retry.py` | 도구 재시도 |
+| `tool_emulator.py` | 도구 에뮬레이션 |
+| `tool_selection.py` | 동적 도구 선택 |
+| `tool_call_limit.py` | 도구 호출 횟수 제한 |
+| `file_search.py` | 파일 검색 |
+| `shell_tool.py` | 쉘 실행 |
+| `context_editing.py` | 컨텍스트 편집 |
+| `todo.py` | Todo 추적 |
+
+---
+
+## 상태 스키마 병합
+
+미들웨어 각각이 자신의 `state_schema`를 가질 수 있으며, `_resolve_schemas()`로 병합됨:
+
+`OmitFromSchema` 어노테이션 (types.py L329):
+- `PrivateStateAttr` = `OmitFromInput` + `OmitFromOutput` → 미들웨어 내부 상태 필드를 input/output schema에서 숨김
+
+---
+
+## Tool 등록 경로 (기존 검증됨)
 
 *Source: `langchain-source-tools-2026-05-23`*
 
@@ -110,161 +256,82 @@ tool_node = (
 @tool 데코레이터 또는 StructuredTool.from_function()
     │
     ├─ create_schema_from_function(name, func)
-    │       ├─ pydantic validate_arguments → inferred_model
-    │       ├─ _infer_arg_descriptions() → (description, arg_descriptions)
-    │       └─ _create_subset_model(...) → args_schema (Pydantic BaseModel)
+    │       └─ args_schema (Pydantic BaseModel)
     │
     └─ StructuredTool(name, func, coroutine, args_schema, description)
-            │
-            └─ .tool_call_schema (property)
-                    └─ args_schema.model_json_schema() - InjectedToolArg 필드 제외
-                       → LLM API에 전달될 JSON schema
+            └─ .tool_call_schema → LLM API에 전달될 JSON schema
 ```
 
----
-
-## bind_tools — tool schema → LLM API payload 변환
+## bind_tools → LLM API payload 변환 (기존 검증됨)
 
 *Source: `langchain-source-bind-tools-function-calling-2026-05-23`*
 
-**검증됨:** `BaseChatModel.bind_tools`는 추상 메서드(NotImplementedError). OpenAI provider는 다음 경로로 변환:
-
 ```
 BaseTool.tool_call_schema
-    │
-    ▼
-bind_tools([tool])              ← provider 구현체 (BaseChatOpenAI 등)
-    │
-    ▼
-convert_to_openai_tool(tool)    ← langchain_core/utils/function_calling.py
-    │
-    ▼
-convert_to_openai_function(tool)
-    │
-    ▼
-_format_tool_to_openai_function(tool: BaseTool)
-    │  tool.tool_call_schema → JSON 변환
-    │
-    ▼
-{"type": "function", "function": {"name": ..., "description": ..., "parameters": {...}}}
-    │
-    ▼
-LLM API 호출 시 tools=[...] 파라미터로 전달
+    → bind_tools([tool])           ← provider 구현체 (BaseChatOpenAI 등)
+    → convert_to_openai_tool(tool)
+    → {"type": "function", "function": {"name": ..., "description": ..., "parameters": {...}}}
+```
+
+## Tool 실행 경로 (기존 검증됨)
+
+```
+AIMessage.tool_calls → BaseTool.invoke(ToolCall)
+    → _prep_run_args → run(tool_input, tool_call_id)
+    → Pydantic validation → StructuredTool._run(*args, **kwargs)
+    → ToolMessage(content, tool_call_id, name, status)
 ```
 
 ---
 
-## Tool 실행 경로 (검증됨)
+## Source Code References
 
-*Source: `langchain-source-tools-2026-05-23`*
-
-```
-[Agent가 AIMessage.tool_calls 수신]
-    │
-    ▼
-BaseTool.invoke(ToolCall)
-    │  ToolCall = {"name": "...", "args": {...}, "id": "call_abc123", "type": "tool_call"}
-    │
-    ├─ _prep_run_args(ToolCall)
-    │       ├─ tool_call_id = ToolCall["id"]       ← "call_abc123"
-    │       └─ tool_input = ToolCall["args"].copy() ← {"query": "..."}
-    │
-    ▼
-BaseTool.run(tool_input, tool_call_id="call_abc123")
-    │
-    ├─ CallbackManager.on_tool_start(...)    ← 트레이싱 시작
-    │
-    ├─ _to_args_and_kwargs(tool_input, tool_call_id)
-    │       └─ _parse_input(tool_input, tool_call_id)
-    │               ├─ args_schema.model_validate(tool_input) ← Pydantic validation
-    │               └─ InjectedToolCallId 주입 (해당 필드 있을 경우)
-    │
-    ├─ StructuredTool._run(*args, **kwargs)
-    │       └─ self.func(*args, **kwargs)     ← 실제 Python 함수 실행
-    │
-    ├─ (예외 처리)
-    │   ├─ ToolException → handle_tool_error에 따라 처리
-    │   ├─ ValidationError → handle_validation_error에 따라 처리
-    │   └─ 기타 Exception → re-raise
-    │
-    ├─ _format_output(content, tool_call_id="call_abc123", name="...", status="success")
-    │       └─ ToolMessage(content, tool_call_id="call_abc123", name="...", status="success")
-    │
-    └─ CallbackManager.on_tool_end(...)      ← 트레이싱 종료
-
-    반환값: ToolMessage
-```
-
----
-
-## 전체 흐름 다이어그램
-
-```
-tools = [StructuredTool, ...]
-    │  각 tool.tool_call_schema → convert_to_openai_tool → JSON schema
-    │
-    ▼
-create_agent(model, tools, system_prompt=...)
-    │  StateGraph 구성: model node + tools node + conditional edges
-    │
-    ▼
-agent.invoke({"messages": [HumanMessage("...")]})
-    │
-    ├─────────────── Agent Loop (StateGraph) ────────────────┐
-    │                                                        │
-    │  model node: LLM(messages) → AIMessage                │
-    │      │                                                 │
-    │      ├─ tool_calls 없음 → [END] (최종 답변)            │
-    │      │                                                 │
-    │      └─ tool_calls 있음:                               │
-    │             │                                          │
-    │             ▼                                          │
-    │        tools node: BaseTool.invoke(ToolCall)           │
-    │             └─ ToolMessage                             │
-    │                    │                                   │
-    │             messages에 추가                           │
-    │                    └────────────────────────────────────┘
-    │
-    └─ 최종 AIMessage content 반환
-```
-
----
-
-## 소스 파일 위치
-
-**검증됨:**
-- `libs/langchain_v1/langchain/agents/factory.py` — `create_agent` 구현. StateGraph 구성, middleware 조합, ToolNode 생성.
-- `libs/core/langchain_core/tools/base.py` — `BaseTool`, tool 실행 경로
-- `libs/core/langchain_core/tools/structured.py` — `StructuredTool`
-- `libs/core/langchain_core/tools/convert.py` — `@tool` 데코레이터
-- `libs/core/langchain_core/utils/function_calling.py` — `convert_to_openai_tool`, `convert_to_openai_function`, `_format_tool_to_openai_function`
-- `libs/partners/openai/langchain_openai/chat_models/base.py` — `BaseChatOpenAI.bind_tools` OpenAI 구현
-
-**구버전 경로 (현재 master에 없음):**
-- `libs/langchain/langchain/agents/tool_calling_agent/base.py` — `create_tool_calling_agent` (deprecated)
-- `libs/langchain/langchain/agents/agent.py` — `AgentExecutor` (deprecated)
-
----
-
-## 미해결 질문
-
-- `_chain_model_call_handlers()`의 구체적인 구현은? middleware 체이닝 메커니즘
-- `before_agent`, `after_agent` 훅의 시그니처와 반환 타입은?
-- `response_format` 처리 시 structured output과 tool calling의 내부 차이는?
-- `create_react_agent`(LangGraph prebuilt)과 `create_agent`(LangChain)의 구현 차이는?
+- Repo: `langchain-ai/langchain`
+- Commit: UNKNOWN (.venv에서 읽음)
+- Files:
+  - `langchain/agents/factory.py` (1,885 lines)
+    - `create_agent`: L697
+    - `_chain_model_call_handlers`: L221
+    - `_get_bound_model`: L1162
+    - `model_node`: L1318
+    - 그래프 노드/엣지 동적 조립: L1477–1679
+    - `recursion_limit: 9_999`: L1665
+  - `langchain/agents/middleware/types.py` (600+ lines)
+    - `AgentMiddleware`: L380
+    - `ModelRequest`: L89
+    - `ModelResponse`: L271
+    - `ExtendedModelResponse`: L289
+    - `AgentState`: L350
+    - `OmitFromSchema`: L329
 
 ---
 
 ## 관련 페이지
 
 - [[LangChain]]
-- [[LangChain Code Map]]
+- [[LangGraph create_react_agent flow]]
+- [[LangGraph ToolNode flow]]
 - [[Tool Calling]]
 - [[StateGraph]]
-- [[LangChain vs LangGraph vs Deep Agents]]
+- [[Human-in-the-Loop]]
+- [[Guardrails]]
 
-## 소스
+---
 
-- `langchain-source-tools-2026-05-23` (tool 실행 경로 검증)
-- `langchain-source-create-agent-factory-2026-05-23` (create_agent graph 구성 검증)
-- `langchain-source-bind-tools-function-calling-2026-05-23` (bind_tools → API payload 변환 검증)
+## Open Questions
+
+- 각 빌트인 미들웨어(`summarization.py`, `pii.py`, `tool_selection.py` 등)의 내부 구현은? — Needs Source
+- `wrap_model_call`과 `before_model`의 실질적 차이는? (하나는 handler를 직접 감싸고, 다른 하나는 상태 변환만)
+- `before_agent` → `before_model` 전환 시 `remaining_steps` 없는데 무한 루프 방어는 recursion_limit 9999에만 의존하는가?
+- `wrap_tool_call`이 `Command`를 반환할 때 어떤 상태 변화가 가능한가?
+- Deep Agents의 middleware 시스템과 이 구조는 동일한가, 유사한가, 다른가? — Needs Source
+
+---
+
+## Sources
+
+- `langchain-source-tools-2026-05-23`
+- `langchain-source-create-agent-factory-2026-05-23`
+- `langchain-source-bind-tools-function-calling-2026-05-23`
+- `langchain-agents-factory-2026-05-28`
+- `langchain-agents-middleware-types-2026-05-28`
