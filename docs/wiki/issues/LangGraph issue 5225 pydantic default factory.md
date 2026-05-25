@@ -193,8 +193,49 @@ TypedDict 케이스                  → 변경 없음 ✅
 - [x] `reproductions/langgraph_pydantic_default_factory/reproduce.py` 실행 확인 (2026-05-25)
 - [x] 수정 방향 확정: `_get_updates` START+Pydantic coercion (2026-05-25)
 - [x] `.venv` 로컬 fix 검증 완료 — 8개 케이스 통과 (2026-05-25)
-- [ ] LangGraph 저장소 fork 후 공식 fix + 회귀 테스트 작성
-- [ ] PR 제출
+- [ ] LangChain tool calling 관련 테스트 읽기 (다음 학습 단계)
+- [ ] 유사한 Pydantic / TypedDict 동작 차이 비교 실험
+
+---
+
+## Fix 분석 (학습 메모)
+
+**검증됨** (`.venv` 직접 패치 + 실행, 2026-05-25)
+
+### 수정 위치: `state.py` `attach_node._get_updates`
+
+```python
+def _get_updates(input):
+    if input is None:
+        return None
+    # START 노드 + Pydantic BaseModel 스키마 + dict 입력일 때:
+    # dict를 스키마로 coerce → Field(default_factory=...) 기본값 적용
+    if (
+        key == START
+        and isinstance(input, dict)
+        and isclass(self.builder.input_schema)
+        and issubclass(self.builder.input_schema, BaseModel)
+    ):
+        input = self.builder.input_schema(**input)
+    if isinstance(input, dict):
+        return [(k, v) for k, v in input.items() if k in output_keys]
+    ...
+```
+
+### 설계 인사이트
+- `BinaryOperatorAggregate.__init__`의 `self.value = typ()` (= `[]`)는 버그가 아님. 채널은 항상 빈 값으로 시작하는 것이 올바른 설계 (reducer는 누산기)
+- 문제는 채널 초기값이 아닌, `invoke({})` 시 Pydantic 기본값이 channel update로 변환되지 않는 것
+- `invoke(Schema())` 경로는 `get_cached_annotated_keys` 분기가 이미 올바르게 처리함
+- 최소 변경 원칙: `binop.py`, `_fields.py` 변경 없이 `state.py` 1개 함수만 수정
+
+### 검증된 케이스 (8개)
+```
+invoke({})                       → ['default', 'added'] ✅
+invoke(State())                  → ['default', 'added'] ✅
+invoke({'variable': ['start']})  → ['start', 'added']   ✅
+checkpointer + resume            → 누산 정상 ✅
+TypedDict 경로                   → 영향 없음 ✅
+```
 
 ---
 

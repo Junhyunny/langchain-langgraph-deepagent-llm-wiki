@@ -54,9 +54,5 @@
 - [[test_pregel_interrupt_map]] → `tests/test_pregel_interrupt_map.md`
 - [[test_pregel_checkpoint_map]] → `tests/test_pregel_checkpoint_map.md`
 
-## 이슈
+## 이슈 분석
 - [[LangGraph issue 5225 pydantic default factory]] → `issues/LangGraph issue 5225 pydantic default factory.md`
-
-## PR 후보
-- [[LangGraph checkpoint pending writes tests documentation PR candidate]] → `prs/LangGraph checkpoint pending writes tests documentation PR candidate.md`
-- [[LangGraph pydantic default factory reducer bug]] → `prs/LangGraph pydantic default factory reducer bug.md`
