@@ -687,3 +687,15 @@ sources:
       - "docs/wiki/issues/LangGraph issue 5225 pydantic default factory.md"
       - "docs/wiki/prs/LangGraph pydantic default factory reducer bug.md"
     notes: "BinaryOperatorAggregate.__init__ line 63-78. self.value = typ() 로 초기화 (Pydantic default_factory 무시). Issue #5225 버그 발생 위치."
+  - id: langchain-core-test-tools-2026-05-27
+    title: "LangChain Core — test_tools.py 테스트 분석"
+    type: test_code
+    framework: LangChain
+    repo: "https://github.com/langchain-ai/langchain"
+    commit: "9a671d7919597eb7226e2f87cdfbc161a774daf7"
+    local_path: "docs/raw/"
+    retrieved_at: "2026-05-27"
+    status: public
+    used_by:
+      - "docs/wiki/tests/test_langchain_tool_calling_map.md"
+    notes: "libs/core/tests/unit_tests/test_tools.py (3743 lines). @tool 데코레이터, StructuredTool, InjectedToolArg, InjectedToolCallId, handle_tool_error, handle_validation_error, ToolOutputMixin 패턴 분석."
