@@ -50,7 +50,7 @@
 ### 그래프 기초
 
 - LangGraph에서 cyclic graph는 내부적으로 어떻게 무한 루프를 방지하는가? — ✅ 해소 (2026-05-24, `_loop.py` 직접 확인). `stop = step + recursion_limit + 1`. 매 superstep마다 `step += 1`. `step > stop` 이면 `status="out_of_steps"`. `main.py`에서 `GraphRecursionError` 발생. 기본값 `recursion_limit=25` (`ensure_config()` 확인). Source: `langgraph-venv-loop-py-2026-05-24`
-- `add_conditional_edges`의 두 번째 인수(path_map)는 선택인가 필수인가? 없을 때 동작 방식은?
+- `add_conditional_edges`의 두 번째 인수(path_map)는 선택인가 필수인가? 없을 때 동작 방식은? — ✅ 해소 (2026-05-25, `graph/_branch.py` + `state.py` 직접 확인). **선택** (`path_map: dict | list | None = None`). None 시 path 함수 반환값이 그대로 노드명으로 사용됨. `Literal[...]` 리턴 타입 힌트가 있으면 자동으로 `{name: name}` dict로 변환. list 제공 시도 `{name: name}` dict로 변환. `BranchSpec.from_path()` line 96-116 확인. Source: `.venv/langgraph/graph/_branch.py`
 - `TypedDict` vs `Pydantic` 상태 스키마의 실질적인 차이는? (런타임 유효성 검사, 직렬화)
 - `NodeRuntime.control`과 `NodeRuntime.heartbeat`의 구체적인 사용 사례는? — Source: `langgraph-docs-graph-api-2026-05-23`
 - `Send` 사용 시 각 worker 결과를 집계하는 reduce 단계 Reducer 설계 패턴은? — Source: `langgraph-docs-graph-api-2026-05-23`
@@ -72,7 +72,8 @@
 
 ### Memory Store
 
-- 프로덕션용 Store 구현체(Redis, PostgreSQL)는 어떤 패키지에 있는가? — Needs Source
+- 프로덕션용 Store 구현체(Redis, PostgreSQL)는 어떤 패키지에 있는가? — ⚠️ 가설 수준 (`langgraph-checkpoint-postgres`, `langgraph-checkpoint-redis` 추정, 직접 확인 필요)
+- `InMemoryStore`의 vector search 지원: ✅ 해소 (2026-05-25, `.venv/langgraph/store/memory/__init__.py` 직접 확인). `index` 파라미터로 vector search 활성화. `_data`(dict)/`_vectors`(dict) 이중 저장, cosine similarity. Source: `langgraph-venv-store-memory-2026-05-25`
 - `create_deep_agent`에서 Store는 어떤 middleware가 어떻게 활용하는가? (`MemoryMiddleware`와의 관계?) — Needs Source
 
 ---

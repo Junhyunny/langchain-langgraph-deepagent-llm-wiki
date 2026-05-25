@@ -50,6 +50,9 @@
 ## 의사결정
 - [[When to use LangGraph vs Deep Agents for orchestration]] → `decisions/When to use LangGraph vs Deep Agents for orchestration.md`
 
+## 테스트 맵
+- [[test_pregel_interrupt_map]] → `tests/test_pregel_interrupt_map.md`
+
 ## 이슈
 *(아직 없음)*
 

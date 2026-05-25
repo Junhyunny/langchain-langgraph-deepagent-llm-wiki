@@ -304,7 +304,16 @@ graph.invoke(
 
 ## Tests
 
-- `test_pregel.py` — interrupt 관련 테스트 다수 포함 (미읽음)
+**`test_pregel.py` (2026-05-25 읽음) — 상세 맵: [[test_pregel_interrupt_map]]**
+
+| 테스트 | 핵심 검증 |
+|--------|-----------|
+| `test_interrupt_multiple` (line 4852) | sequential N interrupt → N+1 invoke; null/map resume 양쪽 동작 |
+| `test_interrupt_loop` (line 4922) | 루프 내 interrupt; 노드 재실행 시 scratchpad 복원 |
+| `test_multiple_interrupt_state_persistence` (line 5305) | interrupt 중 state 미변경; 노드 return 후 state 갱신 |
+| `test_task_before_interrupt_resume` (line 5832) | `@task` + `interrupt()` 조합; child scratchpad 위임 |
+| `test_multi_resume` (line 6210) | `Send()` 병렬 → N개 동시 pending → `{id:v}` dict 한번에 resume |
+| `test_parallel_interrupts` (line 7594) | 병렬 2개 interrupt → one-at-a-time resume → 3 invoke 확인 |
 
 ---
 

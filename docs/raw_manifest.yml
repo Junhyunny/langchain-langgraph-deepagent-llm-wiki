@@ -636,3 +636,28 @@ sources:
     used_by:
       - "docs/wiki/concepts/HumanInTheLoop.md"
     notes: "is_resuming 감지 (line 839), is_time_traveling (line 857), Command(resume=) → resume_is_map 분기 (line 882), versions_seen[INTERRUPT] 업데이트 (line 925), _suppress_interrupt (line 1304)."
+  - id: langgraph-test-pregel-interrupt-2026-05-25
+    title: "test_pregel.py — interrupt/resume 관련 테스트 읽기"
+    type: test_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: "docs/wiki/tests/test_pregel_interrupt_map.md"
+    retrieved_at: "2026-05-25"
+    status: public
+    used_by:
+      - "docs/wiki/tests/test_pregel_interrupt_map.md"
+      - "docs/wiki/concepts/HumanInTheLoop.md"
+    notes: "test_interrupt_multiple, test_interrupt_loop, test_multiple_interrupt_state_persistence, test_task_before_interrupt_resume, test_multi_resume, test_parallel_interrupts 읽음."
+  - id: langgraph-venv-store-memory-2026-05-25
+    title: "LangGraph store/memory/__init__.py — InMemoryStore 내부 구현"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langgraph/store/memory/__init__.py"
+    retrieved_at: "2026-05-25"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Store.md"
+    notes: "_data(dict)/vectors(dict) 이중 저장. batch()→PutOp/GetOp/SearchOp. cosine similarity 기반 vector search. ThreadPoolExecutor로 쿼리 임베딩 병렬 처리. index 파라미터로 vector search 활성화."

@@ -3,11 +3,12 @@ type: concept
 framework:
   - LangGraph
   - Deep Agents
-status: draft
+status: verified
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-05-25
 sources:
   - langgraph-store-base-2026-05-23
+  - langgraph-venv-store-memory-2026-05-25
 ---
 
 # Store
@@ -183,13 +184,85 @@ store.search(("agent", agent_id, "todos"), filter={"status": "pending"})
 - [[Deep Agents]]
 - [[LangGraph Code Map]]
 
+## InMemoryStore 내부 구현 (검증됨)
+
+Source: `langgraph-venv-store-memory-2026-05-25`
+
+### 데이터 구조
+
+```python
+class InMemoryStore(BaseStore):
+    _data: dict[tuple[str, ...], dict[str, Item]]
+    # namespace → key → Item
+
+    _vectors: dict[tuple[str, ...], dict[str, dict[str, list[float]]]]
+    # namespace → key → path → vector (float list)
+```
+
+### Vector Search 지원
+
+**검증됨:** `InMemoryStore`는 `index` 파라미터를 통해 **vector search를 직접 지원**한다.
+
+```python
+from langgraph.store.memory import InMemoryStore
+from langchain.embeddings import init_embeddings
+
+store = InMemoryStore(
+    index={
+        "dims": 1536,
+        "embed": init_embeddings("openai:text-embedding-3-small"),
+        "fields": ["text"],   # 어떤 필드를 임베딩할지
+    }
+)
+store.put(("docs",), "doc1", {"text": "Python tutorial"})
+results = store.search(("docs",), query="python programming")
+```
+
+`index` 없이 생성 시 semantic search 비활성 — filter 기반 exact search만 가능.
+
+### `batch()` 처리 흐름
+
+```
+ops: list[Op]
+  ↓ GetOp → _data[ns].get(key)
+  ↓ SearchOp → _filter_items(op) → cosine similarity → sorted SearchItem[]
+  ↓ PutOp → _extract_texts() → embeddings.embed_documents() → _insertinmem_store()
+            → _apply_put_ops() → _data[ns][key] = Item(...)
+  ↓ ListNamespacesOp → _handle_list_namespaces(op)
+```
+
+### Cosine Similarity (벡터 검색)
+
+- `_embed_search_queries()`: ThreadPoolExecutor로 쿼리 임베딩 병렬 처리
+- `_batch_search()`: `_cosine_similarity(query_vector, candidate_vectors)` → 점수 내림차순 정렬
+- **Max pooling**: 같은 (namespace, key)에 여러 path 벡터가 있을 때 최고 점수 유지
+- `score: float | None` — `SearchItem`에 포함
+
+### `put()` 시 임베딩
+
+- `value=None` → `_data[ns].pop(key)` + `_vectors[ns].pop(key)` — 삭제
+- `index_config` 있고 `embeddings` 있을 때만 임베딩 수행
+- `PutOp.index=False` → 해당 항목 임베딩 스킵
+
+### 프로덕션 Store 구현체
+
+**현재 확인된 패키지:**
+
+| 패키지 | 구현체 | 백엔드 |
+|--------|--------|--------|
+| `langgraph-checkpoint-postgres` | `PostgresStore` (추정) | PostgreSQL |
+| `langgraph-checkpoint-redis` | `RedisStore` (추정) | Redis |
+| `langgraph.store.memory` | `InMemoryStore` | Dict (메모리) |
+
+⚠️ **가설**: 프로덕션 구현체 패키지명은 위와 같을 것으로 추정되나 직접 소스 확인 필요. Status: Needs verification
+
 ## 미해결 질문
 
-- `InMemoryStore`의 구체적 구현은? vector search를 지원하는가?
-- 프로덕션용 Store 구현체(Redis, PostgreSQL)는 어떤 패키지에 있는가? (`langgraph-checkpoint-redis` 등)
-- `query` 파라미터를 사용한 semantic search는 embeddings와 어떻게 연결되는가?
+- 프로덕션용 Store 구현체(Redis, PostgreSQL)는 어떤 패키지에 있는가? — ⚠️ 가설 수준
 - `create_deep_agent`에서 Store는 어떤 middleware가 어떻게 활용하는가? (`MemoryMiddleware`?)
+- `list_namespaces`의 wildcard `"*"` 패턴 실제 동작 확인
 
 ## 소스
 
 - `langgraph-store-base-2026-05-23`
+- `langgraph-venv-store-memory-2026-05-25`
