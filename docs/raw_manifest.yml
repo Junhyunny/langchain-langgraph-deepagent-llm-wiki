@@ -765,3 +765,24 @@ sources:
       pregel/_loop.py:583 tick() (prepare_next_tasks, interrupt_before), :667 after_tick() (apply_writes → _put_checkpoint → step++), :407 put_writes() (checkpoint_pending_writes 축적 + checkpointer.put_writes 비동기), :1055 _put_checkpoint() (create_checkpoint → _checkpointer_put_after_previous → checkpointer.put).
       checkpoint/base/__init__.py:277 BaseCheckpointSaver.put() / put_writes() 인터페이스.
       checkpoint/memory/__init__.py:427 InMemorySaver.put() — blobs[(thread_id, ns, k, v)] + storage[thread_id][ns][checkpoint_id].
+  - id: langchain-source-builtin-middleware-2026-05-25
+    title: "LangChain — Built-in Middleware 소스코드 (SummarizationMiddleware / LLMToolSelectorMiddleware / PIIMiddleware)"
+    type: source_code
+    framework: LangChain
+    local_path: "/usr/local/lib/python3.11/dist-packages/langchain/agents/middleware/"
+    retrieved_at: "2026-05-25"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Agent Harness.md"
+      - "docs/wiki/flows/LangChain create_agent flow.md"
+    notes: "SummarizationMiddleware: before_model, ContextSize(fraction/tokens/messages), AI/Tool 쌍 보호(역방향 AIMessage 검색), 이진 탐색 토큰 cutoff. LLMToolSelectorMiddleware: wrap_model_call, 동적 Union[Literal[...]] 스키마, always_include(max_tools 카운트 제외). PIIMiddleware: before_model+after_model, @hook_config(can_jump_to=[end]), 빌트인 5종(email/credit_card/ip/mac_address/url)+커스텀 regex. 훅 선택 원칙: state 변환→before_model, request(tools) 수정→wrap_model_call."
+  - id: langgraph-subgraph-experiment-2026-05-25
+    title: "LangGraph — 서브그래프 패턴 직접 실험 (공유 키/Send map-reduce/input_output_schema)"
+    type: experiment
+    framework: LangGraph
+    local_path: "examples/langgraph_core/05_subgraph_patterns.py"
+    retrieved_at: "2026-05-25"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Subagents.md"
+    notes: "4가지 실험 직접 실행 확인. ①서브그래프-as-노드: 공유 키만 부모↔서브 전달, 서브 전용 키는 부모 출력에서 제외. ②Send map-reduce: Annotated[list,add] Reducer로 병렬 worker 결과 누적. ③공유 키 없어도 에러 없음(조용히 무시). ④input_schema/output_schema로 debug_info 등 내부 키 노출 방지. langgraph==1.2.1."
