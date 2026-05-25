@@ -59,3 +59,6 @@
 
 ## 이슈 분석
 - [[LangGraph issue 5225 pydantic default factory]] → `issues/LangGraph issue 5225 pydantic default factory.md`
+
+## PR 후보
+- [[LangGraph pydantic default factory reducer bug]] → `prs/LangGraph pydantic default factory reducer bug.md`
