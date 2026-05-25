@@ -786,3 +786,15 @@ sources:
     used_by:
       - "docs/wiki/concepts/Subagents.md"
     notes: "4가지 실험 직접 실행 확인. ①서브그래프-as-노드: 공유 키만 부모↔서브 전달, 서브 전용 키는 부모 출력에서 제외. ②Send map-reduce: Annotated[list,add] Reducer로 병렬 worker 결과 누적. ③공유 키 없어도 에러 없음(조용히 무시). ④input_schema/output_schema로 debug_info 등 내부 키 노출 방지. langgraph==1.2.1."
+  - id: langchain-agents-summarization-middleware-2026-05-28
+    title: "LangChain agents/middleware/summarization.py — SummarizationMiddleware 소스 분석"
+    type: source_code
+    framework: LangChain
+    repo: "https://github.com/langchain-ai/langchain"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langchain/agents/middleware/summarization.py"
+    retrieved_at: "2026-05-28"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/SummarizationMiddleware.md"
+    notes: "678 lines. SummarizationMiddleware.before_model(L309), _should_summarize(L407), _find_token_based_cutoff(이진탐색,L447), _find_safe_cutoff_point(AI/Tool쌍보호,L572), REMOVE_ALL_MESSAGES. trigger=None이면 요약 안 함 주의."
