@@ -36,45 +36,62 @@ app.invoke({})
 
 ## Root Cause
 
-`BinaryOperatorAggregate.__init__` (`langgraph/channels/binop.py`, line 63-78) 이 채널 초기값을 `typ()` (= `[]`)로 설정하며, 스키마의 Pydantic `Field(default_factory=...)` 정보를 참조하지 않는다.
+`START` 노드 writer(`attach_node`)의 `_get_updates` 함수가 `dict` 입력을 Pydantic 스키마로 coerce하지 않아, `Field(default_factory=...)` 기본값이 무시된다.
 
 호출 경로:
 ```
-_get_channels(OverallState)
-  → _get_channel("variable", Annotated[list[str], extend_list])
-      → _is_field_binop() → BinaryOperatorAggregate(list[str], extend_list)
-          → self.value = list()  ← 항상 빈 리스트 (버그)
+invoke({})
+  → __start__ channel = {}
+  → attach_node START → _get_updates({})
+      → isinstance({}, dict) → [(k, v) for k, v in {}.items()] = []
+          → 아무 channel도 업데이트 안 됨 → 채널 초기값 [] 유지 (버그)
 ```
 
-비교: `dataclass`의 경우 `get_field_default()`에서 `field.default_factory` 처리가 있으나, `Pydantic BaseModel`의 `model_fields[name].default_factory`는 처리되지 않음.
+올바른 경로 (`invoke(OverallState())`):
+```
+invoke(OverallState())
+  → __start__ channel = OverallState(variable=['default'])
+  → _get_updates(OverallState(...))
+      → get_cached_annotated_keys(OverallState) → ['variable']
+          → get_update_as_tuples → [('variable', ['default'])]
+              → extend_list([], ['default']) = ['default'] ✅
+```
+
+`invoke({})` 시 `{}` → `OverallState(**{})` = `OverallState(variable=['default'])` coercion이 없는 것이 핵심 원인.
 
 ---
 
 ## Fix
 
-`langgraph/_internal/_fields.py::get_field_default()`에 Pydantic 분기를 추가하고, 이를 채널 초기값 설정 경로에 연결한다.
+`langgraph/graph/state.py`의 `attach_node` 내 `_get_updates` 함수 — `START` 노드에서 Pydantic dict 입력을 스키마로 coerce하는 분기 추가.
 
-### `_fields.py` 변경 (Pydantic support 추가)
+### `state.py` 변경 (`_get_updates` 내)
 
 ```python
-# 기존
-if dataclasses.is_dataclass(schema):
-    ...
-# 추가
-from pydantic.fields import PydanticUndefined
-
-if isinstance(schema, type) and issubclass(schema, BaseModel):
-    if name in schema.model_fields:
-        field_info = schema.model_fields[name]
-        if field_info.default is not PydanticUndefined:
-            return field_info.default
-        elif field_info.default_factory is not None:
-            return field_info.default_factory()
+def _get_updates(input):
+    if input is None:
+        return None
+    # For the START node with a Pydantic BaseModel input schema, coerce
+    # the user-provided dict through the schema to apply field defaults
+    # (e.g. Field(default_factory=...)). This ensures invoke({}) behaves
+    # the same as invoke(Schema()) — issue #5225.
+    if (
+        key == START
+        and isinstance(input, dict)
+        and isclass(self.builder.input_schema)
+        and issubclass(self.builder.input_schema, BaseModel)
+    ):
+        input = self.builder.input_schema(**input)
+    if isinstance(input, dict):
+        return [(k, v) for k, v in input.items() if k in output_keys]
+    elif isinstance(input, Command):
+        ...
 ```
 
-### `binop.py` 또는 `state.py` 연결 확인 필요
-
-`get_field_default`가 채널 초기값에 연결되는 경로를 확인하고, 연결이 없으면 `_get_channels`에서 Pydantic default를 추출해 `BinaryOperatorAggregate`에 `default=` 파라미터로 전달.
+**핵심 설계 결정:**
+- `BinaryOperatorAggregate` / `_get_channels` / `_fields.py` 변경 없음 → 최소 변경
+- `TypedDict` / `dataclass` 경로 영향 없음 (조건에 `issubclass(schema, BaseModel)` 가드)
+- `invoke(OverallState())` 경로는 기존 `get_cached_annotated_keys` 분기가 처리 (변경 불필요)
 
 ---
 
@@ -131,9 +148,9 @@ def test_pydantic_default_factory_with_reducer():
 - [x] 이슈 확인 및 레이블 검토 (2026-05-25)
 - [x] 재현 코드 작성 및 확인 (2026-05-25)
 - [x] 근본 원인 소스 분석 (2026-05-25)
-- [ ] 수정 코드 작성
-- [ ] 회귀 테스트 작성
-- [ ] 로컬에서 테스트 실행 확인
+- [x] 수정 코드 작성 (2026-05-25) — `state.py` `_get_updates` 내 START+Pydantic coercion
+- [x] 로컬에서 테스트 실행 확인 (2026-05-25) — 3가지 케이스 + 8개 엣지케이스 통과
+- [ ] 회귀 테스트 작성 (실제 PR 준비 시)
 - [ ] PR 제출
 
 ---
