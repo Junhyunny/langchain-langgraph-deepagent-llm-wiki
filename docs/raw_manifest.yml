@@ -747,3 +747,21 @@ sources:
     used_by:
       - "docs/wiki/flows/LangChain create_agent flow.md"
     notes: "600+ lines. AgentMiddleware(L380) 6종 훅 시그니처, ModelRequest(L89) override() 불변 패턴, ModelResponse(L271), ExtendedModelResponse(L289), AgentState(L350) jump_to EphemeralValue, OmitFromSchema(L329), JumpTo Literal."
+  - id: langgraph-source-pregel-loop-2026-05-25
+    title: "LangGraph Pregel 런타임 — _loop.py / main.py / checkpoint"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    version: "1.2.1"
+    local_path: "/usr/local/lib/python3.11/dist-packages/langgraph/"
+    retrieved_at: "2026-05-25"
+    status: public
+    used_by:
+      - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
+      - "docs/source_summaries/langgraph-source-pregel-loop-2026-05-25.md"
+    notes: |
+      graph/state.py:1164 compile() 내부 (CompiledStateGraph 조립 순서).
+      pregel/main.py:2868 SyncPregelLoop with 블록 + while loop.tick() BSP 루프.
+      pregel/_loop.py:583 tick() (prepare_next_tasks, interrupt_before), :667 after_tick() (apply_writes → _put_checkpoint → step++), :407 put_writes() (checkpoint_pending_writes 축적 + checkpointer.put_writes 비동기), :1055 _put_checkpoint() (create_checkpoint → _checkpointer_put_after_previous → checkpointer.put).
+      checkpoint/base/__init__.py:277 BaseCheckpointSaver.put() / put_writes() 인터페이스.
+      checkpoint/memory/__init__.py:427 InMemorySaver.put() — blobs[(thread_id, ns, k, v)] + storage[thread_id][ns][checkpoint_id].

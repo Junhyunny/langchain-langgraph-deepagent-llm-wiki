@@ -3,7 +3,7 @@ type: flow
 framework: LangGraph
 status: verified
 confidence: high
-last_reviewed: 2026-05-24
+last_reviewed: 2026-05-25
 sources:
   - langgraph-docs-persistence-2026-05-20
   - langgraph-docs-durable-execution-2026-05-20
@@ -14,6 +14,7 @@ sources:
   - langgraph-source-pregel-interrupts-2026-05-23
   - langgraph-docs-graph-api-2026-05-23
   - langgraph-venv-loop-py-2026-05-24
+  - langgraph-source-pregel-loop-2026-05-25
 ---
 
 # LangGraph StateGraph compile invoke flow
@@ -219,6 +220,93 @@ Source: `langgraph-source-checkpoint-runtime-2026-05-20`
 - `test_pending_writes_resume` (`test_pregel.py` L876): 병렬 노드 부분 실패 후 `invoke(None, ...)` resume 메커니즘
 
 Source: `langgraph-tests-pregel-2026-05-24`
+
+---
+
+## 소스 검증 추가 (2026-05-25, v1.2.1 직접 읽기)
+
+> `/usr/local/lib/python3.11/dist-packages/langgraph/` 직접 확인. Source: `langgraph-source-pregel-loop-2026-05-25`
+
+### `StateGraph.compile()` 내부 상세 (`graph/state.py:1164`)
+
+```
+compile(checkpointer, interrupt_before, interrupt_after, ...)
+  1. ensure_valid_checkpointer()              # None/False/saver 정규화
+  2. serde_allowlist 구성 (STRICT_MSGPACK 활성화 시)
+  3. self.validate(interrupt=[...])           # 구조 검사
+  4. output_channels / stream_channels 결정  # "__root__" vs 필드 목록
+  5. CompiledStateGraph(...)                  # line 1333 — Pregel 서브클래스
+     channels = {**self.channels, **self.managed, START: EphemeralValue(input_schema)}
+  6. attach_node(START, None)
+  7. for key, node: attach_node(key, node)
+  8. _output_mapper, _state_mapper 설정      # Pydantic/dataclass 출력 변환
+  9. attach_edge / attach_branch
+ 10. compiled.validate()                      # 반환값
+```
+
+### `Pregel.stream()` 실행 루프 (`main.py:2868`)
+
+```python
+with SyncPregelLoop(input, stream=..., checkpointer=..., nodes=...) as loop:
+    runner = PregelRunner(put_writes=loop.put_writes, ...)
+    while loop.tick():                    # BSP superstep
+        for task in loop.match_cached_writes():
+            loop.output_writes(task.id, task.writes, cached=True)
+        for _ in runner.tick(pending_tasks, ...):
+            yield from _output(...)       # 스트림 출력
+        loop.after_tick()
+        if durability == "sync":
+            loop._put_checkpoint_fut.result()
+```
+
+### `tick()` 요약 (`_loop.py:583`)
+
+```
+tick() → bool
+  step > stop        → status="out_of_steps", return False
+  prepare_next_tasks → tasks
+  tasks 없음         → status="done", return False
+  interrupt_before   → GraphInterrupt()
+  return True
+```
+
+### `after_tick()` 요약 (`_loop.py:667`)
+
+```
+after_tick()
+  apply_writes()               → updated_channels
+  _emit("values", ...)         → 출력 스트림
+  checkpoint_pending_writes.clear()
+  _put_checkpoint({"source": "loop"})
+    → create_checkpoint(channels, step)
+    → submit(_checkpointer_put_after_previous)
+        → checkpointer.put(config, checkpoint, metadata, new_versions)
+  interrupt_after 체크
+  step += 1
+```
+
+### `BaseCheckpointSaver.put()` 호출 경로
+
+```
+loop.after_tick()
+  → _put_checkpoint(metadata)
+      → create_checkpoint()                 # 채널 상태 직렬화
+      → submit(_checkpointer_put_after_previous, ...)
+          → SyncPregelLoop._checkpointer_put_after_previous()   # line 1498
+              → delta_write_futs 드레인 (순서 보장)
+              → checkpointer.put(config, checkpoint, metadata, new_versions)
+```
+
+### `InMemorySaver.put()` 저장 구조 (`memory/__init__.py:427`)
+
+```
+put(config, checkpoint, metadata, new_versions):
+  # channel_values: (thread_id, checkpoint_ns, channel_name, version) 키로 blob 저장
+  self.blobs[(thread_id, checkpoint_ns, k, v)] = serde.dumps_typed(values[k])
+  # checkpoint 메타: storage[thread_id][checkpoint_ns][checkpoint_id]
+  self.storage[thread_id][checkpoint_ns][checkpoint["id"]] = (c_bytes, meta_bytes, parent_id)
+  return {"configurable": {thread_id, checkpoint_ns, checkpoint_id}}
+```
 
 ## Diagram
 
