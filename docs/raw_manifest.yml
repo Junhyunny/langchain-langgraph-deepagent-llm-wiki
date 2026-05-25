@@ -711,3 +711,15 @@ sources:
     used_by:
       - "docs/wiki/flows/LangGraph ToolNode flow.md"
     notes: "2030 lines. ToolNode, InjectedState, InjectedStore, ToolRuntime, tools_condition, _InjectedArgs, _get_all_injected_args, _inject_tool_args. 병렬 실행(ThreadPoolExecutor), LLM 위조 방지(stripped_args), InjectedToolCallId 연결 포인트."
+  - id: langgraph-prebuilt-chat-agent-executor-2026-05-28
+    title: "LangGraph prebuilt/chat_agent_executor.py 소스 분석"
+    type: source_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: ".venv/lib/python3.14/site-packages/langgraph/prebuilt/chat_agent_executor.py"
+    retrieved_at: "2026-05-28"
+    status: public
+    used_by:
+      - "docs/wiki/flows/LangGraph create_react_agent flow.md"
+    notes: "1015 lines. create_react_agent(deprecated), StateGraph 조립, v1/v2 ToolNode dispatch 차이, should_continue, call_model, remaining_steps 안전 종료, pre/post_model_hook, response_format, 동적 모델."

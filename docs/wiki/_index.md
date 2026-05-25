@@ -39,6 +39,7 @@
 - [[LangGraph StateGraph compile invoke flow]] → `flows/LangGraph StateGraph compile invoke flow.md`
 - [[Deep Agents create_deep_agent flow]] → `flows/Deep Agents create_deep_agent flow.md`
 - [[LangGraph ToolNode flow]] → `flows/LangGraph ToolNode flow.md`
+- [[LangGraph create_react_agent flow]] → `flows/LangGraph create_react_agent flow.md`
 
 ## 실험
 - [[2026-05-23 same task 3 frameworks]] → `experiments/2026-05-23 same task 3 frameworks.md`
