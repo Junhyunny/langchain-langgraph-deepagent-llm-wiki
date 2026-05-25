@@ -29,6 +29,8 @@
 - [[Human-in-the-Loop]] → `concepts/HumanInTheLoop.md`
 - [[DeltaChannel]] → `concepts/DeltaChannel.md`
 - [[SummarizationMiddleware]] → `concepts/SummarizationMiddleware.md`
+- [[LLMToolSelectorMiddleware]] → `concepts/LLMToolSelectorMiddleware.md`
+- [[PIIMiddleware]] → `concepts/PIIMiddleware.md`
 
 ## 코드베이스 맵
 - [[LangChain Code Map]] → `codebase/LangChain Code Map.md`

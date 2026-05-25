@@ -217,25 +217,25 @@ Response: model → [mw3] → [mw2] → [mw1]
 
 ## 빌트인 미들웨어 목록
 
-`langchain/agents/middleware/` 에서 확인됨 (⚠️ 내부 구현은 아직 읽지 않음):
+`langchain/agents/middleware/` 에서 확인됨:
 
-| 파일 | 역할 |
-|------|------|
-| `summarization.py` | 메시지 히스토리 요약 |
-| `human_in_the_loop.py` | HITL (사람 개입) |
-| `pii.py` | PII 감지/제거 |
-| `_redaction.py` | 내용 리덱션 |
-| `model_retry.py` | 모델 호출 재시도 |
-| `model_fallback.py` | 모델 폴백 |
-| `model_call_limit.py` | 모델 호출 횟수 제한 |
-| `tool_retry.py` | 도구 재시도 |
-| `tool_emulator.py` | 도구 에뮬레이션 |
-| `tool_selection.py` | 동적 도구 선택 |
-| `tool_call_limit.py` | 도구 호출 횟수 제한 |
-| `file_search.py` | 파일 검색 |
-| `shell_tool.py` | 쉘 실행 |
-| `context_editing.py` | 컨텍스트 편집 |
-| `todo.py` | Todo 추적 |
+| 파일 | 역할 | 위키 |
+|------|------|------|
+| `summarization.py` | 메시지 히스토리 요약 | [[SummarizationMiddleware]] |
+| `pii.py` | PII 감지/처리 (block/redact/mask/hash) | [[PIIMiddleware]] |
+| `tool_selection.py` | LLM 기반 동적 도구 선별 | [[LLMToolSelectorMiddleware]] |
+| `human_in_the_loop.py` | HITL (사람 개입) | — |
+| `_redaction.py` | PII 리덱션 내부 유틸리티 | — |
+| `model_retry.py` | 모델 호출 재시도 | — |
+| `model_fallback.py` | 모델 폴백 | — |
+| `model_call_limit.py` | 모델 호출 횟수 제한 | — |
+| `tool_retry.py` | 도구 재시도 | — |
+| `tool_emulator.py` | 도구 에뮬레이션 | — |
+| `tool_call_limit.py` | 도구 호출 횟수 제한 | — |
+| `file_search.py` | 파일 검색 | — |
+| `shell_tool.py` | 쉘 실행 | — |
+| `context_editing.py` | 컨텍스트 편집 | — |
+| `todo.py` | Todo 추적 | — |
 
 ---
 
