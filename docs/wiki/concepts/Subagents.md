@@ -42,27 +42,66 @@ Subagents는 더 큰 워크플로의 일부로 부모(오케스트레이션) age
 - *소스 필요.*
 
 ### LangGraph
-*Source: `langgraph-docs-graph-api-2026-05-23`*
+*Source: `langgraph-docs-graph-api-2026-05-23`, `langgraph-subgraph-experiment-2026-05-25`*
 
-**서브그래프 (subgraph-as-node):**
-
-- 컴파일된 `CompiledStateGraph`를 노드로 직접 추가 가능
-- 서브그래프는 자신의 상태 스키마를 가짐 (상위 그래프와 독립)
-
-**Send API — 동적 팬아웃 (map-reduce):**
+**서브그래프-as-노드: 상태 스키마 호환성 (검증됨)**
 
 ```python
+class ParentState(TypedDict):
+    query: str
+    result: str         # 부모와 서브그래프 양쪽에 존재
+
+class SubgraphState(TypedDict):
+    query: str          # 공유 키 → 부모 값이 서브그래프로 전달됨
+    result: str         # 공유 키 → 서브그래프 결과가 부모로 반환됨
+    internal_step: str  # 서브그래프 전용 → 부모 출력에서 제외됨
+```
+
+- 컴파일된 `CompiledStateGraph`를 노드로 직접 추가: `graph.add_node("sub", subgraph)`
+- **공유 키(shared keys)만** 부모↔서브그래프 간 전달됨 — 서브그래프 전용 키는 부모에 누출되지 않음
+- 공유 키가 아예 없어도 에러 없음 — 서브그래프 출력이 조용히 무시됨 (버그 원인 주의)
+- `input_schema` / `output_schema` 파라미터로 공개 인터페이스를 부모에 노출하는 키 제한 가능
+
+**Send API — 동적 팬아웃 (map-reduce, 검증됨):**
+
+```python
+from typing import Annotated
+from operator import add
 from langgraph.types import Send
 
-def dispatch(state: OverallState):
-    return [Send("worker_node", {"item": item}) for item in state["items"]]
+class OverallState(TypedDict):
+    items: list[str]
+    results: Annotated[list[str], add]  # Reducer: 각 worker 결과 누적
 
-builder.add_conditional_edges("dispatcher", dispatch)
+def dispatch(state: OverallState) -> list[Send]:
+    return [Send("worker", {"item": item}) for item in state["items"]]
+
+graph.add_conditional_edges("dispatcher", dispatch)
 ```
 
 - 각 `Send(node, state)`는 독립적인 그래프 복사본을 생성 → 병렬 실행
-- reduce 단계: 각 worker의 부분 업데이트가 OverallState의 Reducer로 집계됨
-- `Send`의 state는 worker 노드에만 전달되는 격리된 입력
+- reduce 단계: 각 worker의 반환값이 OverallState의 Reducer(`add`)로 자동 집계됨
+- `Send`의 state는 worker 노드에만 전달되는 격리된 입력 (OverallState와 스키마 달라도 됨)
+
+**input_schema / output_schema로 인터페이스 분리 (검증됨):**
+
+```python
+class FullState(TypedDict):    # 내부 상태
+    query: str
+    result: str
+    debug_info: str
+
+class InputSchema(TypedDict):  # 호출자가 제공해야 할 것
+    query: str
+
+class OutputSchema(TypedDict): # 호출자에게 반환할 것
+    result: str
+
+graph = StateGraph(FullState, input_schema=InputSchema, output_schema=OutputSchema)
+```
+
+- 내부 상태 `debug_info`는 invoke() 결과에서 자동 제외됨
+- 서브그래프-as-노드로 사용할 때 부모에 노출되는 키도 output_schema로 제한 가능
 
 **Command — 크로스 그래프 네비게이션:**
 
@@ -74,9 +113,9 @@ def child_node(state) -> Command:
 ```
 
 - 서브그래프 노드에서 상위 그래프로 직접 제어를 넘길 수 있다
-- `goto` 대신 `PARENT`를 사용하면 부모 그래프의 다음 노드로 라우팅
+- `goto=PARENT`는 부모 그래프의 다음 노드로 라우팅
 
-Source: `langgraph-docs-graph-api-2026-05-23`
+Source: `langgraph-docs-graph-api-2026-05-23`, `langgraph-subgraph-experiment-2026-05-25`
 
 ### Deep Agents
 *Source: `deepagents-docs-harness-2026-05-19`, `deepagents-source-graph-2026-05-19`, `deepagents-source-subagents-2026-05-23`*
@@ -191,12 +230,13 @@ def wrap_model_call(self, request, handler):
 ## 미해결 질문
 
 - LangChain에서 orchestrator → subagent 컨텍스트 전달 방식은? — Needs Source
-- LangGraph `Send` 사용 시 각 worker의 결과를 집계하는 reduce 단계의 Reducer 설계 패턴은? — Source: `langgraph-docs-graph-api-2026-05-23`
-- LangGraph 서브그래프와 상위 그래프 간 상태 스키마 호환성 요구사항은? — Needs Source
 - Deep Agents: `SubagentTransformer`의 scope 활용 방식은? (`_subagent_transformer.py` 확인 필요) — Source: `deepagents-source-graph-2026-05-19`
 - Deep Agents: subagent가 실패할 때 main agent는 어떻게 처리하는가? — Needs Source
 
 **해소됨:**
+- ✅ LangGraph Send API map-reduce: `Annotated[list, add]` Reducer로 병렬 worker 결과 누적. `Send`의 state는 worker 전용 격리 입력 (직접 실행 확인, 2026-05-25)
+- ✅ LangGraph 서브그래프 상태 스키마 호환성: **공유 키만** 부모↔서브그래프 전달. 서브그래프 전용 키는 부모 출력에서 제외. 공유 키 없어도 에러 없음 (직접 실행 확인, 2026-05-25)
+- ✅ `input_schema`/`output_schema`로 서브그래프 공개 인터페이스 제한 가능 (직접 실행 확인, 2026-05-25)
 - ✅ Deep Agents subagent 상태는 격리됨 — stateless, fresh context로 실행 (Source: `deepagents-docs-harness-2026-05-19`)
 - ✅ 결과 집계: 단일 최종 보고서만 반환 (Source: `deepagents-docs-harness-2026-05-19`)
 - ✅ LangGraph subagent 패턴 2가지: 서브그래프-as-노드, Send API (Source: `langgraph-docs-graph-api-2026-05-23`)

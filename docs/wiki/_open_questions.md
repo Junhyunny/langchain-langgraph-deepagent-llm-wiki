@@ -42,7 +42,7 @@
 - `response_format="content_and_artifact"` 옵션의 정확한 의미는? — Source: `langchain-docs-rag-2026-05-23`
 - `_merge_splits()`의 `chunk_overlap` 구현 방식은? 슬라이딩 윈도우인가? — Source: `langchain-source-text-splitters-2026-05-23`
 - `wrap_model_call` 데코레이터의 전체 서명과 `before_model` hook과의 차이는? — ✅ **검증됨** (2026-05-28): `wrap_model_call`은 handler를 직접 감싸 모델 호출 자체를 가로채는 반면, `before_model`은 상태/메시지 변환만 함. 각 미들웨어의 실제 구현은 Needs Source
-- 빌트인 미들웨어(`summarization.py`, `pii.py`, `tool_selection.py` 등) 내부 구현은? — Needs Source (`langchain/agents/middleware/` 각 파일 읽기 필요)
+- 빌트인 미들웨어(`summarization.py`, `pii.py`, `tool_selection.py` 등) 내부 구현은? — ✅ **해소됨** (2026-05-25): `SummarizationMiddleware`=`before_model`+요약모델 호출+AI/Tool쌍 보호, `LLMToolSelectorMiddleware`=`wrap_model_call`+동적 Literal Union 스키마로 도구 선별, `PIIMiddleware`=`before_model`/`after_model`+`@hook_config(can_jump_to=["end"])`. Source: `langchain-source-builtin-middleware-2026-05-25`
 - `wrap_tool_call`이 `Command`를 반환할 때 어떤 상태 변화가 가능한가? — Needs Source
 
 ---
@@ -55,8 +55,8 @@
 - `add_conditional_edges`의 두 번째 인수(path_map)는 선택인가 필수인가? 없을 때 동작 방식은? — ✅ 해소 (2026-05-25, `graph/_branch.py` + `state.py` 직접 확인). **선택** (`path_map: dict | list | None = None`). None 시 path 함수 반환값이 그대로 노드명으로 사용됨. `Literal[...]` 리턴 타입 힌트가 있으면 자동으로 `{name: name}` dict로 변환. list 제공 시도 `{name: name}` dict로 변환. `BranchSpec.from_path()` line 96-116 확인. Source: `.venv/langgraph/graph/_branch.py`
 - `TypedDict` vs `Pydantic` 상태 스키마의 실질적인 차이는? (런타임 유효성 검사, 직렬화)
 - `NodeRuntime.control`과 `NodeRuntime.heartbeat`의 구체적인 사용 사례는? — Source: `langgraph-docs-graph-api-2026-05-23`
-- `Send` 사용 시 각 worker 결과를 집계하는 reduce 단계 Reducer 설계 패턴은? — Source: `langgraph-docs-graph-api-2026-05-23`
-- LangGraph 서브그래프와 상위 그래프 간 상태 스키마 호환성 요구사항은? — Needs Source
+- `Send` 사용 시 각 worker 결과를 집계하는 reduce 단계 Reducer 설계 패턴은? — ✅ 해소 (2026-05-25, 직접 실행). `Annotated[list[str], add]` Reducer로 병렬 worker 결과 누적. `Send`의 state는 worker 전용 격리 입력. Source: `langgraph-subgraph-experiment-2026-05-25`
+- LangGraph 서브그래프와 상위 그래프 간 상태 스키마 호환성 요구사항은? — ✅ 해소 (2026-05-25, 직접 실행). **공유 키만** 부모↔서브그래프 전달. 서브그래프 전용 키는 부모 출력에서 제외. 공유 키 없어도 에러 없음(조용히 무시됨). `input_schema`/`output_schema`로 인터페이스 제한 가능. Source: `langgraph-subgraph-experiment-2026-05-25`
 - `Command(resume=value, goto="...")` 패턴은 `interrupt()`와 어떻게 연동되는가? — ✅ 해소 (2026-05-24, `_loop.py` + `types.py` 직접 확인) → `HumanInTheLoop.md` 참조. Source: `langgraph-venv-types-py-hitl-2026-05-24`, `langgraph-venv-loop-py-2026-05-24`
 
 ### Checkpointer
