@@ -206,6 +206,37 @@ Response: model → [mw3] → [mw2] → [mw1]
 
 ---
 
+## Fake model 실행 검증
+
+2026-05-28에 fake chat model과 tracing middleware로 `create_agent().invoke()`를 직접 실행했다.
+
+Code:
+
+- `examples/langchain_core/08_create_agent_fake_tool_loop.py`
+
+확인한 실행 순서:
+
+1. `before_agent`
+2. `before_model`
+3. `wrap_model_call:before`
+4. model returns `AIMessage(tool_calls=[lookup_topic])`
+5. `wrap_model_call:after`
+6. `after_model`
+7. `wrap_tool_call:before`
+8. tool returns `ToolMessage`
+9. `wrap_tool_call:after`
+10. second `before_model`
+11. second `wrap_model_call`
+12. model returns final `AIMessage`
+13. second `after_model`
+14. `after_agent`
+
+`bind_tools()`는 model call마다 1회씩, 총 2회 호출되었다. 이 실험은 source reading의 "late binding" 해석과 일치한다.
+
+Source: [[2026-05-28 langchain create_agent fake tool loop]]
+
+---
+
 ## AutoStrategy (response_format 자동 감지)
 
 실행 시점(`_get_bound_model`)에서:
@@ -315,16 +346,18 @@ AIMessage.tool_calls → BaseTool.invoke(ToolCall)
 - [[StateGraph]]
 - [[Human-in-the-Loop]]
 - [[Guardrails]]
+- [[2026-05-28 langchain create_agent fake tool loop]]
+- [[create_agent vs create_deep_agent]]
 
 ---
 
 ## Open Questions
 
 - 각 빌트인 미들웨어(`summarization.py`, `pii.py`, `tool_selection.py` 등)의 내부 구현은? — Needs Source
-- `wrap_model_call`과 `before_model`의 실질적 차이는? (하나는 handler를 직접 감싸고, 다른 하나는 상태 변환만)
+- ✅ `wrap_model_call`과 `before_model`의 실질적 차이는 확인됨. `before_model`은 graph node로 실행되어 state update만 반환하고, `wrap_model_call`은 model handler를 직접 감싸 `request.tools`/`system_message`/응답을 바꿀 수 있다. Source: `langchain-agents-middleware-types-2026-05-28`, [[2026-05-28 langchain create_agent fake tool loop]]
 - `before_agent` → `before_model` 전환 시 `remaining_steps` 없는데 무한 루프 방어는 recursion_limit 9999에만 의존하는가?
 - `wrap_tool_call`이 `Command`를 반환할 때 어떤 상태 변화가 가능한가?
-- Deep Agents의 middleware 시스템과 이 구조는 동일한가, 유사한가, 다른가? — Needs Source
+- ✅ Deep Agents는 이 middleware 시스템 위에 기본 stack을 얹고 `create_agent()`에 위임한다. Source: [[create_agent vs create_deep_agent]]
 
 ---
 

@@ -69,6 +69,7 @@ sources:
     used_by:
       - "docs/wiki/flows/Deep Agents create_deep_agent flow.md"
       - "docs/wiki/experiments/2026-05-28 deepagents tool call and filesystem.md"
+      - "docs/wiki/comparisons/create_agent vs create_deep_agent.md"
       - "docs/wiki/_roadmap.md"
       - "docs/wiki/_open_questions.md"
     notes: "Local .venv source reading against installed deepagents==0.6.3. Captures current middleware order, checkpointer pass-through, StateBackend behavior, filesystem tool filtering, and summarization defaults."
@@ -284,6 +285,8 @@ sources:
     status: current
     used_by:
       - "docs/wiki/flows/LangChain create_agent flow.md"
+      - "docs/wiki/experiments/2026-05-28 langchain create_agent fake tool loop.md"
+      - "docs/wiki/comparisons/create_agent vs create_deep_agent.md"
       - "docs/wiki/codebase/LangChain Code Map.md"
       - "docs/wiki/frameworks/LangChain.md"
     notes: "create_agent는 libs/langchain_v1/langchain/agents/factory.py에 구현. StateGraph 동적 구성: model node + ToolNode + conditional edges. create_tool_calling_agent/AgentExecutor는 deprecated. middleware 조합: _chain_model_call_handlers, _chain_tool_call_wrappers. ToolNode 조건부 추가. middleware hook nodes: before/after_agent, before/after_model."
@@ -749,6 +752,8 @@ sources:
     status: public
     used_by:
       - "docs/wiki/flows/LangChain create_agent flow.md"
+      - "docs/wiki/experiments/2026-05-28 langchain create_agent fake tool loop.md"
+      - "docs/wiki/comparisons/create_agent vs create_deep_agent.md"
     notes: "1885 lines. create_agent(L697), _chain_model_call_handlers(L221), _get_bound_model(L1162), model_node(L1318), 동적 노드/엣지 조립(L1477-1679), recursion_limit 9999(L1665). Middleware 시스템, entry/loop_entry/loop_exit/exit_node 구조."
   - id: langchain-agents-middleware-types-2026-05-28
     title: "LangChain agents/middleware/types.py — AgentMiddleware 타입 정의"
@@ -761,6 +766,7 @@ sources:
     status: public
     used_by:
       - "docs/wiki/flows/LangChain create_agent flow.md"
+      - "docs/wiki/experiments/2026-05-28 langchain create_agent fake tool loop.md"
     notes: "600+ lines. AgentMiddleware(L380) 6종 훅 시그니처, ModelRequest(L89) override() 불변 패턴, ModelResponse(L271), ExtendedModelResponse(L289), AgentState(L350) jump_to EphemeralValue, OmitFromSchema(L329), JumpTo Literal."
   - id: langgraph-source-pregel-loop-2026-05-25
     title: "LangGraph Pregel 런타임 — _loop.py / main.py / checkpoint"

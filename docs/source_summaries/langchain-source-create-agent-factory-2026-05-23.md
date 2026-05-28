@@ -132,13 +132,16 @@ tool_node = (
 ---
 
 ## Open Questions
-- `_chain_model_call_handlers()`의 구체적인 구현은?
-- `before_agent`, `after_agent` 훅의 시그니처와 반환 타입은?
-- `available_tools`는 middleware가 주입한 tool도 포함하는가?
+- ✅ `_chain_model_call_handlers()`의 구체적인 구현은 2026-05-28 `.venv` 소스에서 확인됨. 첫 번째 middleware가 outermost이며, command는 inner-first로 누적된다.
+- ✅ `before_agent`, `after_agent` 훅의 시그니처와 반환 타입은 `AgentMiddleware` 소스에서 확인됨: `(state, runtime) -> dict[str, Any] | None`.
+- ✅ `available_tools`는 사용자가 넘긴 tool과 middleware가 주입한 tool을 함께 포함한다. ToolNode 생성 전 `default_tools`/middleware tools가 병합된다.
+- `wrap_tool_call`이 `Command`를 반환할 때 graph state에 어떤 update/goto 제한이 적용되는지는 별도 확인 필요.
 
 ---
 
 ## Used By
 - `docs/wiki/flows/LangChain create_agent flow.md`
+- `docs/wiki/experiments/2026-05-28 langchain create_agent fake tool loop.md`
+- `docs/wiki/comparisons/create_agent vs create_deep_agent.md`
 - `docs/wiki/codebase/LangChain Code Map.md`
 - `docs/wiki/frameworks/LangChain.md`

@@ -99,6 +99,7 @@ Offloaded messages are written as markdown under `/conversation_history/{thread_
 
 - `docs/wiki/flows/Deep Agents create_deep_agent flow.md`
 - `docs/wiki/experiments/2026-05-28 deepagents tool call and filesystem.md`
+- `docs/wiki/comparisons/create_agent vs create_deep_agent.md`
 - `docs/wiki/_roadmap.md`
 - `docs/wiki/_open_questions.md`
 

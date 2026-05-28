@@ -15,6 +15,7 @@ source .venv/bin/activate
 python examples/langchain_core/01_lcel_chain.py
 python examples/langchain_core/02_tool_calling.py
 python examples/langchain_core/03_create_react_agent.py
+python examples/langchain_core/08_create_agent_fake_tool_loop.py
 ```
 
 ## What To Notice
@@ -36,3 +37,9 @@ python examples/langchain_core/03_create_react_agent.py
 - state 안의 `messages` 리스트는 매 턴마다 누적된다 (`add_messages` reducer).
 - `checkpointer=InMemorySaver()` + `thread_id` → 멀티 턴 대화 연속성 확보.
 - `FakeToolChatModel.bind_tools()` no-op 패턴: `create_agent`는 내부적으로 `model.bind_tools(tools)`를 호출한다.
+
+### 08 — create_agent fake tool loop
+- fake chat model로 `create_agent().invoke()`의 실제 LangGraph 실행 경로를 검증한다.
+- `AIMessage.tool_calls` → `ToolNode` → `ToolMessage` → 다음 model call → final `AIMessage` 순서를 확인한다.
+- `AgentMiddleware` hook 순서: `before_agent`/`after_agent`는 루프 밖에서 1회, `before_model`/`wrap_model_call`/`after_model`은 모델 호출마다 실행된다.
+- `bind_tools()`는 agent 생성 시점이 아니라 매 model call 시점에 실행된다.
