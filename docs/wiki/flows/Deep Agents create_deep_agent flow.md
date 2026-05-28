@@ -197,6 +197,7 @@ Source: `deepagents-source-graph-2026-05-19`
 Local venv files read (2026-05-28):
 
 - `.venv/lib/python3.14/site-packages/deepagents/graph.py`
+- `.venv/lib/python3.14/site-packages/deepagents/middleware/filesystem.py`
 - `.venv/lib/python3.14/site-packages/deepagents/middleware/summarization.py`
 - `.venv/lib/python3.14/site-packages/deepagents/backends/state.py`
 - `.venv/lib/python3.14/site-packages/langgraph/types.py`
@@ -220,7 +221,7 @@ create_deep_agent(permissions=[rule1, rule2, ...])
 ```
 
 - Sandbox backend의 `execute` tool에는 permissions **미적용** (임의 명령 실행 가능)
-- 로컬 `deepagents 0.6.3`의 `graph.py` docstring은 non-sandbox backend에서 `execute` tool이 목록에서 제거되는 것이 아니라 error message를 반환한다고 설명한다. 2026-05-19 harness 문서 요약과 차이가 있으므로 실제 tool call 실행으로 확인 필요.
+- `FilesystemMiddleware`는 `execute` tool을 생성하지만, 기본 `StateBackend`처럼 backend가 `SandboxBackendProtocol`을 지원하지 않으면 `wrap_model_call()`에서 `execute`를 model bind 전 `request.tools`에서 제거한다.
 - deny rule을 allow rule 앞에 배치해야 first-match-wins 의미대로 동작함
 
 ## Skills / Memory 로딩 타이밍
@@ -253,7 +254,7 @@ create_deep_agent(skills=[...], memory=[...])
   Source: `deepagents-source-graph-2026-05-19`
 - `recursion_limit`는 9,999로 하드코딩된다.
   Source: `deepagents-source-graph-2026-05-19`
-- 로컬 `deepagents 0.6.3` 기준으로 `execute` tool은 sandbox backend 없을 때 error message를 반환한다고 docstring에 적혀 있다. 과거 harness 문서 요약의 "제외" 주장과 충돌하므로 실제 tool call 검증이 필요하다.
+- 로컬 `deepagents 0.6.3` 기준으로 `execute` tool은 기본 `StateBackend`에서 model bind 전 필터링된다. `_create_execute_tool()`에는 non-sandbox backend error message 경로가 있지만, 일반 agent loop에서는 `wrap_model_call()`이 먼저 제거한다.
   Source: `deepagents-venv-create-deep-agent-2026-05-28`
 - Subagent는 fresh context로 실행되며 stateless다. 단일 최종 보고서만 반환 가능.
   Source: `deepagents-docs-harness-2026-05-19`
@@ -295,7 +296,7 @@ create_deep_agent(skills=[...], memory=[...])
 - `HarnessProfile`은 어떤 모델에 어떤 profile을 매핑하나?
 - `DeltaChannel`의 `snapshot_frequency=50`이 long-running Deep Agents checkpoint 크기에 주는 실제 효과는 어느 정도인가? (의미는 확인됨: 50 writes마다 snapshot)
 - ✅ `PatchToolCallsMiddleware` 역할 확인됨 — `before_agent` hook에서 dangling tool call (AIMessage에 tool_call이 있는데 그에 대응하는 ToolMessage가 없는 경우)을 감지해 더미 ToolMessage를 삽입. invalid_tool_call(인자 파싱 실패)과 cancelled(중단된 정상 호출) 두 케이스 처리. `Overwrite`로 state.messages 전체 교체. Source: `deepagents-source-patch-tool-calls-2026-05-23`
-- non-sandbox backend에서 `execute` tool 호출 결과가 실제로 어떤 error payload인지 확인 필요.
+- sandbox backend에서 `execute` tool 호출 결과가 실제로 어떤 payload shape로 message history에 남는가?
 
 ---
 
@@ -308,6 +309,7 @@ create_deep_agent(skills=[...], memory=[...])
 - [[Tool Calling]]
 - [[Checkpointing]]
 - [[Context Engineering]]
+- [[2026-05-28 deepagents tool call and filesystem]]
 
 ---
 

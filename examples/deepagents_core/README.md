@@ -11,6 +11,7 @@ pip install deepagents
 # 예제 실행 (저장소 루트에서)
 python examples/deepagents_core/01_basic_deep_agent.py
 python examples/deepagents_core/02_middleware_stack.py
+python examples/deepagents_core/03_tool_call_and_filesystem.py
 ```
 
 API 키 없이 실행하면 구조 검사만 수행합니다.  
@@ -53,6 +54,23 @@ API 키 없이 실행하면 구조 검사만 수행합니다.
 
 ---
 
+### `03_tool_call_and_filesystem.py` — 실제 invoke/tool/filesystem 흐름
+
+- fake chat model로 API 키 없이 `create_deep_agent().invoke()` 실행
+- 사용자 정의 `record_finding` tool 호출 흐름 확인
+- built-in `write_file` tool이 `StateBackend`의 `files` state를 갱신하는지 확인
+- non-sandbox backend에서 `execute` tool이 모델에 bind되기 전에 필터링되는지 확인
+
+**What To Notice:**
+
+1. **fake model이어도 그래프 런타임은 실제 실행됨** — model 응답만 deterministic할 뿐, LangChain agent loop, ToolNode, checkpointed state는 실제 경로를 탄다.
+
+2. **StateBackend files는 로컬 파일시스템이 아니다** — `/notes/langgraph.md`는 디스크가 아니라 LangGraph state의 `files` 채널에 저장된다.
+
+3. **`execute` tool 필터링** — `FilesystemMiddleware`는 `execute` tool을 만들지만, 기본 `StateBackend`가 `SandboxBackendProtocol`을 구현하지 않으면 `wrap_model_call`에서 tool 목록에서 제거한다.
+
+---
+
 ## 소스 기반 확인 사항 (v0.6.3)
 
 | 항목 | 확인 내용 | 파일 |
@@ -63,3 +81,4 @@ API 키 없이 실행하면 구조 검사만 수행합니다.
 | 상태 스키마 | `_DeepAgentState` + `DeltaChannel(snapshot_frequency=50)` | `graph.py:63–66` |
 | required middleware | `FilesystemMiddleware`, `SubAgentMiddleware` | `graph.py:187–204` |
 | `checkpointer` 타입 | `None \| bool \| BaseCheckpointSaver` | `graph.py` 시그니처 |
+| non-sandbox execute | `FilesystemMiddleware.wrap_model_call()`에서 모델 bind 전 필터링 | `filesystem.py` |

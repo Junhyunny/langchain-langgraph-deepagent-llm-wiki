@@ -96,7 +96,8 @@
 - 빌트인 profile(`_builtin_profiles`)에는 어떤 모델에 어떤 profile이 등록되어 있는가? — Source: `deepagents-source-harness-profiles-2026-05-19`
 - `serialized_name: ClassVar[str]`을 가지는 공식 middleware는 어떤 것들이 있는가? (`SummarizationMiddleware` 등) — Source: `deepagents-source-harness-profiles-2026-05-19`
 - `excluded_middleware`에 매칭되지 않는 entry가 있을 때 rejection은 생성 시점인가, 조립 시점인가? — Source: `deepagents-source-harness-profiles-2026-05-19`
-- Sandbox backend 없을 때 `execute` tool은 error 반환인가, tool 목록에서 제외되는가? — **부분 검증됨**: local `deepagents 0.6.3` `graph.py` docstring은 error message 반환이라고 설명한다. 실제 tool call payload 검증 필요. Source: `deepagents-venv-create-deep-agent-2026-05-28`
+- Sandbox backend 없을 때 `execute` tool은 error 반환인가, tool 목록에서 제외되는가? — ✅ **검증됨** (2026-05-28): `FilesystemMiddleware`는 `execute` tool을 생성하지만, 기본 `StateBackend`가 `SandboxBackendProtocol`을 지원하지 않으면 `wrap_model_call()`에서 model bind 전 `request.tools`에서 제거한다. `_create_execute_tool()` 내부에는 non-sandbox error `ToolMessage` 경로도 존재한다. Source: `deepagents-venv-create-deep-agent-2026-05-28`
+- Sandbox backend를 실제로 붙였을 때 `execute` tool 결과 payload는 어떤 message shape인가? — Needs Experiment
 - Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
 - LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? → `MODEL_GROUPS.md` 확인 필요. (Source: `deepagents-blog-evals-2026-05-23`, `deepagents-source-evals-structure-2026-05-23`)
 - BFCL 벤치마크도 Harbor를 통해 동일하게 적용되는가? — Needs Source

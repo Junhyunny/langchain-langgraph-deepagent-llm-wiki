@@ -21,6 +21,7 @@ sources:
 - Installed version: `0.6.3`
 - Local files read:
   - `.venv/lib/python3.14/site-packages/deepagents/graph.py`
+  - `.venv/lib/python3.14/site-packages/deepagents/middleware/filesystem.py`
   - `.venv/lib/python3.14/site-packages/deepagents/middleware/summarization.py`
   - `.venv/lib/python3.14/site-packages/deepagents/backends/state.py`
   - `.venv/lib/python3.14/site-packages/langgraph/types.py`
@@ -34,7 +35,8 @@ sources:
 - `_DeepAgentState.messages`는 `DeltaChannel(_messages_delta_reducer, snapshot_frequency=50)`로 오버라이드된다.
 - 기본 backend는 `StateBackend()`이며, file state는 LangGraph config의 `CONFIG_KEY_READ` / `CONFIG_KEY_SEND`를 통해 읽고 쓴다.
 - 기본 tool suite에는 `write_todos`, filesystem tools, `execute`, `task`가 포함된다.
-- 로컬 `graph.py` docstring 기준으로 non-sandbox backend에서 `execute` tool은 제거되는 것이 아니라 error message를 반환한다.
+- `FilesystemMiddleware`는 `execute` tool을 생성하지만, `wrap_model_call()`에서 backend가 `SandboxBackendProtocol`을 지원하지 않으면 `execute`를 `request.tools`에서 제거한 뒤 model binding으로 넘긴다.
+- `_create_execute_tool()` 자체에도 non-sandbox backend에 대한 error `ToolMessage` 경로가 있지만, 기본 `StateBackend`의 일반 model call에서는 그 전에 tool 목록에서 필터링된다.
 - 기본 general-purpose subagent는 같은 이름의 subagent가 명시되지 않았고 profile이 비활성화하지 않은 경우 자동 추가된다.
 
 ## Middleware Order
@@ -78,22 +80,25 @@ Offloaded messages are written as markdown under `/conversation_history/{thread_
 .venv/bin/python -m py_compile examples/deepagents_core/01_basic_deep_agent.py examples/deepagents_core/02_middleware_stack.py
 .venv/bin/python examples/deepagents_core/01_basic_deep_agent.py
 .venv/bin/python examples/deepagents_core/02_middleware_stack.py
+.venv/bin/python examples/deepagents_core/03_tool_call_and_filesystem.py
 ```
 
 결과:
 
 - 구조 검사와 source introspection은 성공했다.
 - API key가 없어 실제 LLM invocation은 건너뛰었다.
+- fake chat model 기반 `invoke()`는 성공했다. custom tool call, built-in `write_file`, checkpointed `files` state 갱신, non-sandbox `execute` filtering을 확인했다.
 
 ## Still Unclear
 
-- 실제 `execute` tool이 non-sandbox backend에서 어떤 error payload를 반환하는지는 tool call까지 실행해 확인해야 한다.
+- sandbox backend가 있을 때 실제 `execute` result payload가 어떤 message shape로 저장되는지는 별도 확인이 필요하다.
 - `SubagentTransformer`가 streaming/tracing scope에 어떤 이벤트 구조를 붙이는지는 별도 소스 리딩이 필요하다.
 - `MemoryMiddleware`가 `store=`와 어떤 관계를 갖는지는 별도 소스 리딩이 필요하다.
 
 ## Used By
 
 - `docs/wiki/flows/Deep Agents create_deep_agent flow.md`
+- `docs/wiki/experiments/2026-05-28 deepagents tool call and filesystem.md`
 - `docs/wiki/_roadmap.md`
 - `docs/wiki/_open_questions.md`
 
