@@ -28,9 +28,9 @@ MIDDLEWARE_STACK = [
     ("SkillsMiddleware",                "skills= 파라미터 제공 시",       "skills/ 디렉터리에서 스킬 로드"),
     ("FilesystemMiddleware",            "항상 (제거 불가)",               "7개 filesystem 도구 주입, permissions 적용"),
     ("SubAgentMiddleware",              "inline subagents 있을 때",       "task 도구 주입, subagent 호출 처리"),
-    ("AsyncSubAgentMiddleware",         "async subagents 있을 때",        "비동기 subagent 도구 주입"),
-    ("SummarizationMiddleware",         "항상",                          "컨텍스트 > 85% 시 자동 요약"),
+    ("SummarizationMiddleware",         "항상",                          "모델 profile 기반 threshold에서 자동 요약"),
     ("PatchToolCallsMiddleware",        "항상",                          "tool call 형식 정규화"),
+    ("AsyncSubAgentMiddleware",         "async subagents 있을 때",        "비동기 subagent 도구 주입"),
     ("--- user middleware ---",         "middleware= 파라미터",           "사용자 정의 미들웨어 삽입 위치"),
     ("HarnessProfile.extra_middleware", "profile에 있을 때",             "모델별 추가 미들웨어"),
     ("_ToolExclusionMiddleware",        "profile.excluded_tools 있을 때", "특정 도구 제거"),
@@ -89,7 +89,7 @@ def inspect_state_fields() -> None:
 # ---------------------------------------------------------------------------
 
 def inspect_checkpointer_type() -> None:
-    """checkpointer 파라미터가 bool도 허용한다는 점을 확인한다."""
+    """checkpointer 파라미터가 LangGraph Checkpointer alias를 따른다는 점을 확인한다."""
     sig = inspect.signature(__import__("deepagents").create_deep_agent)
     cp_param = sig.parameters["checkpointer"]
 
@@ -98,9 +98,9 @@ def inspect_checkpointer_type() -> None:
     print(f"  default: {cp_param.default!r}")
     print()
     print("What to notice:")
-    print("  - None | bool | BaseCheckpointSaver 세 가지 허용")
-    print("  - bool 타입 의미: True 전달 시 자동으로 MemorySaver 생성 (가설 — 확인 필요)")
-    print("  - LangGraph의 Checkpointer type alias와 동일 인터페이스")
+    print("  - Deep Agents는 checkpointer를 해석하지 않고 langchain.agents.create_agent로 전달")
+    print("  - LangGraph Checkpointer alias: None | bool | BaseCheckpointSaver")
+    print("  - True/False/None 의미는 LangGraph subgraph inheritance 규칙에 속함")
 
 
 # ---------------------------------------------------------------------------

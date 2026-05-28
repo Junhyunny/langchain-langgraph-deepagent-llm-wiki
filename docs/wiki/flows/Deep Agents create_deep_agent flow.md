@@ -3,9 +3,10 @@ type: flow
 framework: Deep Agents
 status: partial
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-05-28
 sources:
   - deepagents-source-graph-2026-05-19
+  - deepagents-venv-create-deep-agent-2026-05-28
   - deepagents-docs-harness-2026-05-19
   - deepagents-source-subagents-2026-05-23
   - deepagents-source-patch-tool-calls-2026-05-23
@@ -18,7 +19,7 @@ sources:
 `create_deep_agent()`는 middleware 스택을 조립한 뒤 `langchain.agents.create_agent`에 위임하는 "middleware 조립기"다.
 LangGraph `StateGraph`를 직접 조립하지 않는다.
 
-Source: `deepagents-source-graph-2026-05-19`
+Source: `deepagents-source-graph-2026-05-19`, `deepagents-venv-create-deep-agent-2026-05-28`
 
 ---
 
@@ -94,9 +95,9 @@ Base stack (고정):
   2. SkillsMiddleware             ← skills 파라미터 있을 때만
   3. FilesystemMiddleware         ← 항상 (required, 제거 불가)
   4. SubAgentMiddleware           ← inline subagents 있을 때만 (required)
-  5. AsyncSubAgentMiddleware      ← async subagents 있을 때만
-  6. SummarizationMiddleware      ← 항상
-  7. PatchToolCallsMiddleware      ← 항상
+  5. SummarizationMiddleware      ← 항상
+  6. PatchToolCallsMiddleware      ← 항상
+  7. AsyncSubAgentMiddleware      ← async subagents 있을 때만
 
   [사용자 middleware] ← middleware= 파라미터
 
@@ -108,7 +109,7 @@ Tail stack:
  12. HumanInTheLoopMiddleware     ← interrupt_on 파라미터 있을 때만
 ```
 
-Source: `deepagents-source-graph-2026-05-19`
+Source: `deepagents-source-graph-2026-05-19`, `deepagents-venv-create-deep-agent-2026-05-28`
 
 ---
 
@@ -127,6 +128,27 @@ final_system_prompt =
 - `system_prompt`가 `SystemMessage`이면 content_blocks에 text block append (cache_control 보존)
 
 Source: `deepagents-source-graph-2026-05-19`
+
+---
+
+## Local v0.6.3 실행 확인
+
+2026-05-28 로컬 `.venv`에 설치된 `deepagents 0.6.3` 기준으로 다음 예제를 실행했다.
+
+```bash
+.venv/bin/python examples/deepagents_core/01_basic_deep_agent.py
+.venv/bin/python examples/deepagents_core/02_middleware_stack.py
+.venv/bin/python examples/research_agent_comparison/04_deep_agents_stub.py
+```
+
+확인한 내용:
+
+- `create_deep_agent` 파라미터명은 `system_prompt=`다. `instructions=`가 아니다.
+- `checkpointer`는 Deep Agents에서 별도 해석하지 않고 `langchain.agents.create_agent`로 전달된다.
+- `Checkpointer` 타입 alias는 LangGraph의 `None | bool | BaseCheckpointSaver`다.
+- API key가 없어 실제 LLM invocation은 건너뛰었다. 따라서 tool call 결과와 모델 응답 품질은 아직 미검증이다.
+
+Source: `deepagents-venv-create-deep-agent-2026-05-28`
 
 ---
 
@@ -172,6 +194,13 @@ Source: `deepagents-source-graph-2026-05-19`
   - `libs/deepagents/deepagents/_subagent_transformer.py` — SubagentTransformer (미수집)
   - `libs/deepagents/deepagents/profiles/harness/harness_profiles.py` — HarnessProfile (미수집)
 
+Local venv files read (2026-05-28):
+
+- `.venv/lib/python3.14/site-packages/deepagents/graph.py`
+- `.venv/lib/python3.14/site-packages/deepagents/middleware/summarization.py`
+- `.venv/lib/python3.14/site-packages/deepagents/backends/state.py`
+- `.venv/lib/python3.14/site-packages/langgraph/types.py`
+
 ---
 
 ## Permissions 처리 흐름
@@ -191,6 +220,7 @@ create_deep_agent(permissions=[rule1, rule2, ...])
 ```
 
 - Sandbox backend의 `execute` tool에는 permissions **미적용** (임의 명령 실행 가능)
+- 로컬 `deepagents 0.6.3`의 `graph.py` docstring은 non-sandbox backend에서 `execute` tool이 목록에서 제거되는 것이 아니라 error message를 반환한다고 설명한다. 2026-05-19 harness 문서 요약과 차이가 있으므로 실제 tool call 실행으로 확인 필요.
 - deny rule을 allow rule 앞에 배치해야 first-match-wins 의미대로 동작함
 
 ## Skills / Memory 로딩 타이밍
@@ -223,12 +253,14 @@ create_deep_agent(skills=[...], memory=[...])
   Source: `deepagents-source-graph-2026-05-19`
 - `recursion_limit`는 9,999로 하드코딩된다.
   Source: `deepagents-source-graph-2026-05-19`
-- `execute` tool은 sandbox backend 없을 때 tool 목록에서 **제외**된다 (error 반환이 아님).
-  Source: `deepagents-docs-harness-2026-05-19`
+- 로컬 `deepagents 0.6.3` 기준으로 `execute` tool은 sandbox backend 없을 때 error message를 반환한다고 docstring에 적혀 있다. 과거 harness 문서 요약의 "제외" 주장과 충돌하므로 실제 tool call 검증이 필요하다.
+  Source: `deepagents-venv-create-deep-agent-2026-05-28`
 - Subagent는 fresh context로 실행되며 stateless다. 단일 최종 보고서만 반환 가능.
   Source: `deepagents-docs-harness-2026-05-19`
 - `PatchToolCallsMiddleware`는 `before_agent` hook에서 dangling tool call을 감지해 더미 `ToolMessage`로 채운다. LangGraph interrupt, 사용자 중단, 인자 파싱 실패 등으로 미응답 tool call이 히스토리에 남을 때 LLM 오류를 방지한다.
   Source: `deepagents-source-patch-tool-calls-2026-05-23`
+- `create_summarization_middleware`는 모델 profile에 `max_input_tokens`가 있으면 `("fraction", 0.85)`에서 트리거하고 `("fraction", 0.10)`만 유지한다. profile token 정보가 없으면 `("tokens", 170000)`에서 트리거하고 최근 6개 메시지를 유지한다.
+  Source: `deepagents-venv-create-deep-agent-2026-05-28`
 
 ---
 
@@ -261,9 +293,9 @@ create_deep_agent(skills=[...], memory=[...])
 - `langchain.agents.create_agent`의 내부 구현은? LangGraph `StateGraph`를 어떻게 조립하나? (`langchain/agents/` 소스 확인 필요)
 - `SubagentTransformer`는 scope를 어떻게 활용하나? streaming/tracing에서 어떤 역할인가?
 - `HarnessProfile`은 어떤 모델에 어떤 profile을 매핑하나?
-- `DeltaChannel`의 `snapshot_frequency=50`은 정확히 무엇을 의미하나?
+- `DeltaChannel`의 `snapshot_frequency=50`이 long-running Deep Agents checkpoint 크기에 주는 실제 효과는 어느 정도인가? (의미는 확인됨: 50 writes마다 snapshot)
 - ✅ `PatchToolCallsMiddleware` 역할 확인됨 — `before_agent` hook에서 dangling tool call (AIMessage에 tool_call이 있는데 그에 대응하는 ToolMessage가 없는 경우)을 감지해 더미 ToolMessage를 삽입. invalid_tool_call(인자 파싱 실패)과 cancelled(중단된 정상 호출) 두 케이스 처리. `Overwrite`로 state.messages 전체 교체. Source: `deepagents-source-patch-tool-calls-2026-05-23`
-- `create_summarization_middleware`는 어떤 조건에서 summarization을 트리거하나? (문서 기준 85% 초과 확인됨, 소스 확인 필요)
+- non-sandbox backend에서 `execute` tool 호출 결과가 실제로 어떤 error payload인지 확인 필요.
 
 ---
 
@@ -282,3 +314,4 @@ create_deep_agent(skills=[...], memory=[...])
 ## 소스
 
 - `deepagents-source-graph-2026-05-19`
+- `deepagents-venv-create-deep-agent-2026-05-28`

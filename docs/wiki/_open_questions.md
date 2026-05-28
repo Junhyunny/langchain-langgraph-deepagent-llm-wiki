@@ -11,7 +11,7 @@
 - [ ] BFCL v3 평가가 실제 실행 경로(테스트/워크플로)에서 어떻게 연결되는지 확정한다.  
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - ✅ `create_agent` 초기화 시간(0.262s)이 `create_react_agent`(0.004s)보다 긴 이유: factory.py `.venv` 직접 확인(2026-05-24). 원인: model이 string이면 `init_chat_model()` 호출(provider import), middleware hook 감지(클래스 비교 전체 순회), `_resolve_schemas()`, `StateGraph` 구성, `graph.compile()`. `bind_tools()`는 **init이 아닌 매 model 호출 시** `_get_bound_model()` 내에서 실행됨. Source: `langchain-venv-factory-read-2026-05-24`
-- ✅ Deep Agents `create_deep_agent` 파라미터명 확인: `system_prompt=` (`instructions=` 아님). `.venv` 직접 실행으로 확인 (2026-05-24). Source: `deepagents-venv-read-2026-05-24`
+- ✅ Deep Agents `create_deep_agent` 파라미터명 확인: `system_prompt=` (`instructions=` 아님). `.venv` 직접 실행과 local `deepagents 0.6.3` source reading으로 확인 (2026-05-28). Source: `deepagents-venv-create-deep-agent-2026-05-28`
 
 ---
 
@@ -96,7 +96,7 @@
 - 빌트인 profile(`_builtin_profiles`)에는 어떤 모델에 어떤 profile이 등록되어 있는가? — Source: `deepagents-source-harness-profiles-2026-05-19`
 - `serialized_name: ClassVar[str]`을 가지는 공식 middleware는 어떤 것들이 있는가? (`SummarizationMiddleware` 등) — Source: `deepagents-source-harness-profiles-2026-05-19`
 - `excluded_middleware`에 매칭되지 않는 entry가 있을 때 rejection은 생성 시점인가, 조립 시점인가? — Source: `deepagents-source-harness-profiles-2026-05-19`
-- Sandbox backend 없을 때 `execute` tool은 error 반환인가, tool 목록에서 제외되는가? — Source: `deepagents-docs-harness-2026-05-19`
+- Sandbox backend 없을 때 `execute` tool은 error 반환인가, tool 목록에서 제외되는가? — **부분 검증됨**: local `deepagents 0.6.3` `graph.py` docstring은 error message 반환이라고 설명한다. 실제 tool call payload 검증 필요. Source: `deepagents-venv-create-deep-agent-2026-05-28`
 - Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
 - LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? → `MODEL_GROUPS.md` 확인 필요. (Source: `deepagents-blog-evals-2026-05-23`, `deepagents-source-evals-structure-2026-05-23`)
 - BFCL 벤치마크도 Harbor를 통해 동일하게 적용되는가? — Needs Source
@@ -108,9 +108,9 @@
 
 ### 에이전트 런타임 (Agent Runtime)
 
-- 에이전트 런타임(모델 + 오케스트레이션 + 도구)은 LangChain / LangGraph / Deep Agents에서 각각 어떤 클래스/컴포넌트로 구현되는가? — **부분 검증됨**: LangChain = `create_agent` → CompiledStateGraph, LangGraph = `StateGraph.compile()` / `create_react_agent`, Deep Agents = Needs Source
+- 에이전트 런타임(모델 + 오케스트레이션 + 도구)은 LangChain / LangGraph / Deep Agents에서 각각 어떤 클래스/컴포넌트로 구현되는가? — **부분 검증됨**: LangChain = `create_agent` → CompiledStateGraph, LangGraph = `StateGraph.compile()` / `create_react_agent`, Deep Agents = `create_deep_agent` → middleware stack → `langchain.agents.create_agent` → CompiledStateGraph. Source: `deepagents-venv-create-deep-agent-2026-05-28`
 - 오케스트레이션 레이어의 인스트럭션(시스템 프롬프트)은 각 프레임워크에서 어떻게 설정하는가? — **검증됨**: `create_agent` → `system_prompt=`, `create_react_agent` → `prompt=`. 동적 변경 여부: Needs Source
-- `instructions`와 `system_prompt`는 같은 개념인가? — **부분 검증됨**: `create_agent`=`system_prompt=`, `create_react_agent`=`prompt=`. 명칭이 다르지만 기능 동일. Deep Agents의 파라미터명 확인 필요 — Needs Source
+- `instructions`와 `system_prompt`는 같은 개념인가? — **부분 검증됨**: `create_agent`=`system_prompt=`, `create_react_agent`=`prompt=`, Deep Agents `create_deep_agent`=`system_prompt=`. 명칭이 다르지만 "system-level instruction" 역할은 유사하다. Source: `deepagents-venv-create-deep-agent-2026-05-28`
 
 ### 리즈닝 / 플래닝 (Reasoning / Planning)
 
