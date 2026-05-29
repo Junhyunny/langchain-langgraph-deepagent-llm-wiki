@@ -104,15 +104,16 @@ handoff_obj = handoff(
 
 ## LangGraph
 
-*Source: Needs Source*
+*Source: `langgraph-prebuilt-tool-node-2026-05-27`, [[2026-05-30 langgraph toolnode parent command send]]*
 
 LangGraph에서 핸드오프에 해당하는 패턴:
 
 - **`Command(goto="node_name")`**: 다른 노드로 제어를 이전. 현재 노드에서 직접 goto 지정.
+- **`Command(graph=Command.PARENT, goto=[Send("node_name", input)])`**: child graph에서 parent graph의 노드를 동적으로 호출. tool call 기반 handoff/fan-out 패턴으로 사용할 수 있음.
 - **`add_conditional_edges`**: 조건에 따라 다음 에이전트 노드를 선택.
 - **서브그래프 전환**: 컴파일된 그래프를 다른 그래프의 노드로 추가.
 
-⚠️ LangGraph의 핸드오프는 OpenAI SDK처럼 LLM이 tool call로 트리거하는 것이 아니라, 노드 반환값이나 조건 에지로 구현된다.
+부분적으로는 LLM tool call로도 트리거할 수 있다. 예를 들어 child graph 안의 `ToolNode`가 실행하는 도구가 `Command(graph=Command.PARENT, goto=[Send(...)])`를 반환하면 parent graph의 대상 노드로 제어/작업을 넘길 수 있다. 다만 OpenAI SDK의 handoff abstraction과 동일한 고수준 API는 아니며, graph control-flow primitive를 직접 조립하는 패턴이다.
 
 ## Deep Agents
 

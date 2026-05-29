@@ -56,6 +56,7 @@
 - [[2026-05-28 langchain create_agent fake tool loop]] → `experiments/2026-05-28 langchain create_agent fake tool loop.md` ✅ 실행됨
 - [[2026-05-28 langgraph toolnode direct]] → `experiments/2026-05-28 langgraph toolnode direct.md` ✅ 실행됨
 - [[2026-05-29 langgraph toolnode command outputs]] → `experiments/2026-05-29 langgraph toolnode command outputs.md` ✅ 실행됨
+- [[2026-05-30 langgraph toolnode parent command send]] → `experiments/2026-05-30 langgraph toolnode parent command send.md` ✅ 실행됨
 
 ## 실패 사례
 - [[LangGraph pending writes resume confusion]] → `failures/LangGraph pending writes resume confusion.md`

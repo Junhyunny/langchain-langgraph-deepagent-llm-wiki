@@ -332,6 +332,22 @@ Source: [[2026-05-29 langgraph toolnode command outputs]]
 
 ---
 
+## Parent Command + Send 실험
+
+2026-05-30에 `examples/langgraph_core/10_toolnode_parent_command_send.py`로 child graph 안의 `ToolNode`가 parent graph로 `Send`를 올리는 경로를 확인했다.
+
+확인한 내용:
+
+- child graph tool이 `Command(graph=Command.PARENT, goto=[Send("collector", {...})])`를 반환할 수 있다.
+- parent graph에 정적 `child -> collector` edge가 없어도 parent `collector` 노드가 실행된다.
+- tool call 2개가 각각 parent `Send`를 반환하면 parent collector가 2번 실행된다.
+- `ToolNode._combine_tool_outputs()`는 여러 parent `Send` command를 하나의 parent command로 병합한다.
+- `Command.PARENT + Send` 경로는 current graph `Command(update=...)`와 달리 matching `ToolMessage`를 요구하지 않았다.
+
+Source: [[2026-05-30 langgraph toolnode parent command send]]
+
+---
+
 ## Source Code References
 
 - Repo: `langchain-ai/langgraph`
@@ -357,7 +373,7 @@ Source: [[2026-05-29 langgraph toolnode command outputs]]
 - `ToolOutputMixin`을 반환하는 도구의 출력은 `BaseTool.invoke()` 내부에서 어떻게 처리되는가? (LangChain Core 쪽)
 - `wrap_tool_call` 미들웨어를 사용한 retry 패턴이 HITL과 어떻게 조합되는가?
 - ✅ `wrap_tool_call`이 `Command`를 반환할 때의 current graph update/goto는 확인됨. `Command.update`는 compiled graph가 적용하고, `Command.goto`는 정적 edge 없이도 대상 노드로 라우팅할 수 있다. Source: [[2026-05-29 langgraph toolnode command outputs]]
-- `Command(graph=Command.PARENT)`를 반환하면 부모 그래프에 어떤 영향을 주는가?
+- ✅ `Command(graph=Command.PARENT, goto=[Send(...)])`는 parent graph의 대상 노드를 동적으로 실행한다. 여러 Send는 parent command로 병합되어 parent collector를 여러 번 호출할 수 있다. Source: [[2026-05-30 langgraph toolnode parent command send]]
 - `_extract_state`에서 `CONFIG_KEY_READ`를 통해 채널에서 상태를 읽는 경로 — Send API와의 관계?
 
 ---
@@ -372,6 +388,7 @@ Source: [[2026-05-29 langgraph toolnode command outputs]]
 - [[test_langchain_tool_calling_map]]
 - [[2026-05-28 langgraph toolnode direct]]
 - [[2026-05-29 langgraph toolnode command outputs]]
+- [[2026-05-30 langgraph toolnode parent command send]]
 - [[ToolNode in LangGraph vs LangChain create_agent]]
 
 ## Sources

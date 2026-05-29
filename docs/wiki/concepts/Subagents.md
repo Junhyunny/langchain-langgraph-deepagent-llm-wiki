@@ -113,7 +113,10 @@ def child_node(state) -> Command:
 ```
 
 - 서브그래프 노드에서 상위 그래프로 직접 제어를 넘길 수 있다
-- `goto=PARENT`는 부모 그래프의 다음 노드로 라우팅
+- `Command(graph=Command.PARENT, goto=[Send("collector", {...})])` 패턴은 parent graph의 특정 노드를 동적으로 실행한다
+- child graph 안의 `ToolNode`가 여러 tool call에서 parent `Send`를 반환하면 parent collector가 여러 번 실행되고, parent reducer로 결과가 병합된다
+
+실험: [[2026-05-30 langgraph toolnode parent command send]]
 
 Source: `langgraph-docs-graph-api-2026-05-23`, `langgraph-subgraph-experiment-2026-05-25`
 
