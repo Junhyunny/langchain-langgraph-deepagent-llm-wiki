@@ -22,6 +22,7 @@ python examples/langgraph_core/06_streaming_modes.py       # 7가지 StreamMode 
 python examples/langgraph_core/07_toolnode_injection.py    # ToolNode + InjectedState/Store
 python examples/langgraph_core/08_toolnode_direct.py       # ToolNode 직접 입력 형태 + wrap_tool_call
 python examples/langgraph_core/09_toolnode_command_outputs.py # ToolNode Command update/goto
+python examples/langgraph_core/10_toolnode_parent_command_send.py # ToolNode Command.PARENT + Send
 ```
 
 ## What To Notice
@@ -37,3 +38,4 @@ python examples/langgraph_core/09_toolnode_command_outputs.py # ToolNode Command
 - `InjectedState`/`InjectedStore`는 LLM schema에 노출하지 않고 런타임 값을 도구에 주입한다.
 - `ToolNode(..., wrap_tool_call=...)`은 LangChain `create_agent`의 `AgentMiddleware.wrap_tool_call` 연결 지점이다.
 - `ToolNode`가 `Command`를 반환하면 compiled graph 안에서 state update와 `goto` 라우팅으로 해석된다.
+- child graph의 `ToolNode`가 `Command(graph=Command.PARENT, goto=[Send(...)])`를 반환하면 parent graph 노드를 동적으로 호출할 수 있다.
