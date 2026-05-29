@@ -97,6 +97,7 @@
 - `serialized_name: ClassVar[str]`을 가지는 공식 middleware는 어떤 것들이 있는가? (`SummarizationMiddleware` 등) — Source: `deepagents-source-harness-profiles-2026-05-19`
 - `excluded_middleware`에 매칭되지 않는 entry가 있을 때 rejection은 생성 시점인가, 조립 시점인가? — Source: `deepagents-source-harness-profiles-2026-05-19`
 - Sandbox backend 없을 때 `execute` tool은 error 반환인가, tool 목록에서 제외되는가? — ✅ **검증됨** (2026-05-28): `FilesystemMiddleware`는 `execute` tool을 생성하지만, 기본 `StateBackend`가 `SandboxBackendProtocol`을 지원하지 않으면 `wrap_model_call()`에서 model bind 전 `request.tools`에서 제거한다. `_create_execute_tool()` 내부에는 non-sandbox error `ToolMessage` 경로도 존재한다. Source: `deepagents-venv-create-deep-agent-2026-05-28`
+- `SubAgentMiddleware`는 parent state를 subagent에 어떻게 전달하고 결과를 어떻게 병합하는가? — ✅ **검증됨** (2026-05-30): `task` tool 실행 시 `_EXCLUDED_STATE_KEYS`가 입력/출력 양방향으로 적용된다. 예제에서 child는 `messages`, `project_id`만 받았고 parent `todos`는 받지 않았다. child `summary`는 parent에 병합됐지만 child `todos`는 병합되지 않았다. Source: [[2026-05-30 deepagents subagentmiddleware task tool]]
 - Sandbox backend를 실제로 붙였을 때 `execute` tool 결과 payload는 어떤 message shape인가? — Needs Experiment
 - Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
 - LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? → `MODEL_GROUPS.md` 확인 필요. (Source: `deepagents-blog-evals-2026-05-23`, `deepagents-source-evals-structure-2026-05-23`)

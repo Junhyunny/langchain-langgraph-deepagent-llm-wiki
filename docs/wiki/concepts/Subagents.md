@@ -6,7 +6,7 @@ framework:
   - Deep Agents
 status: draft
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-05-30
 sources:
   - deepagents-docs-harness-2026-05-19
   - deepagents-source-graph-2026-05-19
@@ -193,6 +193,13 @@ _return_command_with_state_update()  ← _EXCLUDED_STATE_KEYS 필터 (출력)
 Command(update={state_update, messages=[ToolMessage]})
 ```
 
+실행 검증: [[2026-05-30 deepagents subagentmiddleware task tool]]
+
+- `task`가 parent model에 bound tool로 노출됨
+- child state에는 `project_id` 같은 일반 state key가 전달되고, `messages`/`todos` 같은 excluded key는 전달되지 않음
+- child `summary`는 parent state에 병합되고, child `todos`는 병합되지 않음
+- child invoke config에는 `ls_agent_type="subagent"`가 추가됨
+
 ---
 
 #### Config 전파 규칙 (검증됨)
@@ -255,6 +262,8 @@ def wrap_model_call(self, request, handler):
 - [[StateGraph]]
 - [[Context Engineering]]
 - [[Deep Agents create_deep_agent flow]]
+- [[Deep Agents SubAgentMiddleware task tool flow]]
+- [[LangGraph ToolNode Command vs Deep Agents task tool]]
 
 ## 소스
 

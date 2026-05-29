@@ -8,6 +8,9 @@ retrieved_at: "2026-05-23"
 status: current
 used_by:
   - "docs/wiki/concepts/Subagents.md"
+  - "docs/wiki/flows/Deep Agents SubAgentMiddleware task tool flow.md"
+  - "docs/wiki/experiments/2026-05-30 deepagents subagentmiddleware task tool.md"
+  - "docs/wiki/comparisons/LangGraph ToolNode Command vs Deep Agents task tool.md"
 ---
 
 # Summary
@@ -153,3 +156,17 @@ def wrap_model_call(self, request, handler):
 1. `structured_response`가 non-None → JSON 직렬화 (Pydantic: model_dump_json, dataclass: asdict, 기타: json.dumps)
 2. 없으면 → messages를 역순으로 순회해 마지막 비어있지 않은 AIMessage text 추출
    (Anthropic의 trailing empty end_turn AIMessage 방어 로직 포함)
+
+---
+
+## 2026-05-30 로컬 실행 검증
+
+예제: `examples/deepagents_core/04_subagent_middleware_task_tool.py`
+
+검증된 내용:
+- `SubAgentMiddleware.tools`의 `task`가 parent model에 bound tool로 전달됨
+- parent `messages`와 `todos`는 subagent 입력에서 제외됨
+- parent `project_id` 같은 일반 state key는 subagent 입력으로 전달됨
+- subagent `summary`는 parent state에 병합됨
+- subagent `todos`는 parent state에 병합되지 않음
+- subagent invoke config에는 `configurable["ls_agent_type"] = "subagent"`가 추가됨

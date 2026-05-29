@@ -3,7 +3,7 @@ type: flow
 framework: Deep Agents
 status: partial
 confidence: high
-last_reviewed: 2026-05-28
+last_reviewed: 2026-05-30
 sources:
   - deepagents-source-graph-2026-05-19
   - deepagents-venv-create-deep-agent-2026-05-28
@@ -201,6 +201,23 @@ Local venv files read (2026-05-28):
 - `.venv/lib/python3.14/site-packages/deepagents/middleware/summarization.py`
 - `.venv/lib/python3.14/site-packages/deepagents/backends/state.py`
 - `.venv/lib/python3.14/site-packages/langgraph/types.py`
+
+---
+
+## SubAgentMiddleware task tool 흐름
+
+`create_deep_agent()`는 inline subagent가 있을 때 `SubAgentMiddleware`를 main agent middleware stack에 넣는다. 이 middleware는 subagent를 `task` tool로 노출하고, parent model이 `task(description, subagent_type)`을 호출하면 subagent runnable을 실행한다.
+
+세부 흐름은 [[Deep Agents SubAgentMiddleware task tool flow]]에 분리했다.
+
+2026-05-30 실험에서 확인한 것:
+
+- parent model bound tools에 `task`가 포함됨
+- subagent는 parent message history가 아니라 task description 하나를 message로 받음
+- parent `todos`는 child로 전달되지 않고, child `todos`도 parent로 병합되지 않음
+- child `summary` 같은 일반 state update는 parent state로 병합됨
+
+Experiment: [[2026-05-30 deepagents subagentmiddleware task tool]]
 
 ---
 

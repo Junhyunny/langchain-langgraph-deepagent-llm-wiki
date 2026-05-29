@@ -9,6 +9,7 @@
 - [[LangChain vs LangGraph vs Deep Agents]] → `comparisons/LangChain vs LangGraph vs Deep Agents.md`
 - [[create_agent vs create_deep_agent]] → `comparisons/create_agent vs create_deep_agent.md`
 - [[ToolNode in LangGraph vs LangChain create_agent]] → `comparisons/ToolNode in LangGraph vs LangChain create_agent.md`
+- [[LangGraph ToolNode Command vs Deep Agents task tool]] → `comparisons/LangGraph ToolNode Command vs Deep Agents task tool.md`
 
 ## 개념
 - [[Agent Runtime]] → `concepts/Agent Runtime.md`
@@ -45,6 +46,7 @@
 - [[LangChain create_agent flow]] → `flows/LangChain create_agent flow.md`
 - [[LangGraph StateGraph compile invoke flow]] → `flows/LangGraph StateGraph compile invoke flow.md`
 - [[Deep Agents create_deep_agent flow]] → `flows/Deep Agents create_deep_agent flow.md`
+- [[Deep Agents SubAgentMiddleware task tool flow]] → `flows/Deep Agents SubAgentMiddleware task tool flow.md`
 - [[LangGraph ToolNode flow]] → `flows/LangGraph ToolNode flow.md`
 - [[LangGraph create_react_agent flow]] → `flows/LangGraph create_react_agent flow.md`
 
@@ -53,6 +55,7 @@
 - [[2026-05-23 3개 프레임워크 리서치 에이전트 비교]] → `experiments/2026-05-23 3개 프레임워크 리서치 에이전트 비교.md`
 - [[2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과]] → `experiments/2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과.md` ✅ 실행됨
 - [[2026-05-28 deepagents tool call and filesystem]] → `experiments/2026-05-28 deepagents tool call and filesystem.md` ✅ 실행됨
+- [[2026-05-30 deepagents subagentmiddleware task tool]] → `experiments/2026-05-30 deepagents subagentmiddleware task tool.md` ✅ 실행됨
 - [[2026-05-28 langchain create_agent fake tool loop]] → `experiments/2026-05-28 langchain create_agent fake tool loop.md` ✅ 실행됨
 - [[2026-05-28 langgraph toolnode direct]] → `experiments/2026-05-28 langgraph toolnode direct.md` ✅ 실행됨
 - [[2026-05-29 langgraph toolnode command outputs]] → `experiments/2026-05-29 langgraph toolnode command outputs.md` ✅ 실행됨

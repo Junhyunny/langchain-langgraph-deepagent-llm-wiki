@@ -390,6 +390,9 @@ sources:
     status: current
     used_by:
       - "docs/wiki/concepts/Subagents.md"
+      - "docs/wiki/flows/Deep Agents SubAgentMiddleware task tool flow.md"
+      - "docs/wiki/experiments/2026-05-30 deepagents subagentmiddleware task tool.md"
+      - "docs/wiki/comparisons/LangGraph ToolNode Command vs Deep Agents task tool.md"
     notes: "SubAgent/CompiledSubAgent TypedDict 전체 필드. _EXCLUDED_STATE_KEYS(messages/todos/structured_response/skills_metadata/skills_load_errors/memory_contents) 입력·출력 양방향 필터링으로 subagent state isolation 구현. _build_subagent_config: callbacks/tags/configurable만 전파, recursion_limit/metadata 의도적 제외. task tool 실행 흐름, 결과 추출 우선순위(structured_response → AIMessage text), LangSmith tracing 태깅."
 
   - id: langgraph-source-pregel-interrupts-2026-05-23
@@ -732,6 +735,7 @@ sources:
       - "docs/wiki/experiments/2026-05-29 langgraph toolnode command outputs.md"
       - "docs/wiki/experiments/2026-05-30 langgraph toolnode parent command send.md"
       - "docs/wiki/comparisons/ToolNode in LangGraph vs LangChain create_agent.md"
+      - "docs/wiki/comparisons/LangGraph ToolNode Command vs Deep Agents task tool.md"
     notes: "2030 lines. ToolNode, InjectedState, InjectedStore, ToolRuntime, tools_condition, _InjectedArgs, _get_all_injected_args, _inject_tool_args. 병렬 실행(ThreadPoolExecutor), LLM 위조 방지(stripped_args), InjectedToolCallId 연결 포인트."
   - id: langgraph-prebuilt-chat-agent-executor-2026-05-28
     title: "LangGraph prebuilt/chat_agent_executor.py 소스 분석"
