@@ -729,6 +729,7 @@ sources:
     used_by:
       - "docs/wiki/flows/LangGraph ToolNode flow.md"
       - "docs/wiki/experiments/2026-05-28 langgraph toolnode direct.md"
+      - "docs/wiki/experiments/2026-05-29 langgraph toolnode command outputs.md"
       - "docs/wiki/comparisons/ToolNode in LangGraph vs LangChain create_agent.md"
     notes: "2030 lines. ToolNode, InjectedState, InjectedStore, ToolRuntime, tools_condition, _InjectedArgs, _get_all_injected_args, _inject_tool_args. 병렬 실행(ThreadPoolExecutor), LLM 위조 방지(stripped_args), InjectedToolCallId 연결 포인트."
   - id: langgraph-prebuilt-chat-agent-executor-2026-05-28

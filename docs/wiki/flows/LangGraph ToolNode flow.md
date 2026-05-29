@@ -5,7 +5,7 @@ framework:
   - LangChain
 status: verified
 confidence: high
-last_reviewed: 2026-05-28
+last_reviewed: 2026-05-29
 sources:
   - langgraph-prebuilt-tool-node-2026-05-27
   - langchain-agents-factory-2026-05-28
@@ -316,6 +316,22 @@ Source: [[2026-05-28 langgraph toolnode direct]]
 
 ---
 
+## Command 반환 실험
+
+2026-05-29에 `examples/langgraph_core/09_toolnode_command_outputs.py`로 `ToolNode`의 `Command` 반환 경로를 확인했다.
+
+확인한 내용:
+
+- standalone `ToolNode.invoke()`는 `Command`를 적용하지 않고 `[Command(...)]` 형태로 반환한다.
+- compiled graph 안에서는 `Command.update`가 실제 state update로 적용된다.
+- `wrap_tool_call`은 도구 실행을 건너뛰고 직접 `Command(update=..., goto=...)`를 반환할 수 있다.
+- `Command(goto="after")`는 정적 `tools -> after` edge 없이도 `after` 노드로 라우팅했다.
+- 현재 graph에 대한 `Command.update`에는 matching `ToolMessage(tool_call_id=...)`가 필요하다. 없으면 `ValueError`가 발생한다.
+
+Source: [[2026-05-29 langgraph toolnode command outputs]]
+
+---
+
 ## Source Code References
 
 - Repo: `langchain-ai/langgraph`
@@ -340,7 +356,7 @@ Source: [[2026-05-28 langgraph toolnode direct]]
 
 - `ToolOutputMixin`을 반환하는 도구의 출력은 `BaseTool.invoke()` 내부에서 어떻게 처리되는가? (LangChain Core 쪽)
 - `wrap_tool_call` 미들웨어를 사용한 retry 패턴이 HITL과 어떻게 조합되는가?
-- `wrap_tool_call`이 `Command`를 반환할 때 `ToolNode._combine_tool_outputs()`와 graph routing이 어떤 edge를 타는가?
+- ✅ `wrap_tool_call`이 `Command`를 반환할 때의 current graph update/goto는 확인됨. `Command.update`는 compiled graph가 적용하고, `Command.goto`는 정적 edge 없이도 대상 노드로 라우팅할 수 있다. Source: [[2026-05-29 langgraph toolnode command outputs]]
 - `Command(graph=Command.PARENT)`를 반환하면 부모 그래프에 어떤 영향을 주는가?
 - `_extract_state`에서 `CONFIG_KEY_READ`를 통해 채널에서 상태를 읽는 경로 — Send API와의 관계?
 
@@ -355,6 +371,7 @@ Source: [[2026-05-28 langgraph toolnode direct]]
 - [[Subagents]]
 - [[test_langchain_tool_calling_map]]
 - [[2026-05-28 langgraph toolnode direct]]
+- [[2026-05-29 langgraph toolnode command outputs]]
 - [[ToolNode in LangGraph vs LangChain create_agent]]
 
 ## Sources
