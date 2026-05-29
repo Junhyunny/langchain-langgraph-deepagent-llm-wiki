@@ -21,8 +21,10 @@ from typing import Annotated, Any
 from langchain_core.messages import AIMessage, ToolCall, ToolMessage
 from langchain_core.tools import BaseTool, tool
 from langchain_core.tools import InjectedToolCallId
+from langgraph._internal._constants import CONF, CONFIG_KEY_RUNTIME
 from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.prebuilt import InjectedState, InjectedStore, ToolNode
+from langgraph.runtime import Runtime
 from langgraph.store.memory import InMemoryStore
 from typing_extensions import TypedDict
 
@@ -35,6 +37,11 @@ from typing_extensions import TypedDict
 class AgentState(TypedDict):
     messages: Annotated[list, add_messages]
     user_level: str          # InjectedState로 도구에 전달할 값
+
+
+def toolnode_config(store: Any | None = None) -> dict:
+    """Standalone ToolNode.invoke()에 필요한 Runtime config를 만든다."""
+    return {CONF: {CONFIG_KEY_RUNTIME: Runtime(store=store)}}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -71,7 +78,7 @@ def experiment_1_basic_toolnode() -> None:
     )
 
     state_in = {"messages": [ai_msg]}
-    result = tool_node.invoke(state_in)
+    result = tool_node.invoke(state_in, config=toolnode_config())
 
     print("  입력: AIMessage with 2 tool_calls")
     print("  출력 messages:")
@@ -108,8 +115,9 @@ def experiment_2_injected_state() -> None:
 
     tool_node = ToolNode([personalized_greeting])
 
-    # LLM이 보는 스키마: name만 있음 (state는 제거됨)
-    schema = personalized_greeting.get_input_schema().model_json_schema()
+    # LLM이 보는 tool_call_schema: name만 있음 (state는 제거됨)
+    # get_input_schema()에는 런타임 주입 필드가 보일 수 있으므로 tool_call_schema를 확인한다.
+    schema = personalized_greeting.tool_call_schema.model_json_schema()
     print(f"  LLM이 보는 스키마 properties: {list(schema['properties'].keys())}")
     print(f"  (state 필드가 schema에서 제외됨 확인)")
 
@@ -122,7 +130,7 @@ def experiment_2_injected_state() -> None:
         "messages": [ai_msg],
         "user_level": "beginner",
     }
-    result = tool_node.invoke(state_beginner)
+    result = tool_node.invoke(state_beginner, config=toolnode_config())
     print(f"\n  beginner: {result['messages'][0].content!r}")
 
     # expert 레벨 state
@@ -134,7 +142,7 @@ def experiment_2_injected_state() -> None:
         "messages": [ai_msg2],
         "user_level": "expert",
     }
-    result2 = tool_node.invoke(state_expert)
+    result2 = tool_node.invoke(state_expert, config=toolnode_config())
     print(f"  expert:   {result2['messages'][0].content!r}")
 
     print("\n  확인 포인트:")
@@ -182,7 +190,7 @@ def experiment_3_injected_store() -> None:
     print("=" * 60)
 
     store = InMemoryStore()
-    tool_node = ToolNode([save_note, retrieve_note], store=store)
+    tool_node = ToolNode([save_note, retrieve_note])
 
     # step 1: save_note
     ai_save = AIMessage(
@@ -192,7 +200,7 @@ def experiment_3_injected_store() -> None:
         ],
     )
     state_save: AgentState = {"messages": [ai_save], "user_level": "beginner"}
-    result_save = tool_node.invoke(state_save)
+    result_save = tool_node.invoke(state_save, config=toolnode_config(store))
     print(f"  save: {result_save['messages'][0].content!r}")
 
     # step 2: retrieve_note
@@ -203,7 +211,7 @@ def experiment_3_injected_store() -> None:
         ],
     )
     state_get: AgentState = {"messages": [ai_get], "user_level": "beginner"}
-    result_get = tool_node.invoke(state_get)
+    result_get = tool_node.invoke(state_get, config=toolnode_config(store))
     print(f"  retrieve: {result_get['messages'][0].content!r}")
 
     print("\n  확인 포인트:")
@@ -243,7 +251,7 @@ def experiment_4_handle_tool_error() -> None:
     tool_node_unsafe = ToolNode([divide], handle_tool_errors=False)
 
     print("  [handle_tool_errors=True] 에러 케이스:")
-    result_safe = tool_node_safe.invoke(state_bad)
+    result_safe = tool_node_safe.invoke(state_bad, config=toolnode_config())
     msg = result_safe["messages"][0]
     print(f"    status={msg.status!r}, content={msg.content!r}")
 
@@ -254,7 +262,7 @@ def experiment_4_handle_tool_error() -> None:
     )
     state_bad2: AgentState = {"messages": [ai_bad2], "user_level": "beginner"}
     try:
-        tool_node_unsafe.invoke(state_bad2)
+        tool_node_unsafe.invoke(state_bad2, config=toolnode_config())
     except ValueError as e:
         print(f"    ValueError 발생: {e}")
 
@@ -264,7 +272,7 @@ def experiment_4_handle_tool_error() -> None:
         tool_calls=[ToolCall(name="divide", args={"a": 10.0, "b": 2.0}, id="tc_div3")],
     )
     state_ok: AgentState = {"messages": [ai_ok], "user_level": "beginner"}
-    result_ok = tool_node_safe.invoke(state_ok)
+    result_ok = tool_node_safe.invoke(state_ok, config=toolnode_config())
     print(f"    result: {result_ok['messages'][0].content!r}")
 
     print("\n  확인 포인트:")

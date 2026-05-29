@@ -8,6 +8,7 @@
 ## 비교
 - [[LangChain vs LangGraph vs Deep Agents]] → `comparisons/LangChain vs LangGraph vs Deep Agents.md`
 - [[create_agent vs create_deep_agent]] → `comparisons/create_agent vs create_deep_agent.md`
+- [[ToolNode in LangGraph vs LangChain create_agent]] → `comparisons/ToolNode in LangGraph vs LangChain create_agent.md`
 
 ## 개념
 - [[Agent Runtime]] → `concepts/Agent Runtime.md`
@@ -53,6 +54,7 @@
 - [[2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과]] → `experiments/2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과.md` ✅ 실행됨
 - [[2026-05-28 deepagents tool call and filesystem]] → `experiments/2026-05-28 deepagents tool call and filesystem.md` ✅ 실행됨
 - [[2026-05-28 langchain create_agent fake tool loop]] → `experiments/2026-05-28 langchain create_agent fake tool loop.md` ✅ 실행됨
+- [[2026-05-28 langgraph toolnode direct]] → `experiments/2026-05-28 langgraph toolnode direct.md` ✅ 실행됨
 
 ## 실패 사례
 - [[LangGraph pending writes resume confusion]] → `failures/LangGraph pending writes resume confusion.md`

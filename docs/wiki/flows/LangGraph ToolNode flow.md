@@ -5,9 +5,10 @@ framework:
   - LangChain
 status: verified
 confidence: high
-last_reviewed: 2026-05-27
+last_reviewed: 2026-05-28
 sources:
   - langgraph-prebuilt-tool-node-2026-05-27
+  - langchain-agents-factory-2026-05-28
 ---
 
 # LangGraph ToolNode 실행 흐름
@@ -298,6 +299,23 @@ llm_node → tools_condition → "tools" → ToolNode → llm_node → ...
 
 ---
 
+## Direct ToolNode 실행 실험
+
+2026-05-28에 `examples/langgraph_core/08_toolnode_direct.py`로 `ToolNode`를 단독 runnable로 실행했다.
+
+확인한 내용:
+
+- state dict 입력은 `{"messages": [ToolMessage(...)]}` 형태로 반환된다.
+- message list 입력은 `[ToolMessage(...)]` 형태로 반환된다.
+- direct tool call list 입력은 로컬 버전에서 `{"messages": [ToolMessage(...)]}` 형태로 반환된다.
+- standalone `ToolNode.invoke()`는 underlying runnable의 `runtime` 파라미터 때문에 config에 `Runtime`이 필요하다. compiled graph 안에서는 LangGraph가 자동 주입한다.
+- `wrap_tool_call`은 `ToolCallRequest`를 받고, `request.override(tool_call=...)`로 실행 직전 인자를 바꿀 수 있다.
+- LangChain `create_agent()`는 `AgentMiddleware.wrap_tool_call`을 합성한 뒤 `ToolNode(..., wrap_tool_call=...)`로 연결한다.
+
+Source: [[2026-05-28 langgraph toolnode direct]]
+
+---
+
 ## Source Code References
 
 - Repo: `langchain-ai/langgraph`
@@ -322,6 +340,7 @@ llm_node → tools_condition → "tools" → ToolNode → llm_node → ...
 
 - `ToolOutputMixin`을 반환하는 도구의 출력은 `BaseTool.invoke()` 내부에서 어떻게 처리되는가? (LangChain Core 쪽)
 - `wrap_tool_call` 미들웨어를 사용한 retry 패턴이 HITL과 어떻게 조합되는가?
+- `wrap_tool_call`이 `Command`를 반환할 때 `ToolNode._combine_tool_outputs()`와 graph routing이 어떤 edge를 타는가?
 - `Command(graph=Command.PARENT)`를 반환하면 부모 그래프에 어떤 영향을 주는가?
 - `_extract_state`에서 `CONFIG_KEY_READ`를 통해 채널에서 상태를 읽는 경로 — Send API와의 관계?
 
@@ -335,7 +354,10 @@ llm_node → tools_condition → "tools" → ToolNode → llm_node → ...
 - [[Human-in-the-Loop]]
 - [[Subagents]]
 - [[test_langchain_tool_calling_map]]
+- [[2026-05-28 langgraph toolnode direct]]
+- [[ToolNode in LangGraph vs LangChain create_agent]]
 
 ## Sources
 
 - `langgraph-prebuilt-tool-node-2026-05-27`
+- `langchain-agents-factory-2026-05-28`
