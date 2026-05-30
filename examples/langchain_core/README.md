@@ -14,6 +14,7 @@ source .venv/bin/activate
 ```bash
 python examples/langchain_core/01_lcel_chain.py
 python examples/langchain_core/02_tool_calling.py
+python examples/langchain_core/02b_bind_tools.py
 python examples/langchain_core/03_create_react_agent.py
 python examples/langchain_core/08_create_agent_fake_tool_loop.py
 ```
@@ -25,11 +26,17 @@ python examples/langchain_core/08_create_agent_fake_tool_loop.py
 - `a | b` → `RunnableSequence`를 반환한다. `|`는 Python `__or__` 연산자를 오버라이딩한 것.
 - `RunnableParallel(key=runnable, ...)` → 각 runnable을 동시 실행하고 결과를 dict로 모은다.
 
-### 02 — @tool decorator
+### 02 — @tool decorator (실행 경로)
 - `@tool` → `StructuredTool`을 반환한다. 함수 이름이 `name`, docstring이 `description`이 된다.
 - `args_schema.model_json_schema()` → LLM에 전달되는 함수 스키마가 이 JSON이다.
 - 에이전트의 tool 실행 흐름: `AIMessage.tool_calls[i]` → `tool.invoke(args)` → `ToolMessage(content, tool_call_id=id)`
 - `tool_call_id`는 반드시 대응하는 `AIMessage.tool_calls[i]["id"]`와 일치해야 한다.
+
+### 02b — bind_tools (등록 경로)
+- `tool_call_schema.model_json_schema()` → LLM이 실제로 받는 JSON Schema (InjectedToolArg 필드 제외).
+- `convert_to_openai_tool(tool)` → OpenAI API `tools=` 파라미터 payload.
+- `InjectedToolArg`로 표시된 파라미터는 schema에서 제외되어 LLM이 알 수 없다.
+- `bind_tools([t1, t2])` 는 각 tool을 `convert_to_openai_tool()` 로 변환해 `model.bind(tools=[...])` 에 전달한다.
 
 ### 03 — create_agent
 - `create_agent(model, tools, checkpointer)` → `CompiledStateGraph`를 반환한다.
