@@ -21,7 +21,15 @@
 
 ### 메시지 시스템
 
-- `BaseMessage` 클래스 계층은 어떻게 구성되는가? (SystemMessage/HumanMessage/AIMessage/ToolMessage 외에 14개 중 나머지 10개는 무엇인가?) — Needs Source (공식 문서에서 4종만 확인됨)
+- `BaseMessage` 클래스 계층은 어떻게 구성되는가? (SystemMessage/HumanMessage/AIMessage/ToolMessage 외에 14개 중 나머지 10개는 무엇인가?) — Needs Source (공식 문서에서 4종만 확인됨). 4종의 역할·입력 형식은 [[Messages]] 페이지에 정리됨. Source: `langchain-docs-messages-2026-05-30`
+- `AIMessage.tool_calls` 정확한 스키마와 ToolMessage의 `tool_call_id` 매칭 방식은? — Needs Source ([[Tool Calling]] 소스 확인 필요)
+- standard content block의 전체 스펙(멀티모달 블록 타입)과 message metadata의 token usage 필드 구조는? — Needs Source (원문에 token usage는 TODO로 표시됨). Source: `langchain-docs-messages-2026-05-30`
+
+### 모델 / Chat Models (책 1.1~1.2)
+
+- top_p / top_k 등 sampling 파라미터의 정확한 의미와 temperature와의 상호작용은? — Needs Source (LangChain Models 문서는 temperature·max_tokens만 상세 설명; Anthropic/OpenAI API 레퍼런스 필요). Source: `langchain-docs-models-2026-05-30`
+- token이 실제로 어떻게 분할되는가(tokenizer/BPE)? — Needs Source (공식 문서는 정의만 제시)
+- `init_chat_model`의 내부 구현은? (`"openai:o1"` 문자열 파싱, provider 패키지 lazy import/라우팅) — Needs Source (소스 코드 확인 필요). Source: `langchain-docs-models-2026-05-30`
 
 ### PromptTemplate / OutputParser
 
