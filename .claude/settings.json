@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "mcp__github__create_pull_request",
+      "mcp__github__create_pull_request_with_copilot",
+      "mcp__github__create_or_update_file",
+      "mcp__github__create_branch",
+      "mcp__github__create_repository",
+      "mcp__github__delete_file",
+      "mcp__github__push_files",
+      "mcp__github__fork_repository",
+      "mcp__github__merge_pull_request",
+      "mcp__github__update_pull_request",
+      "mcp__github__update_pull_request_branch",
+      "mcp__github__enable_pr_auto_merge",
+      "mcp__github__disable_pr_auto_merge",
+      "mcp__github__issue_write",
+      "mcp__github__sub_issue_write",
+      "mcp__github__add_issue_comment",
+      "mcp__github__add_comment_to_pending_review",
+      "mcp__github__add_reply_to_pull_request_comment",
+      "mcp__github__pull_request_review_write",
+      "mcp__github__resolve_review_thread",
+      "mcp__github__unresolve_review_thread",
+      "mcp__github__assign_copilot_to_issue",
+      "mcp__github__request_copilot_review",
+      "mcp__db48fcf2-1062-446c-88ed-e64e3187b70e",
+      "mcp__f8def0b1-656f-4cc8-9a35-4ead4e4469dd",
+      "mcp__a4624d31-bdca-47e1-9fe4-8deec9ad109e"
+    ]
+  }
+}
