@@ -831,3 +831,41 @@ sources:
     used_by:
       - "docs/wiki/concepts/SummarizationMiddleware.md"
     notes: "678 lines. SummarizationMiddleware.before_model(L309), _should_summarize(L407), _find_token_based_cutoff(이진탐색,L447), _find_safe_cutoff_point(AI/Tool쌍보호,L572), REMOVE_ALL_MESSAGES. trigger=None이면 요약 안 함 주의."
+  - id: langchain-docs-models-2026-05-30
+    title: "LangChain — Models"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/langchain/models"
+    repo: "https://github.com/langchain-ai/docs"
+    commit: "UNKNOWN"
+    local_path: "docs/raw/official/langchain/langchain-docs-models-2026-05-30.md"
+    retrieved_at: "2026-05-30"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Chat Models.md"
+    notes: "src/oss/langchain/models.mdx @ main. Chat model 초기화/호출, Parameters(temperature·max_tokens·top_p 등 샘플링), Model profiles(max_input_tokens=컨텍스트 윈도우), invoke/stream/batch, local models. 책 1.1(토큰·컨텍스트 윈도우·온도·샘플링)·1.2(첫 호출) 근거. docs.langchain.com이 Cloudflare 차단되어 GitHub raw로 수집."
+  - id: langchain-docs-messages-2026-05-30
+    title: "LangChain — Messages"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/langchain/messages"
+    repo: "https://github.com/langchain-ai/docs"
+    commit: "UNKNOWN"
+    local_path: "docs/raw/official/langchain/langchain-docs-messages-2026-05-30.md"
+    retrieved_at: "2026-05-30"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Messages.md"
+    notes: "src/oss/langchain/messages.mdx @ main. SystemMessage·HumanMessage·AIMessage·ToolMessage 역할, text/message/dictionary 프롬프트 형식, message content와 standard content blocks. 책 1.3(System/User/Assistant 메시지 구조) 근거."
+  - id: langchain-docs-quickstart-2026-05-30
+    title: "LangChain — Quickstart"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/langchain/quickstart"
+    repo: "https://github.com/langchain-ai/docs"
+    commit: "UNKNOWN"
+    local_path: "docs/raw/official/langchain/langchain-docs-quickstart-2026-05-30.md"
+    retrieved_at: "2026-05-30"
+    status: current
+    used_by: []
+    notes: "src/oss/langchain/quickstart.mdx @ main. 첫 에이전트 생성: 모델 초기화·메시지 전달·도구 연결·실행. 책 1.2(LLM API 첫 호출) 보조 근거."

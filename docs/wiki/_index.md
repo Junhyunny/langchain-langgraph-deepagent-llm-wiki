@@ -17,6 +17,8 @@
 - [[LangGraph ToolNode Command vs Deep Agents task tool]] → `comparisons/LangGraph ToolNode Command vs Deep Agents task tool.md`
 
 ## 개념
+- [[Chat Models]] → `concepts/Chat Models.md`
+- [[Messages]] → `concepts/Messages.md`
 - [[Agent Runtime]] → `concepts/Agent Runtime.md`
 - [[Tool Calling]] → `concepts/Tool Calling.md`
 - [[StateGraph]] → `concepts/StateGraph.md`
