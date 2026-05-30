@@ -200,6 +200,12 @@ Command(update={state_update, messages=[ToolMessage]})
 - child `summary`는 parent state에 병합되고, child `todos`는 병합되지 않음
 - child invoke config에는 `ls_agent_type="subagent"`가 추가됨
 
+다중 호출 검증: [[2026-05-30 deepagents parallel task tool calls]]
+
+- 단일 parent `AIMessage`의 여러 `task` tool call은 병렬 실행됨
+- 완료 순서가 아니라 원래 tool call 순서대로 `ToolMessage`와 reducer state가 parent에 반영됨
+- 여러 child가 같은 parent state key를 업데이트하려면 reducer를 명시하는 것이 안전함
+
 ---
 
 #### Config 전파 규칙 (검증됨)

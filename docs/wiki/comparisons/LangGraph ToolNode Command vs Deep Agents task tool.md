@@ -44,6 +44,7 @@ LangGraph 방식은 더 직접적이고 강력하지만, 상태 스키마와 rou
 - [[2026-05-29 langgraph toolnode command outputs]]: `Command(update=...)`, `Command(goto=...)` 반환 확인.
 - [[2026-05-30 langgraph toolnode parent command send]]: child `ToolNode`에서 `Command.PARENT + Send`로 parent collector fan-out 확인.
 - [[2026-05-30 deepagents subagentmiddleware task tool]]: Deep Agents `task` tool이 subagent state isolation과 parent state merge를 수행하는 것 확인.
+- [[2026-05-30 deepagents parallel task tool calls]]: Deep Agents 다중 `task` 호출이 병렬 실행되고, parent-visible 결과 순서는 tool call 순서를 따르는 것 확인.
 
 ## Decision Implications
 
@@ -53,7 +54,7 @@ LangGraph 방식은 더 직접적이고 강력하지만, 상태 스키마와 rou
 
 ## Open Questions
 
-- Deep Agents `task` tool call 여러 개가 동시에 실행될 때 parent state merge 순서는 ToolNode 병렬 실행 순서와 어떤 관계가 있는가?
+- Deep Agents `task` tool call 여러 개가 reducer 없는 동일 key를 업데이트하면 어떤 에러가 발생하는가?
 
 ## Sources
 

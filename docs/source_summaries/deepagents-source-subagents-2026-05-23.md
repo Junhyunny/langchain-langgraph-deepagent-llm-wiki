@@ -10,6 +10,7 @@ used_by:
   - "docs/wiki/concepts/Subagents.md"
   - "docs/wiki/flows/Deep Agents SubAgentMiddleware task tool flow.md"
   - "docs/wiki/experiments/2026-05-30 deepagents subagentmiddleware task tool.md"
+  - "docs/wiki/experiments/2026-05-30 deepagents parallel task tool calls.md"
   - "docs/wiki/comparisons/LangGraph ToolNode Command vs Deep Agents task tool.md"
 ---
 
@@ -170,3 +171,13 @@ def wrap_model_call(self, request, handler):
 - subagent `summary`는 parent state에 병합됨
 - subagent `todos`는 parent state에 병합되지 않음
 - subagent invoke config에는 `configurable["ls_agent_type"] = "subagent"`가 추가됨
+
+## 2026-05-30 다중 task 호출 검증
+
+예제: `examples/deepagents_core/05_subagent_parallel_tasks.py`
+
+검증된 내용:
+- 단일 parent `AIMessage`에 `task` tool call 2개가 있으면 두 subagent 호출이 병렬로 시작됨
+- 빠른 subagent가 먼저 종료되어도 parent `ToolMessage` 순서는 원래 tool call 순서를 따름
+- reducer가 붙은 parent state key(`reports`)는 tool call 순서로 병합됨
+- `_EXCLUDED_STATE_KEYS`의 출력 필터링은 다중 task 호출에서도 적용됨

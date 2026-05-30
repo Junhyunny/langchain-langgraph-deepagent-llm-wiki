@@ -56,6 +56,7 @@
 - [[2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과]] → `experiments/2026-05-24 3개 프레임워크 리서치 에이전트 비교 실험 결과.md` ✅ 실행됨
 - [[2026-05-28 deepagents tool call and filesystem]] → `experiments/2026-05-28 deepagents tool call and filesystem.md` ✅ 실행됨
 - [[2026-05-30 deepagents subagentmiddleware task tool]] → `experiments/2026-05-30 deepagents subagentmiddleware task tool.md` ✅ 실행됨
+- [[2026-05-30 deepagents parallel task tool calls]] → `experiments/2026-05-30 deepagents parallel task tool calls.md` ✅ 실행됨
 - [[2026-05-28 langchain create_agent fake tool loop]] → `experiments/2026-05-28 langchain create_agent fake tool loop.md` ✅ 실행됨
 - [[2026-05-28 langgraph toolnode direct]] → `experiments/2026-05-28 langgraph toolnode direct.md` ✅ 실행됨
 - [[2026-05-29 langgraph toolnode command outputs]] → `experiments/2026-05-29 langgraph toolnode command outputs.md` ✅ 실행됨

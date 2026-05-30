@@ -140,6 +140,15 @@ parent runtime config 중 subagent로 전달되는 키:
 - child `todos`는 parent state에 병합되지 않았다.
 - subagent config에는 `ls_agent_type='subagent'`가 들어갔다.
 
+[[2026-05-30 deepagents parallel task tool calls]]에서 단일 `AIMessage`의 `task` tool call 2개를 실행했다.
+
+확인된 내용:
+
+- slow/fast subagent가 같은 시점에 시작했고 fast가 먼저 끝났다. 즉 여러 `task` tool call은 병렬 실행된다.
+- parent `ToolMessage` 순서는 완료 순서가 아니라 원래 `AIMessage.tool_calls` 순서였다.
+- reducer가 붙은 `reports` state는 `['slow-report', 'fast-report']`로 병합되었다.
+- child `todos` 출력은 다중 task 호출에서도 parent state에 병합되지 않았다.
+
 ## Source Code References
 
 - Repo: `github.com/langchain-ai/deepagents`
@@ -163,7 +172,8 @@ parent runtime config 중 subagent로 전달되는 키:
 ## Open Questions
 
 - subagent runnable 예외는 `ToolMessage(status="error")`로 변환되는가, 아니면 graph 실행 예외로 전파되는가?
-- 여러 `task` tool call이 단일 `AIMessage`에 있을 때 병렬 실행과 state merge 순서는 어떻게 보장되는가?
+- reducer가 없는 동일 parent state key를 여러 subagent가 동시에 업데이트하면 어떤 에러가 발생하는가?
+- async path(`ainvoke`)에서도 `asyncio.gather()` 결과 순서가 동일하게 tool call 순서를 보장하는가?
 
 ## Sources
 

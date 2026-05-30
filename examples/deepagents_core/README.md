@@ -13,6 +13,7 @@ python examples/deepagents_core/01_basic_deep_agent.py
 python examples/deepagents_core/02_middleware_stack.py
 python examples/deepagents_core/03_tool_call_and_filesystem.py
 python examples/deepagents_core/04_subagent_middleware_task_tool.py
+python examples/deepagents_core/05_subagent_parallel_tasks.py
 ```
 
 API 키 없이 실행하면 구조 검사만 수행합니다.  
@@ -86,6 +87,23 @@ API 키 없이 실행하면 구조 검사만 수행합니다.
 2. **message history는 격리됨** — subagent는 parent messages 전체가 아니라 task description 하나만 `HumanMessage`로 받는다.
 
 3. **상태 병합도 필터링됨** — 예제에서 child `summary`는 parent state로 병합되지만, child `todos`는 제외된다.
+
+---
+
+### `05_subagent_parallel_tasks.py` — 여러 task tool call 병렬 실행
+
+- 단일 parent `AIMessage`에 `task` tool call 2개를 넣어 실행
+- 느린 subagent와 빠른 subagent의 시작/종료 타임라인 출력
+- `ToolMessage` 순서와 reducer state 병합 순서 확인
+- child `todos`가 parent `todos`를 덮어쓰지 않는지 재확인
+
+**What To Notice:**
+
+1. **동시 실행** — 빠른 task와 느린 task가 모두 시작된 뒤 빠른 task가 먼저 끝난다.
+
+2. **출력 순서** — 빠른 task가 먼저 끝나도 parent `ToolMessage`와 `reports` 병합은 원래 tool call 순서를 따른다.
+
+3. **Reducer 필요** — 여러 subagent가 같은 parent state key를 업데이트하려면 `Annotated[list[str], add]` 같은 reducer가 필요하다.
 
 ---
 
