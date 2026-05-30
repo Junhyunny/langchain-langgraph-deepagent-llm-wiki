@@ -1,5 +1,10 @@
 # 위키 인덱스
 
+## 로드맵
+- [[_book_roadmap]] → `_book_roadmap.md` — 블로그 책 목차형 학습 로드맵 (100섹션 / ~500페이지)
+- [[_roadmap]] → `_roadmap.md` — 오픈소스 기여자 성장 로드맵 (7단계)
+- [[_open_questions]] → `_open_questions.md` — 리서치 리소스 수집 및 미해결 질문
+
 ## 프레임워크
 - [[LangChain]] → `frameworks/LangChain.md`
 - [[LangGraph]] → `frameworks/LangGraph.md`
@@ -75,6 +80,3 @@
 
 ## 이슈 분석
 - [[LangGraph issue 5225 pydantic default factory]] → `issues/LangGraph issue 5225 pydantic default factory.md`
-
-## PR 후보
-- [[LangGraph pydantic default factory reducer bug]] → `prs/LangGraph pydantic default factory reducer bug.md`
