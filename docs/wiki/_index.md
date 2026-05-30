@@ -18,6 +18,7 @@
 
 ## 개념
 - [[Token]] → `concepts/Token.md`
+- [[Context Window]] → `concepts/Context Window.md`
 - [[Sampling]] → `concepts/Sampling.md`
 - [[Chat Models]] → `concepts/Chat Models.md`
 - [[Messages]] → `concepts/Messages.md`
