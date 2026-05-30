@@ -18,7 +18,9 @@
 
 ## 개념
 - [[Token]] → `concepts/Token.md`
+- [[Context Window]] → `concepts/Context Window.md`
 - [[Sampling]] → `concepts/Sampling.md`
+- [[LLM API 첫 호출]] → `concepts/LLM API 첫 호출.md`
 - [[Chat Models]] → `concepts/Chat Models.md`
 - [[Messages]] → `concepts/Messages.md`
 - [[Agent Runtime]] → `concepts/Agent Runtime.md`

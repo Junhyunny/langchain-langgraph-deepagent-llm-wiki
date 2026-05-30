@@ -894,3 +894,39 @@ sources:
     used_by:
       - "docs/wiki/concepts/Token.md"
     notes: "README.md + tiktoken/_educational.py. BPE 알고리즘: 256 byte 토큰 초기화 → 빈도 기반 반복 병합. 1 token ≈ 4 bytes, 가역적·무손실. 책 1.1(토큰) 근거."
+  - id: anthropic-api-quickstart-2026-05-30
+    title: "Anthropic Python SDK — README (Quickstart)"
+    type: official_docs
+    framework: Anthropic
+    repo: "https://github.com/anthropics/anthropic-sdk-python"
+    commit: "UNKNOWN"
+    local_path: "docs/raw/official/anthropic/anthropic-api-quickstart-2026-05-30.md"
+    retrieved_at: "2026-05-30"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/LLM API 첫 호출.md"
+    notes: "anthropic-sdk-python README. client.messages.create() 첫 호출 패턴, ANTHROPIC_API_KEY 인증, Python 3.9+ 요구사항. 책 1.2(Anthropic 연결) 근거."
+  - id: openai-sdk-python-quickstart-2026-05-30
+    title: "OpenAI Python SDK — README (Quickstart)"
+    type: official_docs
+    framework: OpenAI
+    repo: "https://github.com/openai/openai-python"
+    commit: "UNKNOWN"
+    local_path: "docs/raw/official/openai/openai-sdk-python-quickstart-2026-05-30.md"
+    retrieved_at: "2026-05-30"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/LLM API 첫 호출.md"
+    notes: "openai-python README. client.chat.completions.create() 첫 호출 패턴, OPENAI_API_KEY 인증, streaming 예제. 책 1.2(OpenAI 연결) 근거."
+  - id: ollama-python-quickstart-2026-05-30
+    title: "Ollama Python Library — README (Quickstart)"
+    type: official_docs
+    framework: Ollama
+    repo: "https://github.com/ollama/ollama-python"
+    commit: "UNKNOWN"
+    local_path: "docs/raw/official/ollama/ollama-python-quickstart-2026-05-30.md"
+    retrieved_at: "2026-05-30"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/LLM API 첫 호출.md"
+    notes: "ollama-python README. ollama pull + ollama.chat() 로컬 모델 호출, streaming, 모델 관리. 책 1.2(로컬 모델 연결) 근거."
