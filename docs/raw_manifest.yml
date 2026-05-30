@@ -869,3 +869,28 @@ sources:
     status: current
     used_by: []
     notes: "src/oss/langchain/quickstart.mdx @ main. 첫 에이전트 생성: 모델 초기화·메시지 전달·도구 연결·실행. 책 1.2(LLM API 첫 호출) 보조 근거."
+  - id: anthropic-api-sampling-params-2026-05-30
+    title: "Anthropic API — Sampling Parameters (message_create_params.py)"
+    type: source_code
+    framework: Anthropic
+    repo: "https://github.com/anthropics/anthropic-sdk-python"
+    commit: "UNKNOWN"
+    local_path: "docs/raw/official/anthropic/anthropic-api-sampling-params-2026-05-30.md"
+    retrieved_at: "2026-05-30"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Sampling.md"
+      - "docs/wiki/concepts/Token.md"
+    notes: "src/anthropic/types/message_create_params.py. temperature(0.0~1.0, default 1.0), top_p(nucleus sampling), top_k(top-K 제한), max_tokens(필수). 책 1.1(온도·샘플링) 근거."
+  - id: tiktoken-bpe-2026-05-30
+    title: "tiktoken — BPE Tokenization"
+    type: source_code
+    framework: OpenAI
+    repo: "https://github.com/openai/tiktoken"
+    commit: "UNKNOWN"
+    local_path: "docs/raw/official/openai/tiktoken-bpe-2026-05-30.md"
+    retrieved_at: "2026-05-30"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Token.md"
+    notes: "README.md + tiktoken/_educational.py. BPE 알고리즘: 256 byte 토큰 초기화 → 빈도 기반 반복 병합. 1 token ≈ 4 bytes, 가역적·무손실. 책 1.1(토큰) 근거."

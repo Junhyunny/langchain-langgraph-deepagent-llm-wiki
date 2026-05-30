@@ -22,7 +22,9 @@ Chat Model은 provider(OpenAI, Anthropic, Google 등)의 LLM을 **하나의 표�
 
 ## Key Concepts
 - [[Messages]] — Chat Model의 입력·출력 단위
-- [[Token]] / [[Context Window]] — 입력·출력 길이의 단위와 한계
+- [[Token]] — 입력·출력 길이의 기본 단위 (BPE, ~4 bytes/token)
+- [[Sampling]] — temperature / top_p / top_k 파라미터로 다음 토큰 선택 방식 제어
+- [[Context Window]] — `max_input_tokens`로 측정되는 입력 한계
 - [[Tool Calling]] — 모델이 외부 함수를 호출하는 기능
 - [[init_chat_model]] — provider chat model 초기화 진입점
 - [[Agent Runtime]] — 모델이 reasoning engine으로 동작하는 맥락
