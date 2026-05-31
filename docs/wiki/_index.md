@@ -28,7 +28,8 @@
 - [[Runnable]] → `concepts/Runnable.md`
 - [[RunnableSequence]] → `concepts/RunnableSequence.md`
 - [[RunnableParallel]] → `concepts/RunnableParallel.md`
-- [[RunnableConfig]] → `concepts/RunnableConfig.md` (needs_source)
+- [[RunnableConfig]] → `concepts/RunnableConfig.md`
+- [[OutputParser]] → `concepts/OutputParser.md`
 - [[StateGraph]] → `concepts/StateGraph.md`
 - [[Checkpointing]] → `concepts/Checkpointing.md`
 - [[Subagents]] → `concepts/Subagents.md`

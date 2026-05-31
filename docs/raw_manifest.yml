@@ -267,6 +267,17 @@ sources:
       - "docs/wiki/concepts/RunnableParallel.md"
       - "docs/wiki/concepts/RunnableConfig.md"
     notes: "Runnable 추상 클래스(invoke/ainvoke/batch/stream/__or__/pipe/bind/map). RunnableSequence(| 연산자 결과). RunnableLambda(callable→Runnable, sync/async/generator 지원). RunnableParallel(병렬 실행, 출력=dict). RunnableEach(.map() 결과). RunnablePassthrough/RunnableAssign/RunnablePick(passthrough.py). coerce_to_runnable(dict→RunnableParallel, callable→RunnableLambda)."
+  - id: langchain-source-runnableconfig-2026-05-31
+    title: "LangChain — RunnableConfig Source Code (config.py)"
+    type: source_code
+    framework: LangChain
+    url: "https://raw.githubusercontent.com/langchain-ai/langchain/master/libs/core/langchain_core/runnables/config.py"
+    local_path: UNKNOWN
+    retrieved_at: "2026-05-31"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/RunnableConfig.md"
+    notes: "RunnableConfig TypedDict(total=False) 전체 필드: tags/metadata/callbacks/run_name/run_id/max_concurrency/recursion_limit(default=25)/configurable. Helper 함수: ensure_config(컨텍스트 변수 상속), merge_configs(metadata/tags/configurable merge), patch_config(특정 필드 업데이트), get_config_list(길이 맞춤 리스트 변환). configurable_fields/configurable_alternatives는 이 파일이 아닌 base.py에 정의됨."
   - id: langgraph-store-base-2026-05-23
     title: "LangGraph — BaseStore / InMemoryStore (Store Interface Source Code)"
     type: source_code
@@ -463,6 +474,7 @@ sources:
     used_by:
       - "docs/wiki/concepts/PromptTemplate.md"
       - "docs/wiki/frameworks/LangChain.md"
+      - "docs/wiki/concepts/OutputParser.md"
     notes: "PydanticOutputParser(JsonOutputParser 상속): get_format_instructions(JSON schema 추출+템플릿 래핑), parse() 파이프라인(텍스트→JSON→Pydantic.model_validate). JsonOutputParser: parse_json_markdown, partial/diff 스트리밍 지원. with_structured_output: BaseChatModel 추상(NotImplementedError), 4가지 입력 타입(Pydantic/TypedDict/JSON schema/OpenAI function schema), Pydantic만 검증됨. OpenAI 구현: method='function_calling'(기본, bind_tools→PydanticToolsParser), 'json_mode'(bind json_object→PydanticOutputParser), 'json_schema'(bind response_format→RunnableLambda). include_raw 파라미터: True시 raw/parsed/parsing_error dict 반환."
 
   - id: langgraph-tests-checkpoint-recovery-2026-05-23
