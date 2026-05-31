@@ -537,6 +537,7 @@ Main content.
 8. 코드를 학습했다면 소스 파일 경로를 추가한다.
 9. 동작을 테스트했다면 실험 또는 재현 메모를 추가한다.
 10. 주요 페이지를 추가할 때 `_index.md`를 갱신한다.
+11. 위키 페이지의 `status`가 바뀌면 `_book_roadmap.md`의 준비도 기호를 갱신한다 (`/sync-coverage`).
 
 예시 학습 질문:
 
@@ -548,6 +549,48 @@ Main content.
 - `docs/wiki/flows/LangGraph checkpointing flow.md`
 - `docs/wiki/frameworks/LangGraph.md`
 - `docs/wiki/_open_questions.md`
+
+---
+
+# `_book_roadmap.md` 커버리지 관리
+
+`docs/wiki/_book_roadmap.md`의 각 섹션 제목 끝에는 위키 준비도 기호가 붙어 있다.
+이 기호는 해당 섹션의 블로그 글을 쓰기 전에 위키가 얼마나 준비되어 있는지를 나타낸다.
+
+## 기호 의미
+
+| 기호 | 의미 | 판정 기준 |
+|------|------|-----------|
+| ✅ | 준비됨 | 연결된 위키 페이지 존재 + `status: verified` |
+| 🟠 | 소스 있음 | 위키 페이지 존재 + `status: partial`, 또는 verified·draft 혼합 |
+| 🟡 | 초안 | 위키 페이지 존재 + `status: draft` |
+| ❌ | 없음 | 연결된 위키 페이지 없음 |
+
+## 섹션-위키 연결 규칙
+
+- 로드맵 섹션 행 바로 다음의 `  - 위키: [[PageName]]` 행이 연결 정보다.
+- `[[PageName]]`은 `docs/wiki/**/*PageName*.md` 파일에 대응한다.
+- 복수 페이지가 연결된 경우: 가장 낮은 status를 기준으로 판정한다.
+  단, verified와 draft 혼합이면 🟠로 올린다.
+
+## 준비도 기호를 갱신해야 하는 시점
+
+다음 상황에서 `/sync-coverage` 스킬을 실행하거나 직접 기호를 수정한다.
+
+1. 새 위키 페이지를 생성했을 때 (❌ → 🟡 또는 그 이상)
+2. 기존 위키 페이지의 `status`를 올렸을 때 (draft → partial → verified)
+3. 로드맵에 새 섹션을 추가했을 때
+4. 사용자가 `/sync-coverage` 를 요청했을 때
+
+## `/sync-coverage` 스킬
+
+`.claude/commands/sync-coverage.md`에 정의된 스킬이다.
+
+- 모든 위키 파일의 `status` frontmatter를 수집한다.
+- 로드맵의 `위키: [[...]]` 링크를 기반으로 섹션별 기호를 결정한다.
+- 변경이 필요한 섹션만 수정하고 요약 리포트를 출력한다.
+
+**중요:** 이 스킬은 기호만 갱신하며 위키 내용이나 로드맵의 다른 텍스트는 건드리지 않는다.
 
 ---
 
