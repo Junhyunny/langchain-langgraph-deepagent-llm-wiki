@@ -30,6 +30,7 @@
 - [[RunnableParallel]] → `concepts/RunnableParallel.md`
 - [[RunnableConfig]] → `concepts/RunnableConfig.md`
 - [[OutputParser]] → `concepts/OutputParser.md`
+- [[StructuredOutput]] → `concepts/StructuredOutput.md`
 - [[StateGraph]] → `concepts/StateGraph.md`
 - [[Checkpointing]] → `concepts/Checkpointing.md`
 - [[Subagents]] → `concepts/Subagents.md`

@@ -475,6 +475,7 @@ sources:
       - "docs/wiki/concepts/PromptTemplate.md"
       - "docs/wiki/frameworks/LangChain.md"
       - "docs/wiki/concepts/OutputParser.md"
+      - "docs/wiki/concepts/StructuredOutput.md"
     notes: "PydanticOutputParser(JsonOutputParser 상속): get_format_instructions(JSON schema 추출+템플릿 래핑), parse() 파이프라인(텍스트→JSON→Pydantic.model_validate). JsonOutputParser: parse_json_markdown, partial/diff 스트리밍 지원. with_structured_output: BaseChatModel 추상(NotImplementedError), 4가지 입력 타입(Pydantic/TypedDict/JSON schema/OpenAI function schema), Pydantic만 검증됨. OpenAI 구현: method='function_calling'(기본, bind_tools→PydanticToolsParser), 'json_mode'(bind json_object→PydanticOutputParser), 'json_schema'(bind response_format→RunnableLambda). include_raw 파라미터: True시 raw/parsed/parsing_error dict 반환."
 
   - id: langgraph-tests-checkpoint-recovery-2026-05-23

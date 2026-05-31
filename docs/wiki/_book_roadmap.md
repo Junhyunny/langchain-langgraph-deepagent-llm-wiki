@@ -110,6 +110,7 @@
 - [ ] **5.2** OutputParser — StrOutputParser, JsonOutputParser, 구조화 출력
   - 위키: [[OutputParser]]
 - [ ] **5.3** with_structured_output — JSON 스키마 기반 출력 강제의 동작 원리
+  - 위키: [[StructuredOutput]]
 
 ### 6장. Tool 시스템
 
