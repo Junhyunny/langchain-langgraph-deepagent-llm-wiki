@@ -420,6 +420,7 @@ sources:
     used_by:
       - "docs/wiki/flows/Deep Agents create_deep_agent flow.md"
       - "docs/wiki/concepts/Agent Harness.md"
+      - "docs/wiki/concepts/Tool Calling.md"
     notes: "PatchToolCallsMiddleware: before_agent hook 단독 사용. dangling tool call(AIMessage에 tool_call이 있는데 ToolMessage가 없는 경우) 감지 → 더미 ToolMessage 삽입. invalid_tool_call(인자 파싱 실패)과 cancelled(중단된 정상 호출) 두 케이스. Overwrite로 state.messages 전체 교체."
   - id: langgraph-source-checkpoint-internals-2026-05-23
     title: "LangGraph — Pregel _checkpoint.py (체크포인트 유틸리티 소스코드)"
@@ -738,6 +739,7 @@ sources:
       - "docs/wiki/comparisons/ToolNode in LangGraph vs LangChain create_agent.md"
       - "docs/wiki/comparisons/LangGraph ToolNode Command vs Deep Agents task tool.md"
       - "docs/wiki/experiments/2026-05-30 deepagents parallel task tool calls.md"
+      - "docs/wiki/concepts/Tool Calling.md"
     notes: "2030 lines. ToolNode, InjectedState, InjectedStore, ToolRuntime, tools_condition, _InjectedArgs, _get_all_injected_args, _inject_tool_args. 병렬 실행(ThreadPoolExecutor), LLM 위조 방지(stripped_args), InjectedToolCallId 연결 포인트."
   - id: langgraph-prebuilt-chat-agent-executor-2026-05-28
     title: "LangGraph prebuilt/chat_agent_executor.py 소스 분석"
