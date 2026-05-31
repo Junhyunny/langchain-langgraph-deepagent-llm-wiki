@@ -138,7 +138,7 @@
   - 위키: [[Tool Calling]]
 - [ ] **6.3** Tool Calling 실행 흐름 — AIMessage(tool_calls) → ToolMessage 전체 경로 🟠
   - 위키: [[Tool Calling]], [[LangChain create_agent flow]]
-- [ ] **6.4** InjectedToolArg / InjectedState — 런타임 주입 패턴 🟡
+- [ ] **6.4** InjectedToolArg / InjectedState — 런타임 주입 패턴 ✅
   - 위키: [[LangChain create_agent flow]]
 
 ### 7장. LangChain 에이전트
@@ -160,7 +160,7 @@
   - 위키: [[LLMToolSelectorMiddleware]]
 - [ ] **8.4** ModelRetryMiddleware + ModelFallbackMiddleware — 복원력 설계 ✅
   - 위키: [[RetryMiddleware]], [[ModelFallbackMiddleware]]
-- [ ] **8.5** ToolRetryMiddleware — 실패한 도구 호출을 어떻게 재시도하는가 🟡
+- [ ] **8.5** ToolRetryMiddleware — 실패한 도구 호출을 어떻게 재시도하는가 ✅
   - 위키: [[RetryMiddleware]]
 
 ### 9장. 메모리, 스트리밍, RAG
@@ -191,9 +191,9 @@
 
 - [ ] **11.1** invoke 실행 흐름 — SyncPregelLoop이 step을 실행하는 전체 경로 ✅
   - 위키: [[LangGraph StateGraph compile invoke flow]]
-- [ ] **11.2** Superstep 메커니즘 — tick / after_tick / recursion_limit의 동작 🟠
+- [ ] **11.2** Superstep 메커니즘 — tick / after_tick / recursion_limit의 동작 ✅
   - 위키: [[LangGraph StateGraph compile invoke flow]]
-- [ ] **11.3** 무한 루프 방지 — `stop = step + recursion_limit + 1` 내부 구현 🟠
+- [ ] **11.3** 무한 루프 방지 — `stop = step + recursion_limit + 1` 내부 구현 ✅
   - 위키: [[LangGraph StateGraph compile invoke flow]]
 
 ### 12장. Checkpointing
@@ -229,9 +229,9 @@
 
 - [ ] **15.1** Subgraph — 모듈화와 parent ↔ child 상태 스키마 호환성 🟡
   - 위키: [[Subagents]]
-- [ ] **15.2** Send / Map-Reduce — 병렬 worker 패턴, reducer 집계 설계 🟡
+- [ ] **15.2** Send / Map-Reduce — 병렬 worker 패턴, reducer 집계 설계 ✅
   - 위키: [[LangGraph ToolNode flow]]
-- [ ] **15.3** child ToolNode의 Command.PARENT + Send — fan-out 실험 분석 🟡
+- [ ] **15.3** child ToolNode의 Command.PARENT + Send — fan-out 실험 분석 ✅
   - 위키: [[LangGraph ToolNode flow]]
 - [ ] **15.4** Streaming 7가지 모드 — values / updates / custom / checkpoints / tasks / messages / debug 🟡
   - 위키: [[Event Streaming]]
@@ -305,7 +305,7 @@
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]
 - [ ] **22.3** Checkpointing 비교 — 세 프레임워크의 지속성 전략 🟡
   - 위키: [[Checkpointing]]
-- [ ] **22.4** 병렬 실행 비교 — Send / RunnableParallel / parallel task의 설계 차이 🟡
+- [ ] **22.4** 병렬 실행 비교 — Send / RunnableParallel / parallel task의 설계 차이 ✅
   - 위키: [[RunnableParallel]], [[LangGraph ToolNode flow]]
 - [ ] **22.5** 컨텍스트 윈도우 관리 비교 — SummarizationMiddleware vs LangGraph streaming 🟠
   - 위키: [[SummarizationMiddleware]], [[Event Streaming]]
@@ -324,9 +324,9 @@
 ### 24장. 실전 프로젝트: 리서치 에이전트 3가지 버전
 
 - [ ] **24.1** 리서치 에이전트 설계 — 공통 요구사항과 각 프레임워크 접근 방식 🟡
-- [ ] **24.2** LangChain 버전 — create_agent + 미들웨어 스택으로 구현 🟠
+- [ ] **24.2** LangChain 버전 — create_agent + 미들웨어 스택으로 구현 ✅
   - 위키: [[LangChain create_agent flow]]
-- [ ] **24.3** LangGraph 버전 — StateGraph + ToolNode + Checkpointing으로 구현 🟠
+- [ ] **24.3** LangGraph 버전 — StateGraph + ToolNode + Checkpointing으로 구현 ✅
   - 위키: [[LangGraph StateGraph compile invoke flow]], [[LangGraph ToolNode flow]]
 - [ ] **24.4** Deep Agents 버전 — SubAgentMiddleware + task tool로 구현 🟠
   - 위키: [[Deep Agents create_deep_agent flow]], [[Deep Agents SubAgentMiddleware task tool flow]]
