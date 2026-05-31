@@ -95,16 +95,22 @@
 ### 4장. Runnable — LangChain의 기반 인터페이스
 
 - [ ] **4.1** Runnable 인터페이스란? — invoke / stream / batch / pipe의 통일된 계약
+  - 위키: [[Runnable]]
 - [ ] **4.2** RunnableSequence — LCEL 체인을 `|` 연산자로 연결하는 방식
+  - 위키: [[RunnableSequence]]
 - [ ] **4.3** RunnableParallel — 병렬 실행과 내부 thread pool 동작
+  - 위키: [[RunnableParallel]]
 - [ ] **4.4** RunnableConfig — 실행 시간 설정 주입, configurable 패턴
+  - 위키: [[RunnableConfig]]
 
 ### 5장. 프롬프트와 출력 파싱
 
 - [ ] **5.1** PromptTemplate — ChatPromptTemplate, FewShotPromptTemplate 내부 구조
   - 위키: [[PromptTemplate]]
 - [ ] **5.2** OutputParser — StrOutputParser, JsonOutputParser, 구조화 출력
+  - 위키: [[OutputParser]]
 - [ ] **5.3** with_structured_output — JSON 스키마 기반 출력 강제의 동작 원리
+  - 위키: [[StructuredOutput]]
 
 ### 6장. Tool 시스템
 
