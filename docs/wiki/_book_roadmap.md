@@ -95,9 +95,13 @@
 ### 4장. Runnable — LangChain의 기반 인터페이스
 
 - [ ] **4.1** Runnable 인터페이스란? — invoke / stream / batch / pipe의 통일된 계약
+  - 위키: [[Runnable]]
 - [ ] **4.2** RunnableSequence — LCEL 체인을 `|` 연산자로 연결하는 방식
+  - 위키: [[RunnableSequence]]
 - [ ] **4.3** RunnableParallel — 병렬 실행과 내부 thread pool 동작
+  - 위키: [[RunnableParallel]]
 - [ ] **4.4** RunnableConfig — 실행 시간 설정 주입, configurable 패턴
+  - 위키: [[RunnableConfig]] ⚠️ needs_source
 
 ### 5장. 프롬프트와 출력 파싱
 

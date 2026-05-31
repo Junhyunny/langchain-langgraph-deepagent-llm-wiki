@@ -262,6 +262,10 @@ sources:
     used_by:
       - "docs/wiki/frameworks/LangChain.md"
       - "docs/wiki/concepts/Context Engineering.md"
+      - "docs/wiki/concepts/Runnable.md"
+      - "docs/wiki/concepts/RunnableSequence.md"
+      - "docs/wiki/concepts/RunnableParallel.md"
+      - "docs/wiki/concepts/RunnableConfig.md"
     notes: "Runnable 추상 클래스(invoke/ainvoke/batch/stream/__or__/pipe/bind/map). RunnableSequence(| 연산자 결과). RunnableLambda(callable→Runnable, sync/async/generator 지원). RunnableParallel(병렬 실행, 출력=dict). RunnableEach(.map() 결과). RunnablePassthrough/RunnableAssign/RunnablePick(passthrough.py). coerce_to_runnable(dict→RunnableParallel, callable→RunnableLambda)."
   - id: langgraph-store-base-2026-05-23
     title: "LangGraph — BaseStore / InMemoryStore (Store Interface Source Code)"

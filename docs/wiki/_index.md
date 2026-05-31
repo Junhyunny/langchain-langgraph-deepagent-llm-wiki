@@ -25,6 +25,10 @@
 - [[Messages]] → `concepts/Messages.md`
 - [[Agent Runtime]] → `concepts/Agent Runtime.md`
 - [[Tool Calling]] → `concepts/Tool Calling.md`
+- [[Runnable]] → `concepts/Runnable.md`
+- [[RunnableSequence]] → `concepts/RunnableSequence.md`
+- [[RunnableParallel]] → `concepts/RunnableParallel.md`
+- [[RunnableConfig]] → `concepts/RunnableConfig.md` (needs_source)
 - [[StateGraph]] → `concepts/StateGraph.md`
 - [[Checkpointing]] → `concepts/Checkpointing.md`
 - [[Subagents]] → `concepts/Subagents.md`
