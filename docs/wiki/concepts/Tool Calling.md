@@ -6,12 +6,14 @@ framework:
   - Deep Agents
 status: draft
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-05-31
 sources:
   - langchain-docs-tools-2026-05-23
   - langchain-docs-messages-2026-05-23
   - langchain-source-tools-2026-05-23
   - langchain-source-bind-tools-function-calling-2026-05-23
+  - langgraph-prebuilt-tool-node-2026-05-27
+  - deepagents-source-patch-tool-calls-2026-05-23
 ---
 
 # Tool Calling
@@ -362,19 +364,96 @@ self.bind(tools=[formatted_tool, ...])  ← 이후 LLM API 호출 시 tools= 파
 ---
 
 ## LangGraph에서의 Tool Calling
+*Source: `langgraph-prebuilt-tool-node-2026-05-27` → [[LangGraph ToolNode flow]]*
 
-- 도구는 `StateGraph` 안의 노드로 정의하거나 `ToolNode`를 사용
-- `ToolNode`는 `langgraph.prebuilt`에서 제공
-- `Command` 반환으로 상태 업데이트와 라우팅을 동시 처리 가능
+LangGraph는 `ToolNode`(`langgraph.prebuilt`)를 통해 Tool Calling을 처리한다.
 
-*Source: 소스 코드 확인 필요*
+### ToolNode 역할
+
+`ToolNode`는 LangChain Core의 `@tool`/`BaseTool`과 LangGraph `StateGraph` 사이의 경계 역할을 한다.
+
+```
+AIMessage(tool_calls=[...])
+    ↓
+ToolNode
+    ├─ AIMessage.tool_calls 파싱
+    ├─ ThreadPoolExecutor로 병렬 실행
+    ├─ InjectedState / InjectedStore / ToolRuntime 주입
+    └─ ToolMessage 리스트를 state에 반환
+```
+
+### 표준 ReAct 라우팅 (`tools_condition`)
+
+```python
+from langgraph.prebuilt import ToolNode, tools_condition
+
+graph.add_node("tools", ToolNode([get_weather]))
+graph.add_conditional_edges("llm", tools_condition)
+# tool_calls 있으면 "tools", 없으면 "__end__"
+```
+
+### 병렬 실행
+
+단일 `AIMessage`에 여러 `tool_calls`가 있으면 `ThreadPoolExecutor`로 동시 실행한다.
+
+### LangGraph 전용 주입 패턴
+
+| 어노테이션 | 주입 내용 |
+|-----------|---------|
+| `InjectedState` | 전체 그래프 상태 or 특정 필드 |
+| `InjectedState("messages")` | `state["messages"]`만 주입 |
+| `InjectedStore` | `BaseStore` 퍼시스턴트 스토어 |
+| `ToolRuntime` (타입 힌트만으로) | state, config, store, stream_writer, tool_call_id |
+
+**보안 포인트:** LLM이 `InjectedState` 필드를 직접 채워도 `stripped_args`에서 제거 후 시스템이 신뢰된 값만 주입한다.
+
+### Command 반환
+
+도구가 `Command`를 반환하면 상태 업데이트와 라우팅을 동시 처리할 수 있다.
+
+```python
+@tool
+def route_tool(x: str) -> Command:
+    return Command(update={"result": x}, goto="next_node")
+```
+
+- `Command(goto=Command.PARENT, ...)` — child graph에서 parent graph로 라우팅
+- `Command.update`에는 반드시 매칭 `ToolMessage(tool_call_id=...)`가 필요
 
 ---
 
 ## Deep Agents에서의 Tool Calling
+*Source: `deepagents-source-patch-tool-calls-2026-05-23`*
 
-- 추후 작성 — 도구 레지스트리와 도구 위임 메커니즘 확인 필요
-- *소스 필요*
+Deep Agents는 LangChain의 `@tool`/`BaseTool` 시스템 위에서 동작하며, `PatchToolCallsMiddleware`로 Tool Calling의 정합성을 보장한다.
+
+### PatchToolCallsMiddleware — dangling tool call 처리
+
+에이전트 실행 직전(`before_agent` 훅)에 메시지 히스토리의 **dangling tool call**을 자동으로 수정한다.
+
+**dangling tool call:** LLM이 tool call을 요청했으나 대응하는 `ToolMessage`가 없는 상태. LangGraph interrupt, 사용자 중간 메시지, 인자 파싱 실패 등으로 발생한다.
+
+```
+실행 전 상태:
+  AIMessage(tool_calls=[{id: "call_abc", name: "search"}])
+  ↑ ToolMessage 없음 → LLM 재호출 시 형식 에러
+
+PatchToolCallsMiddleware.before_agent():
+  → 더미 ToolMessage(content="was cancelled...", tool_call_id="call_abc") 삽입
+
+수정 후:
+  AIMessage(tool_calls=[{id: "call_abc"}])
+  ToolMessage(tool_call_id="call_abc", content="was cancelled...")
+```
+
+| 케이스 | 삽입 메시지 |
+|--------|------------|
+| `invalid_tool_call` (인자 파싱 실패) | "could not be executed - arguments were malformed or truncated." |
+| 일반 tool_call (중단됨) | "was cancelled - another message came in before it could be completed." |
+
+`Overwrite` 타입으로 state를 교체하므로 메시지 reducer의 append 동작을 우회한다.
+
+`create_deep_agent`의 base middleware 스택에 고정 포함되며, 메인 에이전트·서브에이전트 모두에 적용된다.
 
 ---
 
@@ -401,6 +480,11 @@ self.bind(tools=[formatted_tool, ...])  ← 이후 LLM API 호출 시 tools= 파
 - ✅ LLM tool call → tool 실행 → ToolMessage 반환 흐름은? → `invoke(ToolCall)` → `_prep_run_args` → `run()` → `_to_args_and_kwargs` → `_run()` → `_format_output` → `ToolMessage(content, tool_call_id=...)`. (Source: `langchain-source-tools-2026-05-23`)
 - ✅ `@tool`로 만든 tool의 `args_schema.model_json_schema()`가 LLM API 호출 시 어떤 payload로 변환되는가? → `BaseTool.tool_call_schema` → `bind_tools([tool])` → `convert_to_openai_tool` → `convert_to_openai_function` → `_format_tool_to_openai_function` → `{"type": "function", "function": {...}}` 형식의 OpenAI API payload. `BaseChatModel.bind_tools`는 추상이므로 provider별로 다른 변환 경로 사용. (Source: `langchain-source-bind-tools-function-calling-2026-05-23`)
 
+## Tests
+
+- `langchain-core-test-tools-2026-05-27` (commit: `9a671d7919597eb7226e2f87cdfbc161a774daf7`)
+  - 위키 맵: [[test_langchain_tool_calling_map]]
+
 ## 관련 페이지
 
 - [[LangChain]]
@@ -408,6 +492,9 @@ self.bind(tools=[formatted_tool, ...])  ← 이후 LLM API 호출 시 tools= 파
 - [[Deep Agents]]
 - [[StateGraph]]
 - [[Subagents]]
+- [[LangGraph ToolNode flow]]
+- [[LangGraph ToolNode Command vs Deep Agents task tool]]
+- [[ToolNode in LangGraph vs LangChain create_agent]]
 
 ## 소스
 
@@ -415,3 +502,5 @@ self.bind(tools=[formatted_tool, ...])  ← 이후 LLM API 호출 시 tools= 파
 - `langchain-docs-messages-2026-05-23`
 - `langchain-source-tools-2026-05-23`
 - `langchain-source-bind-tools-function-calling-2026-05-23`
+- `langgraph-prebuilt-tool-node-2026-05-27`
+- `deepagents-source-patch-tool-calls-2026-05-23`
