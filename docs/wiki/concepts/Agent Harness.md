@@ -3,9 +3,9 @@ type: concept
 framework:
   - Deep Agents
   - LangChain
-status: partial
+status: verified
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-06-03
 sources:
   - langchain-docs-products-2026-05-23
   - deepagents-source-harness-profiles-2026-05-19

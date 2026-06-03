@@ -1,9 +1,9 @@
 ---
 type: framework
 framework: LangGraph
-status: partial
+status: verified
 confidence: high
-last_reviewed: 2026-05-24
+last_reviewed: 2026-06-03
 sources:
   - langgraph-docs-graph-api-2026-05-23
   - langgraph-docs-persistence-2026-05-20
@@ -24,6 +24,25 @@ LangGraph는 상태를 가진 멀티 액터 LLM 애플리케이션을 그래프�
 ## 중요한 이유
 
 LangGraph는 영속적 상태, human-in-the-loop, 구조화된 실행 흐름이 필요한 복잡한 agent를 위한 핵심 오케스트레이션 프레임워크다.
+
+---
+
+## 왜 그래프 구조인가?
+
+기존 선형 체인(LCEL)은 `A → B → C` 흐름만 표현할 수 있다. 실제 에이전트에는 다음이 필요하다:
+
+| 요구사항 | 선형 체인으로는 |
+|---------|---------------|
+| **루프(Cycle)** — 모델 → 도구 → 모델 반복 | 불가능 (DAG는 사이클 금지) |
+| **조건부 분기** — 상태에 따라 다른 경로 선택 | 수동 if/else, 재사용 불가 |
+| **병렬 팬아웃** — 여러 노드 동시 실행 | 별도 thread 관리 필요 |
+| **명시적 공유 상태** — 타입화된 스키마로 모든 노드가 공유 | 암묵적 변수 전달 |
+| **영속성(Checkpointing)** — 실행 중 모든 state 스냅샷 저장 | 구현 없음 |
+| **런타임 제어** — recursion_limit, interrupt_before/after | 런타임 훅 없음 |
+
+LangGraph는 `StateGraph`로 이를 해결한다: 노드(함수) + 엣지(전이 규칙) + 공유 상태(TypedDict/Pydantic 스키마)를 조합해 복잡한 에이전트 흐름을 선언적으로 표현한다.
+
+→ 자세한 API: [[StateGraph]]
 
 ---
 

@@ -1,9 +1,9 @@
 ---
 type: framework
 framework: LangChain
-status: partial
+status: verified
 confidence: high
-last_reviewed: 2026-05-24
+last_reviewed: 2026-06-03
 sources:
   - langchain-docs-event-streaming-2026-05-18
   - langchain-docs-messages-2026-05-23
@@ -14,6 +14,7 @@ sources:
   - langchain-source-create-agent-factory-2026-05-23
   - langchain-source-dynamic-prompt-2026-05-23
   - langchain-source-memory-api-2026-05-23
+  - deepagents-docs-overview-2026-05-18
 ---
 
 # LangChain
@@ -25,6 +26,24 @@ LangChain은 LLM 기반 애플리케이션을 구축하기 위한 프레임워�
 ## 중요한 이유
 
 LangChain은 이 생태계의 기반 프레임워크다. LangGraph와 Deep Agents는 모두 LangChain 추상화 위에 구축되므로, 이를 이해하기 전에 LangChain을 이해하는 것이 필요하다.
+
+## 언제 LangChain을 쓰는가?
+
+| 상황 | 선택 |
+|------|------|
+| 단순 도구 호출 루프, LCEL 파이프라인, RAG | **LangChain** (`create_agent()`) |
+| 명시적 상태 관리, 체크포인팅, 그래프 분기, HITL | [[LangGraph]] |
+| 멀티스텝 태스크, 서브에이전트 위임, 파일시스템, 컨텍스트 관리 | [[Deep Agents]] |
+
+LangChain이 적합한 경우:
+- **단순 에이전트**: 상태 그래프 없이 도구 호출 루프만 필요한 경우
+- **LCEL 체인**: 프롬프트 → 모델 → 파서 형태의 선형 파이프라인
+- **RAG 파이프라인**: 벡터 스토어 기반 문서 검색이 필요한 경우
+- **미들웨어 조합**: 요약(`SummarizationMiddleware`), PII 필터, 도구 재선택 등 내장 미들웨어 활용
+- **다양한 LLM 통합**: OpenAI, Anthropic, 로컬 모델 등을 동일한 인터페이스로 사용
+
+> "더 단순한 에이전트를 만들 때 → LangChain `create_agent` 또는 custom LangGraph workflow 권장"
+> *Source: `deepagents-docs-overview-2026-05-18`*
 
 ---
 

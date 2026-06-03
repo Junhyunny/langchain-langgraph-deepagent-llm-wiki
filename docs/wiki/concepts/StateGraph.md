@@ -2,9 +2,9 @@
 type: concept
 framework:
   - LangGraph
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-06-03
 sources:
   - langgraph-reference-stategraph-compile-2026-05-20
   - langgraph-docs-persistence-2026-05-20

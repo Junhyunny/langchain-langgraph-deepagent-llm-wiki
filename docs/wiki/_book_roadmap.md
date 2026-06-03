@@ -97,11 +97,11 @@
 
 ### 3장. 세 프레임워크 한눈에 보기
 
-- [ ] **3.1** LangChain이란? — 포지셔닝, 핵심 추상화, 언제 쓰는가 🟠
+- [ ] **3.1** LangChain이란? — 포지셔닝, 핵심 추상화, 언제 쓰는가 ✅
   - 위키: [[LangChain]]
 - [ ] **3.2** LangGraph란? — 왜 그래프 구조로 에이전트를 만드는가 🟠
   - 위키: [[LangGraph]], [[StateGraph]]
-- [ ] **3.3** Deep Agents란? — LangChain 위에 올라간 미들웨어 스택의 철학 🟠
+- [ ] **3.3** Deep Agents란? — LangChain 위에 올라간 미들웨어 스택의 철학 ✅
   - 위키: [[Deep Agents]], [[Agent Harness]]
 - [ ] **3.4** 세 프레임워크 한눈에 비교 — 언제 무엇을 선택하는가 🟡
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]

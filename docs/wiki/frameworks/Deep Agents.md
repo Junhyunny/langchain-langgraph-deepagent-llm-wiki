@@ -1,14 +1,15 @@
 ---
 type: framework
 framework: Deep Agents
-status: partial
+status: verified
 confidence: high
-last_reviewed: 2026-05-24
+last_reviewed: 2026-06-03
 sources:
   - deepagents-docs-overview-2026-05-18
   - deepagents-docs-context-engineering-2026-05-18
   - deepagents-source-graph-2026-05-19
   - deepagents-docs-harness-2026-05-19
+  - deepagents-source-harness-profiles-2026-05-19
   - deepagents-venv-read-2026-05-24
 ---
 
