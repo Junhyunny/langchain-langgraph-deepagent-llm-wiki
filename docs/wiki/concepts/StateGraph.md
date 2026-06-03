@@ -145,26 +145,67 @@ Source: `langgraph-docs-graph-api-2026-05-23`
 
 ## 엣지 (Edges)
 
+### add_edge — 무조건 전이
+
 ```python
 from langgraph.graph import StateGraph, START, END
 
 builder = StateGraph(State)
 builder.add_node("agent", agent_fn)
 builder.add_node("tools", tool_fn)
-builder.add_edge(START, "agent")
+builder.add_edge(START, "agent")   # 시작 노드 지정
+builder.add_edge("tools", "agent") # 무조건 agent로 복귀
+```
 
-# 조건부 엣지
+### add_conditional_edges — 조건부 전이
+
+라우팅 함수의 반환값으로 다음 노드를 결정한다.
+
+**시그니처:**
+```python
+builder.add_conditional_edges(
+    source,      # 출발 노드 이름
+    path,        # 라우팅 함수 (state → str | list[str] | Send)
+    path_map,    # Optional: 반환값 → 노드 이름 매핑
+    then,        # Optional: 조건부 분기 후 항상 실행할 노드
+)
+```
+
+**path_map 3가지 형태:**
+
+| 형태 | 사용 시점 | 예시 |
+|------|---------|------|
+| `None` (생략) | 라우팅 함수가 노드 이름을 직접 반환 | `return "tools"` |
+| `list` | 가능한 노드 이름 목록 (유효성 검사용) | `["tools", END]` |
+| `dict` | 반환값 → 노드 이름 명시적 매핑 | `{"tool": "tools", "done": END}` |
+
+```python
+# 형태 1: path_map 생략 (라우팅 함수가 노드 이름 직접 반환)
 def route(state: State) -> str:
-    if state["needs_tools"]:
-        return "tools"
-    return END
+    return "tools" if state["needs_tools"] else END
 
+builder.add_conditional_edges("agent", route)
+
+# 형태 2: list (유효성 검사 + 문서화 역할)
 builder.add_conditional_edges("agent", route, ["tools", END])
-builder.add_edge("tools", "agent")
 
-# 병렬 팬아웃 (리스트 반환)
+# 형태 3: dict (라우팅 함수 반환값을 노드 이름으로 매핑)
+def route(state: State) -> str:
+    return "use_tool" if state["needs_tools"] else "finish"
+
+builder.add_conditional_edges(
+    "agent",
+    route,
+    {"use_tool": "tools", "finish": END}
+)
+
+# then: 조건부 분기 후 항상 실행할 노드
+builder.add_conditional_edges("agent", route, ["tools"], then="logger")
+
+# 병렬 팬아웃 (라우팅 함수가 리스트 반환)
 def fan_out(state: State) -> list[str]:
     return ["node_a", "node_b"]  # 동시 실행
+
 builder.add_conditional_edges("decide", fan_out)
 ```
 

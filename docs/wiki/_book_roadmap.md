@@ -178,11 +178,11 @@
 
 ### 10장. StateGraph 기초
 
-- [ ] **10.1** StateGraph란? — 노드, 엣지, 상태의 관계를 그래프로 표현하는 이유 🟡
+- [ ] **10.1** StateGraph란? — 노드, 엣지, 상태의 관계를 그래프로 표현하는 이유 ✅
   - 위키: [[StateGraph]]
-- [ ] **10.2** 상태 정의 — TypedDict vs Pydantic, Reducer의 역할 🟡
+- [ ] **10.2** 상태 정의 — TypedDict vs Pydantic, Reducer의 역할 ✅
   - 위키: [[StateGraph]]
-- [ ] **10.3** 엣지 라우팅 — add_edge, add_conditional_edges, path_map 선택과 생략 🟠
+- [ ] **10.3** 엣지 라우팅 — add_edge, add_conditional_edges, path_map 선택과 생략 ✅
   - 위키: [[StateGraph]], [[LangGraph StateGraph compile invoke flow]]
 - [ ] **10.4** StateGraph.compile() 내부 — Pregel 그래프가 만들어지는 과정 (`state.py:1164`) ✅
   - 위키: [[LangGraph StateGraph compile invoke flow]]
