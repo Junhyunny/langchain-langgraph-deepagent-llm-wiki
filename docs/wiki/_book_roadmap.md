@@ -132,11 +132,11 @@
 
 ### 6장. Tool 시스템
 
-- [ ] **6.1** Tool 정의 방법 — `@tool` 데코레이터, BaseTool 상속, 두 방식의 차이 🟡
+- [ ] **6.1** Tool 정의 방법 — `@tool` 데코레이터, BaseTool 상속, 두 방식의 차이 ✅
   - 위키: [[Tool Calling]]
-- [ ] **6.2** bind_tools 내부 — 모델에 도구가 어떻게 연결되는가 (`_get_bound_model`) 🟡
+- [ ] **6.2** bind_tools 내부 — 모델에 도구가 어떻게 연결되는가 (`_get_bound_model`) ✅
   - 위키: [[Tool Calling]]
-- [ ] **6.3** Tool Calling 실행 흐름 — AIMessage(tool_calls) → ToolMessage 전체 경로 🟠
+- [ ] **6.3** Tool Calling 실행 흐름 — AIMessage(tool_calls) → ToolMessage 전체 경로 ✅
   - 위키: [[Tool Calling]], [[LangChain create_agent flow]]
 - [ ] **6.4** InjectedToolArg / InjectedState — 런타임 주입 패턴 ✅
   - 위키: [[LangChain create_agent flow]]

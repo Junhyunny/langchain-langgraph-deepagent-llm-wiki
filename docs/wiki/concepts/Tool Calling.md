@@ -4,9 +4,9 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
+status: verified
 confidence: high
-last_reviewed: 2026-05-31
+last_reviewed: 2026-06-03
 sources:
   - langchain-docs-tools-2026-05-23
   - langchain-docs-messages-2026-05-23
@@ -466,10 +466,7 @@ PatchToolCallsMiddleware.before_agent():
 
 ## 미해결 질문
 
-- 각 프레임워크는 병렬 도구 호출을 내부적으로 어떻게 처리하는가?
-- LangGraph `ToolNode`와 `create_agent` 도구 실행의 차이는?
 - LCEL `.bind_tools()` 방식과 `create_agent([tool])` 방식의 차이는?
-- `@tool`로 만든 tool의 `args_schema.model_json_schema()`가 LLM API 호출 시 어떤 payload로 변환되는가? (ChatModel `bind_tools` 경로)
 - `ToolRuntime`(`_DirectlyInjectedToolArg` 상속)의 전체 필드 구성은?
 
 **해소됨 (2026-05-23):**
@@ -479,6 +476,8 @@ PatchToolCallsMiddleware.before_agent():
 - ✅ tool 실행 중 예외 처리는? → `ToolException`은 `handle_tool_error` 설정에 따라 에러 메시지 반환 or re-raise. 기타 예외는 항상 re-raise. (Source: `langchain-source-tools-2026-05-23`)
 - ✅ LLM tool call → tool 실행 → ToolMessage 반환 흐름은? → `invoke(ToolCall)` → `_prep_run_args` → `run()` → `_to_args_and_kwargs` → `_run()` → `_format_output` → `ToolMessage(content, tool_call_id=...)`. (Source: `langchain-source-tools-2026-05-23`)
 - ✅ `@tool`로 만든 tool의 `args_schema.model_json_schema()`가 LLM API 호출 시 어떤 payload로 변환되는가? → `BaseTool.tool_call_schema` → `bind_tools([tool])` → `convert_to_openai_tool` → `convert_to_openai_function` → `_format_tool_to_openai_function` → `{"type": "function", "function": {...}}` 형식의 OpenAI API payload. `BaseChatModel.bind_tools`는 추상이므로 provider별로 다른 변환 경로 사용. (Source: `langchain-source-bind-tools-function-calling-2026-05-23`)
+- ✅ 각 프레임워크는 병렬 도구 호출을 내부적으로 어떻게 처리하는가? → LangGraph `ToolNode`는 단일 `AIMessage`의 `tool_calls` 리스트를 `ThreadPoolExecutor`로 동시 실행한다. (Source: `langgraph-prebuilt-tool-node-2026-05-27`)
+- ✅ LangGraph `ToolNode`와 `create_agent` 도구 실행의 차이는? → `ToolNode`는 `StateGraph` 노드로 직접 등록되어 `AIMessage.tool_calls`를 파싱·병렬 실행한다. LangChain `create_agent`는 LCEL 체인 내에서 tool을 직접 invoke하는 방식으로, ToolNode의 InjectedState/InjectedStore 주입 기능이 없다. (Source: `langgraph-prebuilt-tool-node-2026-05-27`, `langchain-source-create-agent-factory-2026-05-23`)
 
 ## Tests
 

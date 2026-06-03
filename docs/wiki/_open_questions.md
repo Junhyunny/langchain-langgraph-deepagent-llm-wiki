@@ -18,6 +18,8 @@
 ## LangChain
 
 - Custom stream transformer의 정확한 계약(contract)은 무엇인가? (required_stream_modes, push() 메서드?) — Needs Source
+- `ToolRuntime`(`_DirectlyInjectedToolArg` 상속)의 전체 필드 구성은? `state`, `config`, `store`, `stream_writer`, `tool_call_id` 외에 추가 필드가 있는가? — Needs Source
+- LCEL `.bind_tools([tool])` 방식과 `create_agent([tool])` 방식의 실행 경로 차이는? InjectedState 주입 여부 등 차이 정리 필요 — Needs Source
 
 ### 메시지 시스템
 
