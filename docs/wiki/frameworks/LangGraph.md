@@ -208,7 +208,7 @@ def human_review(state: State):
 
 **검증됨** (`_loop.py` + `ensure_config()` 직접 확인, 2026-05-24):
 
-- 기본값: **25** (`langchain_core.ensure_config()` 기준)
+- 기본값: **25** (`langchain_core.ensure_config()` 코드 레벨 기준) → LangGraph Pregel 런타임(v1.0.6+)에서 **1000**으로 오버라이드됨 ([[StateGraph]] 참조)
 - 내부 구현: `stop = step + recursion_limit + 1`. 매 superstep마다 `step += 1`
 - `step > stop` 되면 `status = "out_of_steps"` → `main.py`에서 `GraphRecursionError` 발생
 - 에러 메시지: `"Recursion limit of {n} reached without hitting a stop condition."`

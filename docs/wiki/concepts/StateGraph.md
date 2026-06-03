@@ -2,7 +2,7 @@
 type: concept
 framework:
   - LangGraph
-status: partial
+status: verified
 confidence: high
 last_reviewed: 2026-06-03
 sources:
@@ -10,6 +10,7 @@ sources:
   - langgraph-docs-persistence-2026-05-20
   - langgraph-source-checkpoint-runtime-2026-05-20
   - langgraph-docs-graph-api-2026-05-23
+  - langgraph-tests-checkpoint-recovery-2026-05-23
 ---
 
 # StateGraph
@@ -223,6 +224,11 @@ Source: `langgraph-docs-graph-api-2026-05-23`
 - 초과 시 `GraphRecursionError` 발생
 - 설정 위치: `config`의 **top-level key** — `configurable` 내부가 아님 ⚠️
 
+> **버전 노트:** `langchain_core.ensure_config()`의 코드 레벨 기본값은 25이지만,
+> LangGraph Pregel 런타임은 v1.0.6부터 독자적으로 **1000**을 기본값으로 사용한다.
+> `config`에 `recursion_limit`을 명시하지 않으면 Pregel 루프가 1000을 적용한다.
+> — Source: `langgraph-docs-graph-api-2026-05-23`, [[LangGraph]]
+
 ```python
 # 올바른 설정
 config = {"recursion_limit": 50}
@@ -269,6 +275,18 @@ Source (내부 구현): `langgraph-source-checkpoint-runtime-2026-05-20`
   - `libs/langgraph/langgraph/pregel/main.py`
   - `libs/langgraph/langgraph/pregel/_loop.py`
 
+## 테스트
+
+**파일:** `libs/langgraph/tests/test_pregel.py`
+
+| 테스트 | 검증 내용 |
+|--------|----------|
+| `test_pending_writes_resume` | 노드 실패 후 `invoke(None, thread_config)`로 재개 시 이미 성공한 노드를 재실행하지 않음. `durability=exit`와 기본 설정 간 checkpoint 저장 차이도 검증 |
+| `test_run_from_checkpoint_id_retains_previous_writes` | 특정 `checkpoint_id`로 포크 재실행 시 기존 writes 문맥이 유지됨 |
+| `test_invoke_checkpoint_two` | 노드 에러 발생 시 checkpoint 롤백, `__error__`가 `pending_writes`에 기록됨 |
+
+Source: `langgraph-tests-checkpoint-recovery-2026-05-23`
+
 ## 미해결 질문
 
 - `compiled.validate()`는 정확히 어떤 graph 구조 검사를 수행하는가? — Source: `langgraph-source-checkpoint-runtime-2026-05-20`
@@ -279,7 +297,9 @@ Source (내부 구현): `langgraph-source-checkpoint-runtime-2026-05-20`
 - `checkpointer=None`의 subgraph inheritance는 parent runtime config에서 어떻게 전달되는가? — Needs Source
 - `input_schema`/`output_schema` 분리가 성능에 미치는 영향은? — Source: `langgraph-docs-graph-api-2026-05-23`
 
-**해소됨 (2026-05-23):**
+**해소됨 (2026-06-03):**
+- ✅ `recursion_limit` 기본값 불일치 해소: `langchain_core` 코드 레벨 기본값은 25, LangGraph Pregel 런타임(v1.0.6+)이 이를 1000으로 오버라이드한다. (Source: `langgraph-docs-graph-api-2026-05-23`)
+- ✅ `Command(resume=value)` + `interrupt()` 연동: `interrupt("msg")`로 실행이 중단된 후 외부 호출자가 `graph.invoke(Command(resume=user_input), config)`를 통해 재개하면, `interrupt()` 호출 지점에서 `user_input`이 반환값으로 넘어와 노드가 계속 실행된다. 노드에서 `Command(goto="next")`를 반환해 다음 라우팅을 지정할 수 있다. (Source: `langgraph-docs-graph-api-2026-05-23`)
 - ✅ 조건부 에지의 라우팅 함수가 반환할 수 있는 값 타입: 문자열, 문자열 리스트(병렬 팬아웃), `Send` 객체 리스트 (Source: `langgraph-docs-graph-api-2026-05-23`)
 - ✅ 노드 함수 반환값: 변경된 키만 포함한 부분 업데이트 반환 → Reducer가 상태에 병합 (Source: `langgraph-docs-graph-api-2026-05-23`)
 - ✅ `recursion_limit`은 `configurable` 안이 아닌 config top-level key (Source: `langgraph-docs-graph-api-2026-05-23`)
