@@ -1,9 +1,9 @@
 ---
 type: flow
 framework: Deep Agents
-status: partial
+status: verified
 confidence: high
-last_reviewed: 2026-05-30
+last_reviewed: 2026-06-04
 sources:
   - deepagents-source-graph-2026-05-19
   - deepagents-venv-create-deep-agent-2026-05-28

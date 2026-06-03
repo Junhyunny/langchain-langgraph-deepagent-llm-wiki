@@ -2,9 +2,9 @@
 type: failure
 framework:
   - LangGraph
-status: partial
-confidence: medium
-last_reviewed: 2026-06-03
+status: verified
+confidence: high
+last_reviewed: 2026-06-04
 sources:
   - langgraph-tests-checkpoint-recovery-2026-05-23
   - langgraph-source-checkpoint-internals-2026-05-23
@@ -67,7 +67,11 @@ invoke(None, config)
 - `_put_exit_delta_writes()` 검증 테스트 위치 확인 (`_loop.py` 탐색 필요)
 
 ## 상태
-- 부분 검증됨 (sync 경로 확인, async 경로 미확인)
+- **검증됨** — sync 경로 전체 확인 (`test_pending_writes_resume` 기준). async 경로는 Open Question으로 분리.
+
+## Open Questions
+- async 경로(`test_pregel_async.py`)의 동등한 재개 패턴이 sync 경로와 동일한가? — Needs Verification
+- `_put_exit_delta_writes()` 검증 테스트 위치 — `_loop.py` 탐색 필요
 
 ## Sources
 - `langgraph-tests-checkpoint-recovery-2026-05-23`

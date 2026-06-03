@@ -4,9 +4,9 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
+status: verified
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-06-04
 sources:
   - langchain-docs-event-streaming-2026-05-18
   - langgraph-source-streaming-2026-05-23

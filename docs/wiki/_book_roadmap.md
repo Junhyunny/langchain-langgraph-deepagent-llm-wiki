@@ -204,7 +204,7 @@
   - 위키: [[Checkpointing]]
 - [ ] **12.3** DeltaChannel — 증분 저장의 동작 원리, snapshot_frequency ✅
   - 위키: [[DeltaChannel]]
-- [ ] **12.4** Checkpoint 복구 — pending_writes와 resume 흐름의 내부 구조 🟠
+- [ ] **12.4** Checkpoint 복구 — pending_writes와 resume 흐름의 내부 구조 ✅
   - 위키: [[LangGraph pending writes resume confusion]]
 
 ### 13장. Human-in-the-Loop
@@ -251,16 +251,16 @@
 
 ### 17장. Deep Agents 기초
 
-- [ ] **17.1** create_deep_agent — 내부 구조 완전 분석, 미들웨어 스택이 조립되는 과정 🟠
+- [ ] **17.1** create_deep_agent — 내부 구조 완전 분석, 미들웨어 스택이 조립되는 과정 ✅
   - 위키: [[Deep Agents create_deep_agent flow]]
-- [ ] **17.2** Agent Harness란? — Harness의 역할과 구성 요소 🟠
+- [ ] **17.2** Agent Harness란? — Harness의 역할과 구성 요소 ✅
   - 위키: [[Agent Harness]]
-- [ ] **17.3** HarnessProfile — 모델별 프로필 매핑, `_builtin_profiles` 내부 🟠
+- [ ] **17.3** HarnessProfile — 모델별 프로필 매핑, `_builtin_profiles` 내부 ✅
   - 위키: [[Deep Agents]]
 
 ### 18장. Deep Agents Middleware 스택
 
-- [ ] **18.1** Middleware 스택의 조립 원리 — wrap_model_call 중첩 순서와 실행 방향 🟠
+- [ ] **18.1** Middleware 스택의 조립 원리 — wrap_model_call 중첩 순서와 실행 방향 ✅
   - 위키: [[Agent Harness]], [[Deep Agents]]
 - [ ] **18.2** FilesystemMiddleware — write_file / read_file 도구의 내부 구현 🟡
 - [ ] **18.3** SubAgentMiddleware — task 도구 실행, subagent 생성, 상태 격리 흐름 🟡
@@ -307,7 +307,7 @@
   - 위키: [[Checkpointing]]
 - [ ] **22.4** 병렬 실행 비교 — Send / RunnableParallel / parallel task의 설계 차이 ✅
   - 위키: [[RunnableParallel]], [[LangGraph ToolNode flow]]
-- [ ] **22.5** 컨텍스트 윈도우 관리 비교 — SummarizationMiddleware vs LangGraph streaming 🟠
+- [ ] **22.5** 컨텍스트 윈도우 관리 비교 — SummarizationMiddleware vs LangGraph streaming ✅
   - 위키: [[SummarizationMiddleware]], [[Event Streaming]]
 
 ### 23장. 언제 무엇을 쓰는가
