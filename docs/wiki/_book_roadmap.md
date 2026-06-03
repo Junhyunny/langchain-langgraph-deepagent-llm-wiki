@@ -198,13 +198,13 @@
 
 ### 12장. Checkpointing
 
-- [ ] **12.1** Checkpointing이란? — 왜 체크포인트가 필요한가, 어떤 문제를 해결하는가 🟡
+- [ ] **12.1** Checkpointing이란? — 왜 체크포인트가 필요한가, 어떤 문제를 해결하는가 ✅
   - 위키: [[Checkpointing]]
-- [ ] **12.2** MemorySaver 내부 — `_put_checkpoint → checkpointer.put()` 호출 경로 🟡
+- [ ] **12.2** MemorySaver 내부 — `_put_checkpoint → checkpointer.put()` 호출 경로 ✅
   - 위키: [[Checkpointing]]
 - [ ] **12.3** DeltaChannel — 증분 저장의 동작 원리, snapshot_frequency ✅
   - 위키: [[DeltaChannel]]
-- [ ] **12.4** Checkpoint 복구 — pending_writes와 resume 흐름의 내부 구조 🟡
+- [ ] **12.4** Checkpoint 복구 — pending_writes와 resume 흐름의 내부 구조 🟠
   - 위키: [[LangGraph pending writes resume confusion]]
 
 ### 13장. Human-in-the-Loop

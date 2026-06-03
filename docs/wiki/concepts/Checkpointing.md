@@ -3,9 +3,9 @@ type: concept
 framework:
   - LangGraph
   - LangChain
-status: draft
+status: verified
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-06-03
 sources:
   - langgraph-docs-persistence-2026-05-20
   - langgraph-docs-durable-execution-2026-05-20
@@ -15,6 +15,7 @@ sources:
   - langgraph-source-checkpoint-savers-2026-05-23
   - langgraph-source-pregel-interrupts-2026-05-23
   - langgraph-source-checkpoint-internals-2026-05-23
+  - langgraph-tests-checkpoint-recovery-2026-05-23
 ---
 
 # Checkpointing
@@ -325,7 +326,38 @@ exit 모드에서는 마지막 super-step에 채널 쓰기가 없으면 `channel
 
 ## Tests
 
-- TBD. 다음 코드 리딩 루프에서 checkpoint saver tests와 Pregel recovery tests를 찾아야 한다.
+Source: `langgraph-tests-checkpoint-recovery-2026-05-23` (`libs/langgraph/tests/test_pregel.py`)
+
+### test_pending_writes_resume
+
+노드 일부가 실패한 실행에서 `invoke(None, config)` 재개 시 동작을 검증한다.
+
+- **설정:** 두 노드(`one`, `two`) 중 `two`가 첫 실행에서 예외를 발생시킴
+- **검증 포인트:**
+  - 재개 후 `one`은 호출 횟수가 증가하지 않음 (pending write 재사용)
+  - `two`는 재시도됨
+  - `durability="exit"` 여부에 따라 저장되는 checkpoint 개수가 달라짐
+- **의미:** pending writes recovery의 canonical 기준 테스트
+
+### test_run_from_checkpoint_id_retains_previous_writes
+
+특정 `checkpoint_id`로 재실행할 때 기존 writes 컨텍스트가 유지됨을 검증한다.
+
+- **설정:** 첫 번째 실행에서 checkpoint_id 저장 → 동일 checkpoint_id로 두 번째 invoke
+- **검증 포인트:**
+  - 두 번째 실행에서 이전 writes 문맥이 보존됨 (fork 실행)
+  - time-travel replay 시 stale RESUME writes가 제거됨
+- **의미:** Time Travel / fork 실행의 writes 연속성 보장 확인
+
+### test_invoke_checkpoint_two
+
+노드 에러 발생 시 checkpoint rollback과 `__error__` pending write 기록을 검증한다.
+
+- **설정:** 노드에서 의도적 예외 발생
+- **검증 포인트:**
+  - 에러 발생 시 checkpoint가 롤백됨
+  - 에러가 `pending_writes`의 `__error__` 채널에 기록됨
+- **의미:** 에러 → pending write → 재개 전체 사이클 검증
 
 ## Related Pages
 
@@ -360,3 +392,4 @@ exit 모드에서는 마지막 super-step에 채널 쓰기가 없으면 `channel
 - `langgraph-source-checkpoint-runtime-2026-05-20`
 - `langgraph-source-pregel-interrupts-2026-05-23`
 - `langgraph-source-checkpoint-internals-2026-05-23`
+- `langgraph-tests-checkpoint-recovery-2026-05-23`
