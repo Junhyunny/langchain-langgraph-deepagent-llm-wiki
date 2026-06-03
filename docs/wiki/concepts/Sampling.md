@@ -4,9 +4,9 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
+status: partial
 confidence: medium
-last_reviewed: 2026-05-30
+last_reviewed: 2026-06-03
 sources:
   - anthropic-api-sampling-params-2026-05-30
   - langchain-docs-models-2026-05-30
@@ -35,7 +35,7 @@ Sampling은 LLM이 각 위치에서 다음 토큰을 선택하는 방식을 제�
 ## Verified Facts
 
 ### Greedy Decoding vs Sampling
-*Source: HuggingFace Transformers docs (transformers main, 2026-05-30)*
+⚠️ *Source: HuggingFace Transformers docs (transformers main, 2026-05-30) — raw_manifest.yml에 미등록. Needs Source 처리.*
 
 - **Greedy decoding:** 각 단계에서 가장 높은 확률의 토큰 하나만 선택. `temperature → 0`에 가까워질수록 이에 가깝다.
   - 단점: 짧은 출력에는 효과적이나 긴 시퀀스에서 반복 발생.

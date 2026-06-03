@@ -4,9 +4,9 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-30
+last_reviewed: 2026-06-03
 sources:
   - langchain-docs-models-2026-05-30
   - anthropic-api-sampling-params-2026-05-30
