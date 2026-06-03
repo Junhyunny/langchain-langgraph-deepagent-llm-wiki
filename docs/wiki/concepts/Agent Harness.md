@@ -137,6 +137,93 @@ Framework (LangChain)
 - Harness와 Framework 모두 Runtime 위에 올라간다.
 - 단, Harness는 Runtime의 낮은 수준 API를 직접 노출하지 않고 opinionated 추상화로 감싼다.
 
+## AgentMiddleware 훅 시스템
+
+*Source: `langchain-agents-middleware-types-2026-05-28`, `langchain-agents-factory-2026-05-28`*
+
+Harness의 모든 미들웨어(SummarizationMiddleware, PIIMiddleware 등)는 `AgentMiddleware` 기본 클래스의 훅을 구현하여 동작한다.
+
+### 6가지 훅 포인트
+
+| 훅 | 실행 시점 | 루프 내/외 |
+|----|-----------|-----------|
+| `before_agent` | 에이전트 전체 시작 전 (1회) | **루프 외** |
+| `before_model` | 매 모델 호출 전 | **루프 내** |
+| `wrap_model_call` | 모델 실행 자체를 래핑 | **루프 내** |
+| `after_model` | 매 모델 호출 후 | **루프 내** |
+| `wrap_tool_call` | 각 도구 실행을 래핑 | **루프 내** |
+| `after_agent` | 에이전트 전체 종료 후 (1회) | **루프 외** |
+
+모든 훅은 `async` 버전(`a` 접두사)도 제공된다.
+
+### AgentMiddleware 기본 클래스 서명 (types.py L380)
+
+```python
+class AgentMiddleware(Generic[StateT, ContextT, ResponseT]):
+    state_schema: type[StateT]   # 미들웨어 전용 상태 스키마
+    tools: Sequence[BaseTool]    # 미들웨어가 추가하는 도구
+
+    def before_agent(state, runtime) -> dict | None: ...
+    def before_model(state, runtime) -> dict | None: ...
+    def wrap_model_call(request, handler) -> ModelCallResult: ...
+    def after_model(state, runtime) -> dict | None: ...
+    def wrap_tool_call(request, handler) -> ToolMessage | Command: ...
+    def after_agent(state, runtime) -> dict | None: ...
+```
+
+### 훅 선택 원칙
+
+| 목적 | 사용 훅 | 이유 |
+|------|---------|------|
+| state.messages 변환 (요약, PII 처리) | `before_model` / `after_model` | graph node로 실행 → state update 반환 |
+| request.tools / system_message 수정 | `wrap_model_call` | 모델 호출 인자(`ModelRequest`)를 직접 가로채야 함 |
+| 도구 실행 전후 로직 (로깅, 재시도) | `wrap_tool_call` | `ToolCallRequest`를 감싸 실행 결과를 제어 |
+
+> **빌트인 예시:**
+> - `SummarizationMiddleware` → `before_model` (messages 교체)
+> - `LLMToolSelectorMiddleware` → `wrap_model_call` (request.tools 필터링)
+> - `PIIMiddleware` → `before_model` + `after_model` (입출력 양방향)
+
+### wrap_model_call 체이닝 순서
+
+미들웨어 목록 오른쪽→왼쪽 합성 (양파 모델, `_chain_model_call_handlers` L221):
+
+```
+Request:  [mw1] → [mw2] → [mw3] → model
+Response: model → [mw3] → [mw2] → [mw1]
+```
+
+첫 번째 미들웨어가 outermost — 가장 먼저 실행되고 가장 나중에 응답을 받는다.
+
+### ModelRequest 불변 패턴 (types.py L89)
+
+```python
+# 잘못된 방식 (deprecated)
+request.tools = filtered_tools
+
+# 올바른 방식 (override → 새 인스턴스 반환)
+modified = request.override(tools=filtered_tools)
+result = handler(modified)
+```
+
+### 실행 순서 검증 (2026-05-28 실험)
+
+*Source: [[2026-05-28 langchain create_agent fake tool loop]]*
+
+tool call 1회가 포함된 2-step 루프:
+
+```
+before_agent
+  before_model → wrap_model_call → [model] → wrap_model_call → after_model
+  wrap_tool_call → [tool] → wrap_tool_call
+  before_model → wrap_model_call → [model] → wrap_model_call → after_model
+after_agent
+```
+
+`bind_tools()`는 매 모델 호출 시 실행됨 (지연 바인딩) — `wrap_model_call`로 request.tools를 수정할 수 있는 이유.
+
+자세한 흐름: [[LangChain create_agent flow]]
+
 ## Related Pages
 
 - [[Deep Agents]]
@@ -232,3 +319,6 @@ with open("openai-gpt-5.4.yaml") as f:
 - `deepagents-docs-harness-2026-05-19`
 - `deepagents-source-harness-profiles-2026-05-19`
 - `deepagents-source-patch-tool-calls-2026-05-23`
+- `langchain-agents-middleware-types-2026-05-28`
+- `langchain-agents-factory-2026-05-28`
+- `langchain-source-builtin-middleware-2026-05-25`

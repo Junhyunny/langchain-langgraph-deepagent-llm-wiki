@@ -147,7 +147,7 @@
   - 위키: [[LangChain create_agent flow]]
 - [ ] **7.2** create_agent — factory.py 내부 구조, 초기화 비용의 정체 ✅
   - 위키: [[LangChain create_agent flow]]
-- [ ] **7.3** Middleware 시스템 설계 — before_model / wrap_model_call / wrap_tool_call 훅의 역할 🟠
+- [ ] **7.3** Middleware 시스템 설계 — before_model / wrap_model_call / wrap_tool_call 훅의 역할 ✅
   - 위키: [[Agent Harness]], [[LangChain]]
 
 ### 8장. LangChain 빌트인 미들웨어
