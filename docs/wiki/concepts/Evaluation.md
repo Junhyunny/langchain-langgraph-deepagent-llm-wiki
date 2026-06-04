@@ -241,6 +241,70 @@ BFCL v3는 Harbor를 통해 실행되는 Terminal Bench 2.0 경로와 다르다.
 
 따라서 "BFCL도 Harbor를 통해 동일하게 적용되는가?"에 대한 현재 결론은 **아니다**다. BFCL은 Deep Agents eval pytest suite 내부에 직접 적응되어 있고, Harbor 통합은 Terminal Bench 2.0 중심이다.
 
+### deepagents_harbor 모듈 구조 (Partial)
+
+Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
+
+`libs/evals/deepagents_harbor/`는 Harbor benchmark를 Deep Agents로 실행하기 위한 integration layer다. 핵심은 Harbor의 `BaseAgent` / `BaseEnvironment` 인터페이스와 Deep Agents의 sandbox backend 계약을 이어 주는 것이다.
+
+| File | Role |
+|------|------|
+| `__init__.py` | public export surface. `DeepAgentsWrapper`, `HarborSandbox`, `LangSmithEnvironment`, LangSmith helper, failure/metadata 타입을 re-export |
+| `deepagents_wrapper.py` | Harbor `BaseAgent` 구현체. `--agent-import-path deepagents_harbor:DeepAgentsWrapper`로 사용되는 진입점 |
+| `backend.py` | `HarborSandbox`: Harbor `BaseEnvironment`를 Deep Agents `SandboxBackendProtocol`로 감싸는 async backend |
+| `langsmith.py` | Harbor tasks → LangSmith dataset/experiment/feedback 연결 helper |
+| `langsmith_environment.py` | LangSmith Sandbox를 Harbor `BaseEnvironment`로 사용하는 adapter |
+| `failure.py` | 실패를 capability vs infra OOM/timeout/sandbox/unknown으로 분류 |
+| `metadata.py` | host/sandbox CPU, memory, OS, concurrency 같은 infra metadata 수집 |
+
+`DeepAgentsWrapper`와 Harbor agent interface 연결:
+
+- `DeepAgentsWrapper`는 Harbor `BaseAgent`를 상속한다.
+- Harbor CLI는 `--agent-import-path deepagents_harbor:DeepAgentsWrapper`로 이 class를 import한다.
+- Harbor는 agent 생성 시 `logs_dir`, `model_name`, `--agent-kwarg` 값을 넘기고, `DeepAgentsWrapper.__init__()`은 `super().__init__(logs_dir, model_name, ...)`를 호출한다.
+- `setup(environment)`은 현재 no-op이고, 실제 trial 실행은 `run(instruction, environment, context)`에서 일어난다.
+
+`DeepAgentsWrapper.run()`의 주요 책임:
+
+- Harbor `environment`를 `HarborSandbox`로 감싼다.
+- sandbox 내부 `pwd`/`ls` 결과를 기반으로 system prompt에 작업 디렉터리 컨텍스트를 추가한다.
+- 기본값은 Deep Agents CLI agent(`create_cli_agent`)를 사용하며, 옵션에 따라 SDK agent(`create_deep_agent`)도 만들 수 있다.
+- CLI agent 모드에서는 `auto_approve=True`, `enable_memory=False`, `enable_skills=False`, `enable_shell=False`로 Harbor 실행 환경에 맞게 제한한다.
+- `LANGSMITH_EXPERIMENT`가 있으면 LangSmith `trace()` context로 감싸고, 없으면 runnable config metadata로 기록한다.
+- 실행 결과의 `AIMessage` / `ToolMessage`를 ATIF trajectory JSON으로 변환해 `trajectory.json`에 저장한다.
+
+`HarborSandbox`의 주요 책임:
+
+- `aexecute()`는 Harbor environment의 `exec()`를 호출하고 timeout 및 shell artifact stderr 정리를 처리한다.
+- `aread`, `awrite`, `aedit`, `als`, `agrep`, `aglob` 등 async filesystem/search operations를 구현한다.
+- 큰 파일 write/edit은 명령행에 content를 직접 넣지 않고 Harbor native upload/download를 사용해 OS `ARG_MAX` 문제를 피한다.
+- sync method는 지원하지 않고 `NotImplementedError`를 던진다.
+
+Harbor CI workflow 실행 경로:
+
+1. `.github/workflows/harbor.yml` workflow dispatch 입력에서 model group, sandbox env, task 수, concurrency, agent mode를 받는다.
+2. `.github/scripts/models.py harbor`가 Harbor model matrix를 만든다.
+3. `scripts/harbor_langsmith.py ensure-dataset "$HARBOR_DATASET_NAME" --version "$HARBOR_DATASET_VERSION"`로 LangSmith dataset을 준비한다.
+4. model별 job에서 `scripts/harbor_langsmith.py create-experiment "$HARBOR_DATASET_NAME" --model "$HARBOR_MODEL"`를 실행하고 stdout 2줄을 experiment name/URL로 해석한다.
+5. `uv run harbor run --agent-import-path deepagents_harbor:DeepAgentsWrapper --dataset terminal-bench@2.0 ... --agent-kwarg use_cli_agent=false` 형태로 Harbor를 실행한다. CI 기본 `agent_mode`는 `sdk`라서 `use_cli_agent=false`가 기본이다.
+6. 최신 Harbor job directory를 찾은 뒤 `scripts/harbor_langsmith.py add-feedback "$HARBOR_JOB_DIR" --project-name "$LANGSMITH_EXPERIMENT_NAME"`로 Harbor reward를 LangSmith trace feedback에 붙인다.
+
+LangSmith sandbox를 쓸 때는 Harbor `--env` 대신 `--environment-import-path deepagents_harbor.langsmith_environment:LangSmithEnvironment`가 사용된다. docker/daytona/modal/runloop은 Harbor native `--env` 값으로 전달된다.
+
+Makefile 로컬 실행 경로:
+
+- `libs/evals/Makefile`은 `AGENT_MODE ?= cli`를 기본값으로 둔다.
+- `AGENT_MODE=cli`이면 `--agent-kwarg use_cli_agent=true`, 그 외에는 `false`로 번역된다.
+- `run-hello-world`는 `hello-world` dataset을 docker env로 1개 trial 실행한다.
+- `run-terminal-bench-docker`, `run-terminal-bench-daytona`, `run-terminal-bench-modal`, `run-terminal-bench-runloop`은 모두 `terminal-bench@2.0`, `deepagents_harbor:DeepAgentsWrapper`, `jobs/terminal-bench`를 사용하고 sandbox env와 concurrency만 다르게 둔다.
+
+`harbor_langsmith.py` 실행 경로:
+
+- `create-dataset` / `ensure-dataset`은 Harbor tasks를 LangSmith dataset으로 만들거나 재사용한다.
+- `create-experiment`는 LangSmith project/session을 만들고, workflow가 파싱할 수 있도록 experiment name과 URL만 stdout에 출력한다.
+- `add-feedback`은 Harbor job folder의 trial subdirectory를 순회하고, 각 `result.json`의 `verifier_result.rewards.reward`를 `harbor_reward` feedback으로 기록한다.
+- LangSmith root run matching은 `metadata.trial_name == <trial directory name>` 필터로 수행된다. verifier result가 없거나 reward가 numeric이 아니면 `0.0`으로 기록하고 comment에 이유를 남긴다.
+
 ### Harbor 샌드박스 (Terminal Bench 2.0)
 
 ```bash

@@ -10,6 +10,10 @@
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - ✅ BFCL v3 평가가 실제 실행 경로(테스트/워크플로)에서 어떻게 연결되는지 확정했다 (2026-06-05). Harbor가 아니라 일반 pytest eval suite의 `test_external_benchmarks.py::test_bfcl_v3`에서 `run_bfcl_case()`를 호출한다. BFCL API public method를 `StructuredTool`로 감싸 multi-turn Deep Agent run을 실행하고, final API state comparison으로 LangSmith `correctness` feedback을 기록한다.  
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
+- ✅ DeepAgentsWrapper가 Harbor agent interface에 연결되는 경로를 확정했다 (2026-06-05). `DeepAgentsWrapper(BaseAgent)`가 `--agent-import-path deepagents_harbor:DeepAgentsWrapper`로 로드되고, Harbor `BaseEnvironment`는 `HarborSandbox`를 통해 Deep Agents sandbox backend로 변환된다.  
+  Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
+- ✅ Harbor 실행 오케스트레이션 경로를 확정했다 (2026-06-05). `.github/workflows/harbor.yml`은 model matrix → LangSmith dataset/experiment → `uv run harbor run` → `harbor_langsmith.py add-feedback` 순서로 동작하고, `libs/evals/Makefile`은 로컬 sandbox별 shortcut을 제공한다.  
+  Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - ✅ `create_agent` 초기화 시간(0.262s)이 `create_react_agent`(0.004s)보다 긴 이유: factory.py `.venv` 직접 확인(2026-05-24). 원인: model이 string이면 `init_chat_model()` 호출(provider import), middleware hook 감지(클래스 비교 전체 순회), `_resolve_schemas()`, `StateGraph` 구성, `graph.compile()`. `bind_tools()`는 **init이 아닌 매 model 호출 시** `_get_bound_model()` 내에서 실행됨. Source: `langchain-venv-factory-read-2026-05-24`
 - ✅ Deep Agents `create_deep_agent` 파라미터명 확인: `system_prompt=` (`instructions=` 아님). `.venv` 직접 실행과 local `deepagents 0.6.3` source reading으로 확인 (2026-05-28). Source: `deepagents-venv-create-deep-agent-2026-05-28`
 
