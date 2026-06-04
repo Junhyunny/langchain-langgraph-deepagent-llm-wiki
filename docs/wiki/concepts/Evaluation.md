@@ -67,7 +67,7 @@ Source: `deepagents-blog-evals-2026-05-23` ⚠️ blog 출처 (medium confidence
 | 상황 | 방법 |
 |------|------|
 | 내부 custom eval | custom assertions ("did the agent parallelize tool calls?") |
-| 외부 벤치마크 (BFCL) | exact matching against ground truth |
+| 외부 벤치마크 (BFCL) | adapted benchmark scoring. 현재 Deep Agents BFCL v3 경로는 final API state comparison |
 | 의미론적 정확성 | LLM-as-a-judge |
 
 ### 5가지 메트릭
@@ -185,6 +185,62 @@ scorer = TrajectoryScorer().success(
 
 > **검증됨:** Deep Agents eval의 LLM-as-a-judge 기본 판정 모델은 `claude-sonnet-4-6`이며, 이는 `MODEL_GROUPS.md`가 아니라 `llm_judge.py`의 `_DEFAULT_JUDGE_MODEL`에서 결정된다.
 
+### BFCL v3 실행 경로 (Verified)
+
+Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
+
+BFCL v3는 Harbor 경로가 아니라 일반 pytest eval suite의 curated external benchmark로 실행된다.
+
+진입점:
+
+```text
+libs/evals/tests/evals/test_external_benchmarks.py::test_bfcl_v3
+→ run_bfcl_case(case, model)
+→ create_deep_agent(..., tools=BFCL API tools, checkpointer=MemorySaver())
+→ multi-turn agent.invoke(..., config={"configurable": {"thread_id": ...}})
+→ replay ground truth calls on fresh API instances
+→ compare final public API state
+→ log LangSmith correctness feedback
+```
+
+핵심 파일:
+
+| File | Role |
+|------|------|
+| `tests/evals/test_external_benchmarks.py` | FRAMES/Nexus/BFCL 15개 curated hard-set의 pytest entrypoint |
+| `tests/evals/external_benchmarks.py` | BFCL case loading, tool wrapping, agent run, state-comparison scoring |
+| `tests/evals/data/benchmark_samples/bfcl_v3_final.json` | curated BFCL v3 case source |
+| `tests/evals/data/bfcl_apis/*` | stateful API implementations used as live tools |
+
+BFCL case 구성:
+
+- 현재 curated set은 5개 case ID를 사용한다: `multi_turn_composite_97`, `multi_turn_composite_116`, `multi_turn_composite_199`, `multi_turn_miss_func_55`, `multi_turn_miss_param_55`.
+- 각 case의 `involved_classes`에 따라 `VehicleControlAPI`, `MessageAPI`, `TradingBot`, `TravelAPI`, `TicketAPI`를 생성한다.
+- API instance의 public method를 `StructuredTool.from_function()`으로 감싸 Deep Agent에 전달한다.
+- agent system prompt는 domain API tools 사용을 지시하고, `task`/subagent 및 file tools 사용을 금지한다.
+- multi-turn conversation은 동일한 `thread_id`로 순차 `invoke()`되어 [[Checkpointing]] 기반 state continuity를 사용한다.
+
+채점 방식:
+
+- ground truth call string을 별도 fresh API instance에 replay한다.
+- model이 tool calls로 변경한 API instance state와 ground-truth API instance state를 비교한다.
+- public attribute diff가 있으면 `pytest.fail(...)`와 LangSmith `correctness=0`.
+- diff가 없으면 LangSmith `correctness=1`.
+- invoke exception도 `correctness=0`으로 기록된다.
+
+정리하면, Deep Agents의 BFCL v3 적용은 "LLM tool-call 문자열 exact match"라기보다 **stateful tool execution 결과의 final state equivalence**를 보는 방식이다.
+
+### BFCL과 Harbor의 관계
+
+BFCL v3는 Harbor를 통해 실행되는 Terminal Bench 2.0 경로와 다르다.
+
+| Benchmark | Execution path | Scoring |
+|-----------|----------------|---------|
+| BFCL v3 curated set | `pytest tests/evals/test_external_benchmarks.py`, 일반 eval workflow | API final state comparison + LangSmith correctness feedback |
+| Terminal Bench 2.0 | `uv run harbor run --agent-import-path deepagents_harbor:DeepAgentsWrapper --dataset terminal-bench@2.0 ...` | Harbor reward score, optional LangSmith feedback push |
+
+따라서 "BFCL도 Harbor를 통해 동일하게 적용되는가?"에 대한 현재 결론은 **아니다**다. BFCL은 Deep Agents eval pytest suite 내부에 직접 적응되어 있고, Harbor 통합은 Terminal Bench 2.0 중심이다.
+
 ### Harbor 샌드박스 (Terminal Bench 2.0)
 
 ```bash
@@ -230,9 +286,9 @@ Harbor → LangSmith 통합: reward score (0.0~1.0) 피드백 자동 push.
 
 **해소됨 (2026-06-05):**
 - ✅ LLM-as-a-judge 기본 판정 모델 → `claude-sonnet-4-6`. `MODEL_GROUPS.md`는 eval 대상 모델 카탈로그이고, judge model 기본값은 `llm_judge.py`에서 결정됨. `judge_model` 인자로 override 가능. (Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`)
+- ✅ BFCL v3 실행 경로 → Harbor가 아니라 `test_external_benchmarks.py::test_bfcl_v3` → `external_benchmarks.py::run_bfcl_case()` 경로. BFCL API methods를 `StructuredTool`로 감싸 multi-turn Deep Agent run을 실행하고, final API state comparison으로 correctness를 기록함. (Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`)
 
 **잔여 질문:**
-- BFCL 벤치마크도 Harbor를 통해 동일하게 적용되는가? — Needs Source
 - eval을 지속적으로 "줄이는(reduce)" 기준은 무엇인가? — Source: `deepagents-blog-evals-2026-05-23`
 - 각 프레임워크에는 어떤 내장 평가 유틸리티가 존재하는가? (LangChain, LangGraph 소스 필요)
 - LangSmith를 Trajectory evaluation에 어떻게 사용할 수 있는가?

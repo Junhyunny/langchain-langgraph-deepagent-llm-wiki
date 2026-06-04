@@ -150,7 +150,7 @@ uv run harbor run \
 
 - `evals.yml` — GitHub Actions 자동 테스트
 - `harbor.yml` — Harbor 샌드박스 테스트
-- 외부 벤치마크: Terminal Bench 2.0 (Harbor), BFCL (블로그 언급)
+- 외부 벤치마크: Terminal Bench 2.0 (Harbor), BFCL v3 (pytest external benchmark 경로로 후속 확인)
 
 ---
 
@@ -166,5 +166,5 @@ uv run harbor run \
 ## 잔여 Open Questions
 
 - ✅ LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? — 해소됨(2026-06-05): 기본값은 `claude-sonnet-4-6`, `judge_model` 인자로 override 가능. Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
-- `BFCL` 벤치마크는 Harbor를 통해 동일한 방식으로 적용되는가? — Needs Source
+- ✅ `BFCL` 벤치마크는 Harbor를 통해 동일한 방식으로 적용되는가? — 해소됨(2026-06-05): 아니다. BFCL v3는 `test_external_benchmarks.py::test_bfcl_v3` → `external_benchmarks.py::run_bfcl_case()` 경로에서 실행되고, Harbor는 Terminal Bench 2.0 경로다. Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - `latency_ratio` 메트릭이 블로그에서 언급됐지만 CONTRIBUTING에서는 `solve_rate`로 보임 — 동일한가? — Needs Verification

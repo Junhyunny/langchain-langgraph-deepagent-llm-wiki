@@ -369,7 +369,7 @@ sources:
     status: current
     used_by:
       - "docs/wiki/concepts/Evaluation.md"
-    notes: "libs/evals 전체 구조: deepagents_evals/, deepagents_harbor/, tests/evals/(utils.py/conftest.py/pytest_reporter.py/llm_judge.py). EVAL_CATALOG.md: 111개 eval, 7 카테고리(file_ops/retrieval/tool_use/memory/conversation/summarization/unit_test). TrajectoryScorer: .success()=hard fail, .expect()=soft logged. llm_judge: OpenEvals 래퍼, judge 모델 미확인. Harbor: Terminal Bench 2.0, docker/daytona/modal/runloop 환경. LangSmith 통합: reward score 0.0~1.0 피드백 push."
+    notes: "libs/evals 전체 구조: deepagents_evals/, deepagents_harbor/, tests/evals/(utils.py/conftest.py/pytest_reporter.py/llm_judge.py). EVAL_CATALOG.md: 111개 eval, 7 카테고리(file_ops/retrieval/tool_use/memory/conversation/summarization/unit_test). TrajectoryScorer: .success()=hard fail, .expect()=soft logged. llm_judge: OpenEvals 래퍼(기본 judge model은 후속 source에서 claude-sonnet-4-6로 확인). Harbor: Terminal Bench 2.0, docker/daytona/modal/runloop 환경. LangSmith 통합: reward score 0.0~1.0 피드백 push."
 
   - id: langchain-source-vectorstore-embeddings-2026-05-23
     title: "LangChain — VectorStore / Embeddings / Document Source Code"
@@ -501,7 +501,10 @@ sources:
     urls:
       - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/MODEL_GROUPS.md"
       - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/tests/evals/llm_judge.py"
+      - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/tests/evals/test_external_benchmarks.py"
+      - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/tests/evals/external_benchmarks.py"
       - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/.github/scripts/models.py"
+      - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/.github/workflows/evals.yml"
       - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/README.md"
       - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/CONTRIBUTING.md"
     local_path: "docs/raw/official/deepagents/deepagents-evals-model-groups-harbor-bfcl-2026-05-23.md"
@@ -512,7 +515,7 @@ sources:
       - "docs/wiki/concepts/Evaluation.md"
       - "docs/wiki/experiments/2026-05-23 same task 3 frameworks.md"
       - "docs/wiki/_open_questions.md"
-    notes: "Evidence for Deep Agents eval model groups catalog, LLM-as-a-judge default model in llm_judge.py, Harbor integration, and BFCL v3 coverage in external benchmarks docs."
+    notes: "Evidence for Deep Agents eval model groups catalog, LLM-as-a-judge default model in llm_judge.py, BFCL v3 pytest execution path/state-comparison scoring, Harbor integration, and BFCL v3 coverage in external benchmarks docs."
 
   - id: openai-agents-sdk-agent-overview-2026-05-23
     title: "OpenAI Agents SDK — Agent Overview"

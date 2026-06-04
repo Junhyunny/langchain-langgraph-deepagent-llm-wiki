@@ -8,7 +8,7 @@
 
 - ✅ Deep Agents eval에서 LLM-as-a-judge 모델 결정 경로를 확정했다 (2026-06-05). 기본 judge model은 `claude-sonnet-4-6`이며, `MODEL_GROUPS.md`가 아니라 `libs/evals/tests/evals/llm_judge.py`의 `_DEFAULT_JUDGE_MODEL`에서 결정된다. `MODEL_GROUPS.md`는 eval 대상 모델 카탈로그다.  
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
-- [ ] BFCL v3 평가가 실제 실행 경로(테스트/워크플로)에서 어떻게 연결되는지 확정한다.  
+- ✅ BFCL v3 평가가 실제 실행 경로(테스트/워크플로)에서 어떻게 연결되는지 확정했다 (2026-06-05). Harbor가 아니라 일반 pytest eval suite의 `test_external_benchmarks.py::test_bfcl_v3`에서 `run_bfcl_case()`를 호출한다. BFCL API public method를 `StructuredTool`로 감싸 multi-turn Deep Agent run을 실행하고, final API state comparison으로 LangSmith `correctness` feedback을 기록한다.  
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - ✅ `create_agent` 초기화 시간(0.262s)이 `create_react_agent`(0.004s)보다 긴 이유: factory.py `.venv` 직접 확인(2026-05-24). 원인: model이 string이면 `init_chat_model()` 호출(provider import), middleware hook 감지(클래스 비교 전체 순회), `_resolve_schemas()`, `StateGraph` 구성, `graph.compile()`. `bind_tools()`는 **init이 아닌 매 model 호출 시** `_get_bound_model()` 내에서 실행됨. Source: `langchain-venv-factory-read-2026-05-24`
 - ✅ Deep Agents `create_deep_agent` 파라미터명 확인: `system_prompt=` (`instructions=` 아님). `.venv` 직접 실행과 local `deepagents 0.6.3` source reading으로 확인 (2026-05-28). Source: `deepagents-venv-create-deep-agent-2026-05-28`
@@ -113,7 +113,7 @@
 - Sandbox backend를 실제로 붙였을 때 `execute` tool 결과 payload는 어떤 message shape인가? — Needs Experiment
 - Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
 - ✅ LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? — 해소 (2026-06-05): 기본값은 `claude-sonnet-4-6`; `llm_judge(..., judge_model=...)`로 override 가능. Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
-- BFCL 벤치마크도 Harbor를 통해 동일하게 적용되는가? — Needs Source
+- ✅ BFCL 벤치마크도 Harbor를 통해 동일하게 적용되는가? — 해소 (2026-06-05): 아니다. BFCL v3는 pytest external benchmark 경로이며, Harbor 통합은 Terminal Bench 2.0 경로다. Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - eval을 지속적으로 "줄이는(reduce)" 기준은 무엇인가? — Source: `deepagents-blog-evals-2026-05-23`
 
 ---
