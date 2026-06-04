@@ -103,7 +103,7 @@ AI는 참고 자료(wiki 페이지, source summary, 재현 예제)를 준비하�
 - [ ] Deep Agents 실제 provider LLM invocation + sandbox backend `execute` tool call 확인
 - [ ] `stream_events(version="v3")` typed projection 직접 실험 (real LLM 필요)
 - [ ] LangGraph Streaming: custom transformer 작성 (ToolCallTransformer 구현 패턴 참고)
-- [ ] Deep Agents eval: LLM-as-a-judge 모델 결정 경로 (`MODEL_GROUPS.md` 직접 읽기)
+- [x] Deep Agents eval: LLM-as-a-judge 모델 결정 경로 (`MODEL_GROUPS.md` 직접 읽기) ✅ (2026-06-05, 기본 judge model은 `llm_judge.py`의 `claude-sonnet-4-6`; `MODEL_GROUPS.md`는 eval 대상 모델 카탈로그)
 
 > 참고 자료:
 > - `docs/wiki/tests/test_pregel_interrupt_map.md`

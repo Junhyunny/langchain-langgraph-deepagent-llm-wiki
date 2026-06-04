@@ -4,12 +4,13 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
+status: partial
 confidence: medium
-last_reviewed: 2026-05-23
+last_reviewed: 2026-06-05
 sources:
   - deepagents-blog-evals-2026-05-23
   - deepagents-source-evals-structure-2026-05-23
+  - deepagents-evals-model-groups-harbor-bfcl-2026-05-23
 ---
 
 # Evaluation
@@ -145,7 +146,9 @@ def test_example(model: BaseChatModel) -> None:
     )
 ```
 
-### LLM-as-a-judge 구현
+### LLM-as-a-judge 구현 (Verified)
+
+Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 
 ```python
 from tests.evals.llm_judge import llm_judge
@@ -158,9 +161,29 @@ scorer = TrajectoryScorer().success(
 )
 ```
 
-- **OpenEvals** 라이브러리를 래핑
-- human-readable criteria string을 LLM에 전달해 semantic 평가
-- ⚠️ 구체적 judge 모델 미확인 (`MODEL_GROUPS.md` 확인 필요)
+- `llm_judge.py`는 **OpenEvals**의 `create_llm_as_judge`를 감싼다.
+- 기본 judge model은 `claude-sonnet-4-6`이다.
+- 호출자가 `llm_judge(..., judge_model="...")` 인자를 넘기면 기본 judge model을 override할 수 있다.
+- 각 criterion은 독립적으로 평가되고, 하나라도 실패하면 전체 `SuccessAssertion`이 실패한다.
+- 기본값 `include_tool_calls=False`에서는 agent text response만 judge prompt에 들어간다.
+- `include_tool_calls=True`이면 tool call을 포함한 full trajectory가 judge prompt에 들어간다.
+- `MODEL_GROUPS.md`는 eval 대상 모델 그룹 카탈로그이며, judge model 기본값을 정하는 파일은 아니다.
+
+### MODEL_GROUPS.md와의 관계
+
+`MODEL_GROUPS.md`는 eval workflow에서 사용할 수 있는 모델 그룹의 quick reference다. 파일 자체도 source of truth를 `.github/scripts/models.py`로 명시한다.
+
+핵심 구분:
+
+| 항목 | 결정 위치 | 의미 |
+|------|-----------|------|
+| Eval 대상 모델 | `.github/scripts/models.py` → `MODEL_GROUPS.md` | `--model` 또는 workflow matrix로 실행할 agent model 후보 |
+| LLM-as-a-judge 기본 모델 | `libs/evals/tests/evals/llm_judge.py` | semantic assertion을 채점하는 judge model |
+| Judge model override | `llm_judge(..., judge_model=...)` | 특정 eval에서 판정 모델을 명시적으로 바꿈 |
+
+따라서 21.2의 결론은 다음이다.
+
+> **검증됨:** Deep Agents eval의 LLM-as-a-judge 기본 판정 모델은 `claude-sonnet-4-6`이며, 이는 `MODEL_GROUPS.md`가 아니라 `llm_judge.py`의 `_DEFAULT_JUDGE_MODEL`에서 결정된다.
 
 ### Harbor 샌드박스 (Terminal Bench 2.0)
 
@@ -205,8 +228,10 @@ Harbor → LangSmith 통합: reward score (0.0~1.0) 피드백 자동 push.
 - ✅ `libs/evals` 디렉토리 실제 구조 → `deepagents_evals/` + `deepagents_harbor/` + `tests/evals/`. pytest + TrajectoryScorer. (Source: `deepagents-source-evals-structure-2026-05-23`)
 - ✅ 외부 벤치마크 적용 방법 → Harbor를 통해 Terminal Bench 2.0 실행. `DeepAgentsWrapper`로 래핑, LangSmith로 결과 추적. (Source: `deepagents-source-evals-structure-2026-05-23`)
 
+**해소됨 (2026-06-05):**
+- ✅ LLM-as-a-judge 기본 판정 모델 → `claude-sonnet-4-6`. `MODEL_GROUPS.md`는 eval 대상 모델 카탈로그이고, judge model 기본값은 `llm_judge.py`에서 결정됨. `judge_model` 인자로 override 가능. (Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`)
+
 **잔여 질문:**
-- LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? → `MODEL_GROUPS.md` 확인 필요
 - BFCL 벤치마크도 Harbor를 통해 동일하게 적용되는가? — Needs Source
 - eval을 지속적으로 "줄이는(reduce)" 기준은 무엇인가? — Source: `deepagents-blog-evals-2026-05-23`
 - 각 프레임워크에는 어떤 내장 평가 유틸리티가 존재하는가? (LangChain, LangGraph 소스 필요)
@@ -224,3 +249,5 @@ Harbor → LangSmith 통합: reward score (0.0~1.0) 피드백 자동 push.
 ## Sources
 
 - `deepagents-blog-evals-2026-05-23` ⚠️ blog (medium confidence)
+- `deepagents-source-evals-structure-2026-05-23`
+- `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`

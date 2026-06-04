@@ -6,7 +6,7 @@
 
 ## 이번 주 우선순위 큐 (2026-05-24)
 
-- [ ] Deep Agents eval에서 LLM-as-a-judge 모델 결정 경로를 확정한다 (`MODEL_GROUPS.md` 연계 포함).  
+- ✅ Deep Agents eval에서 LLM-as-a-judge 모델 결정 경로를 확정했다 (2026-06-05). 기본 judge model은 `claude-sonnet-4-6`이며, `MODEL_GROUPS.md`가 아니라 `libs/evals/tests/evals/llm_judge.py`의 `_DEFAULT_JUDGE_MODEL`에서 결정된다. `MODEL_GROUPS.md`는 eval 대상 모델 카탈로그다.  
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - [ ] BFCL v3 평가가 실제 실행 경로(테스트/워크플로)에서 어떻게 연결되는지 확정한다.  
   Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
@@ -112,7 +112,7 @@
 - 단일 parent `AIMessage`가 여러 `task` tool call을 반환하면 subagents는 병렬 실행되는가? — ✅ **검증됨** (2026-05-30): slow/fast task가 같은 시점에 시작했고 fast가 먼저 끝났다. parent `ToolMessage`와 reducer state merge 순서는 완료 순서가 아니라 원래 tool call 순서를 따랐다. Source: [[2026-05-30 deepagents parallel task tool calls]]
 - Sandbox backend를 실제로 붙였을 때 `execute` tool 결과 payload는 어떤 message shape인가? — Needs Experiment
 - Interpreter (`eval` tool, QuickJS)는 어떤 패키지에 포함되어 있는가? — Source: `deepagents-docs-harness-2026-05-19`
-- LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? → `MODEL_GROUPS.md` 확인 필요. (Source: `deepagents-blog-evals-2026-05-23`, `deepagents-source-evals-structure-2026-05-23`)
+- ✅ LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? — 해소 (2026-06-05): 기본값은 `claude-sonnet-4-6`; `llm_judge(..., judge_model=...)`로 override 가능. Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - BFCL 벤치마크도 Harbor를 통해 동일하게 적용되는가? — Needs Source
 - eval을 지속적으로 "줄이는(reduce)" 기준은 무엇인가? — Source: `deepagents-blog-evals-2026-05-23`
 

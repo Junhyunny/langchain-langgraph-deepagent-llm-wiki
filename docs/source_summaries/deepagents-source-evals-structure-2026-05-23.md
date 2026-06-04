@@ -121,7 +121,7 @@ scorer = TrajectoryScorer().success(
 
 - `llm_judge`는 **OpenEvals**를 래핑한 `SuccessAssertion` 구현체
 - human-readable criteria string을 LLM에 전달해 semantic 평가
-- ⚠️ 어떤 구체적 judge 모델(GPT-4o vs Claude vs 기타)을 사용하는지는 미확인 — `MODEL_GROUPS.md` 확인 필요
+- ✅ 구체적 judge 모델은 후속 확인으로 해소됨(2026-06-05): 기본값은 `claude-sonnet-4-6`이며, `MODEL_GROUPS.md`가 아니라 `libs/evals/tests/evals/llm_judge.py`의 `_DEFAULT_JUDGE_MODEL`에서 결정됨. Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 
 ---
 
@@ -165,6 +165,6 @@ uv run harbor run \
 
 ## 잔여 Open Questions
 
-- ⚠️ LLM-as-a-judge에서 구체적으로 어떤 judge 모델(GPT-4o, Claude, etc.)을 사용하는가? — `MODEL_GROUPS.md` 확인 필요
+- ✅ LLM-as-a-judge에서 구체적으로 어떤 judge 모델을 사용하는가? — 해소됨(2026-06-05): 기본값은 `claude-sonnet-4-6`, `judge_model` 인자로 override 가능. Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
 - `BFCL` 벤치마크는 Harbor를 통해 동일한 방식으로 적용되는가? — Needs Source
 - `latency_ratio` 메트릭이 블로그에서 언급됐지만 CONTRIBUTING에서는 `solve_rate`로 보임 — 동일한가? — Needs Verification
