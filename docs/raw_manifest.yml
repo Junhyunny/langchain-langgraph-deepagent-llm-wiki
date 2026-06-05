@@ -498,6 +498,8 @@ sources:
     title: "Deep Agents evals — MODEL_GROUPS and Harbor/BFCL references"
     type: source_code
     framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "436409fc7014f9c68b316f127664363c5402db06"
     urls:
       - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/MODEL_GROUPS.md"
       - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/tests/evals/llm_judge.py"
@@ -519,13 +521,14 @@ sources:
       - "https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/evals/CONTRIBUTING.md"
     local_path: "docs/raw/official/deepagents/deepagents-evals-model-groups-harbor-bfcl-2026-05-23.md"
     retrieved_at: "2026-05-23"
+    reverified_at: "2026-06-05"
     status: current
     used_by:
       - "docs/source_summaries/deepagents-evals-model-groups-harbor-bfcl-2026-05-23.md"
       - "docs/wiki/concepts/Evaluation.md"
       - "docs/wiki/experiments/2026-05-23 same task 3 frameworks.md"
       - "docs/wiki/_open_questions.md"
-    notes: "Evidence for Deep Agents eval model groups catalog, LLM-as-a-judge default model in llm_judge.py, BFCL v3 pytest execution path/state-comparison scoring, deepagents_harbor module structure, Harbor integration, and BFCL v3 coverage in external benchmarks docs."
+    notes: "Evidence for Deep Agents eval model groups catalog, LLM-as-a-judge default model in llm_judge.py, BFCL v3 pytest execution path/state-comparison scoring, deepagents_harbor module structure, Harbor integration, and BFCL v3 coverage in external benchmarks docs. Re-verified 2026-06-05 against pinned commit 436409f: llm_judge._DEFAULT_JUDGE_MODEL, external_benchmarks BFCL state-diff scoring, deepagents_wrapper/backend Harbor interface, harbor.yml/Makefile execution paths, and langsmith.add_feedback all confirmed."
 
   - id: openai-agents-sdk-agent-overview-2026-05-23
     title: "OpenAI Agents SDK — Agent Overview"

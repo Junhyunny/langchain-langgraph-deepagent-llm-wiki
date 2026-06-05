@@ -4,8 +4,10 @@ source_id: deepagents-evals-model-groups-harbor-bfcl-2026-05-23
 title: "Deep Agents evals — MODEL_GROUPS, Harbor, BFCL references"
 framework: Deep Agents
 retrieved_at: "2026-05-23"
+reverified_at: "2026-06-05"
+commit: "436409fc7014f9c68b316f127664363c5402db06"
 status: verified
-confidence: medium
+confidence: high
 ---
 
 # Source Summary: Deep Agents eval model groups + Harbor/BFCL
@@ -33,6 +35,11 @@ confidence: medium
   - `libs/evals/README.md`
   - `libs/evals/CONTRIBUTING.md`
 
+## Verification
+- **Re-verified 2026-06-05** against pinned commit `436409fc7014f9c68b316f127664363c5402db06` (langchain-ai/deepagents `main`, dated 2026-06-03).
+- 확인된 항목: `llm_judge._DEFAULT_JUDGE_MODEL = "claude-sonnet-4-6"` + `check()` = `all(r["score"] ...)`; `external_benchmarks.py` BFCL 5개 case ID + `_BFCL_CLASS_REGISTRY` 5개 API + `StructuredTool.from_function` + `create_deep_agent(..., checkpointer=MemorySaver())` + `_replay_bfcl_ground_truth`/`_bfcl_state_diff` state 비교; `deepagents_wrapper.DeepAgentsWrapper(BaseAgent)` + `backend.HarborSandbox(SandboxBackendProtocol)`; `harbor.yml` 기본 `agent_mode=sdk`; `Makefile` `AGENT_MODE ?= cli`; `langsmith.add_feedback()`.
+- confidence를 medium → high로 상향한다 (commit-pinned source-confirmed).
+
 ## Key Facts
 - `MODEL_GROUPS.md`는 auto-generated 문서이며 eval workflow에서 사용하는 모델 세트 카탈로그다.
 - `MODEL_GROUPS.md`는 source of truth가 아니라 `.github/scripts/models.py`에서 생성된 quick reference다.
@@ -49,7 +56,7 @@ confidence: medium
 - BFCL agent는 `create_deep_agent(model=model, tools=tools, system_prompt=_BFCL_SYSTEM_PROMPT, checkpointer=MemorySaver())`로 생성된다.
 - BFCL은 multi-turn conversation을 같은 `thread_id` config로 순차 `agent.invoke()` 하며, stateful tool/API 상태를 유지한다.
 - BFCL 채점은 text exact match가 아니라 state comparison이다. ground truth call strings를 fresh API instance에 replay한 뒤, model-run API instance의 public state와 비교한다.
-- state diff가 있거나 invoke exception이 발생하면 LangSmith feedback `correctness=0`; diff가 없으면 `correctness=1`을 기록한다.
+- state diff가 있거나 invoke exception이 발생하면 LangSmith feedback `correctness=0`; diff가 없으면 `correctness=1`을 기록한다. invoke exception의 경우 `correctness=0`을 기록한 뒤 예외를 **re-raise**해서 실패가 LangSmith dashboard에 누락 데이터가 아니라 실패 run으로 드러나게 한다.
 - BFCL 경로는 Harbor CLI를 사용하지 않는다. Harbor 문서화 경로는 Terminal Bench 2.0용이다.
 - `.github/workflows/evals.yml`는 `eval_categories` 입력에 `tool_use`를 포함하고, 이 경로로 `test_external_benchmarks.py::test_bfcl_v3`도 일반 eval pytest suite 안에서 실행될 수 있다.
 - `README.md`와 `CONTRIBUTING.md`는 Harbor 연동(terminal-bench) 실행 경로를 문서화한다.
@@ -115,9 +122,9 @@ Subcommands:
 - `create-dataset`: creates a LangSmith dataset from Harbor tasks.
 - `ensure-dataset`: creates or reuses the dataset.
 - `create-experiment`: creates a LangSmith project/session and prints exactly two stdout lines: experiment name and URL. `harbor.yml` parses those two lines into `LANGSMITH_EXPERIMENT` and `LANGSMITH_EXPERIMENT_URL`.
-- `add-feedback`: reads Harbor trial results from a job directory and writes `harbor_reward` feedback to matching LangSmith traces.
+- `add-feedback`: reads Harbor trial results from a job directory and writes `harbor_reward` feedback to matching LangSmith traces. The CLI only parses args and delegates to `deepagents_harbor.langsmith.add_feedback()`; the actual logic lives in that module, not in `harbor_langsmith.py`.
 
-`add_feedback()` iterates trial directories under the Harbor job folder, reads each `result.json`, extracts `verifier_result.rewards.reward`, then finds the corresponding LangSmith root run by `metadata.trial_name == <trial directory name>`. Missing verifier output becomes reward `0.0` with an explanatory comment.
+`add_feedback()` (in `deepagents_harbor/langsmith.py`) iterates trial directories under the Harbor job folder (`trial_dirs = [d for d in job_folder.iterdir() if d.is_dir()]`), reads each `result.json`, extracts `verifier_result["rewards"]["reward"]`, then finds the corresponding LangSmith root run with `client.list_runs(project_name=..., filter='and(eq(metadata_key, "trial_name"), eq(metadata_value, "<trial_dir.name>"))', is_root=True)` and writes `client.create_feedback(run_id=..., key="harbor_reward", score=reward, comment=comment)`. Missing/non-numeric verifier output becomes reward `0.0` with an explanatory comment (status `fallback`).
 
 ## Interpretation
 - LLM-as-a-judge의 기본 판정 모델은 `MODEL_GROUPS.md`가 아니라 `llm_judge.py`에서 직접 결정된다.

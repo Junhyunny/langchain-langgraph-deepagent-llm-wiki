@@ -4,8 +4,8 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: partial
-confidence: medium
+status: verified
+confidence: high
 last_reviewed: 2026-06-05
 sources:
   - deepagents-blog-evals-2026-05-23
@@ -226,7 +226,7 @@ BFCL case 구성:
 - model이 tool calls로 변경한 API instance state와 ground-truth API instance state를 비교한다.
 - public attribute diff가 있으면 `pytest.fail(...)`와 LangSmith `correctness=0`.
 - diff가 없으면 LangSmith `correctness=1`.
-- invoke exception도 `correctness=0`으로 기록된다.
+- invoke exception은 `correctness=0`을 기록한 뒤 예외를 **re-raise**한다 — 실패가 LangSmith dashboard에 누락 데이터가 아니라 실패한 run으로 드러나도록.
 
 정리하면, Deep Agents의 BFCL v3 적용은 "LLM tool-call 문자열 exact match"라기보다 **stateful tool execution 결과의 final state equivalence**를 보는 방식이다.
 
@@ -241,9 +241,9 @@ BFCL v3는 Harbor를 통해 실행되는 Terminal Bench 2.0 경로와 다르다.
 
 따라서 "BFCL도 Harbor를 통해 동일하게 적용되는가?"에 대한 현재 결론은 **아니다**다. BFCL은 Deep Agents eval pytest suite 내부에 직접 적응되어 있고, Harbor 통합은 Terminal Bench 2.0 중심이다.
 
-### deepagents_harbor 모듈 구조 (Partial)
+### deepagents_harbor 모듈 구조 (Verified)
 
-Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23`
+Source: `deepagents-evals-model-groups-harbor-bfcl-2026-05-23` (commit `436409f`, re-verified 2026-06-05)
 
 `libs/evals/deepagents_harbor/`는 Harbor benchmark를 Deep Agents로 실행하기 위한 integration layer다. 핵심은 Harbor의 `BaseAgent` / `BaseEnvironment` 인터페이스와 Deep Agents의 sandbox backend 계약을 이어 주는 것이다.
 
@@ -298,12 +298,13 @@ Makefile 로컬 실행 경로:
 - `run-hello-world`는 `hello-world` dataset을 docker env로 1개 trial 실행한다.
 - `run-terminal-bench-docker`, `run-terminal-bench-daytona`, `run-terminal-bench-modal`, `run-terminal-bench-runloop`은 모두 `terminal-bench@2.0`, `deepagents_harbor:DeepAgentsWrapper`, `jobs/terminal-bench`를 사용하고 sandbox env와 concurrency만 다르게 둔다.
 
-`harbor_langsmith.py` 실행 경로:
+`harbor_langsmith.py` 실행 경로 (CLI는 thin wrapper, 실제 로직은 `deepagents_harbor.langsmith`):
 
 - `create-dataset` / `ensure-dataset`은 Harbor tasks를 LangSmith dataset으로 만들거나 재사용한다.
-- `create-experiment`는 LangSmith project/session을 만들고, workflow가 파싱할 수 있도록 experiment name과 URL만 stdout에 출력한다.
-- `add-feedback`은 Harbor job folder의 trial subdirectory를 순회하고, 각 `result.json`의 `verifier_result.rewards.reward`를 `harbor_reward` feedback으로 기록한다.
-- LangSmith root run matching은 `metadata.trial_name == <trial directory name>` 필터로 수행된다. verifier result가 없거나 reward가 numeric이 아니면 `0.0`으로 기록하고 comment에 이유를 남긴다.
+- `create-experiment`는 LangSmith project/session을 만들고, workflow가 파싱할 수 있도록 experiment name과 URL만 stdout에 출력한다 (정확히 2줄 contract).
+- `add-feedback`은 args만 파싱하고 `deepagents_harbor.langsmith.add_feedback()`에 위임한다. iteration 로직은 `harbor_langsmith.py`가 아니라 그 모듈에 있다.
+- `add_feedback()`은 Harbor job folder의 trial subdirectory를 순회하고, 각 `result.json`의 `verifier_result["rewards"]["reward"]`를 추출해 `client.create_feedback(run_id=..., key="harbor_reward", score=reward, ...)`로 기록한다.
+- LangSmith root run matching은 `metadata.trial_name == <trial directory name>` 필터(`is_root=True`)로 수행된다. verifier result가 없거나 reward가 numeric이 아니면 `0.0`으로 기록하고 comment에 이유를 남긴다 (status `fallback`).
 
 ### Harbor 샌드박스 (Terminal Bench 2.0)
 
@@ -341,6 +342,24 @@ Harbor → LangSmith 통합: reward score (0.0~1.0) 피드백 자동 push.
 - "eval = 압력 벡터" 관점은 eval을 단순 테스트가 아닌 **agent 동작 설계 도구**로 보는 것이다.
 - ideal trajectory는 correctness만으로 부족하다는 인식에서 나온다 — 정확하지만 비효율적인 모델도 프로덕션에서 문제다.
 - SDK test와 model capability eval을 분리하는 것은 신호 희석을 막기 위한 중요한 설계 결정이다.
+
+## Source Code References
+
+- Repo: `langchain-ai/deepagents`
+- Commit: `436409fc7014f9c68b316f127664363c5402db06` (2026-06-03, re-verified 2026-06-05)
+- Files (모두 commit-pinned 확인):
+  - `libs/evals/tests/evals/llm_judge.py` — `_DEFAULT_JUDGE_MODEL = "claude-sonnet-4-6"`, `llm_judge(*criteria, judge_model=..., include_tool_calls=False)`, openevals `create_llm_as_judge` 래핑, `check()` = `all(r["score"] for r in results)` (21.2)
+  - `libs/evals/tests/evals/external_benchmarks.py` — `_BFCL_V3_IDS` 5개 case, `_BFCL_CLASS_REGISTRY` 5개 API, `_wrap_bfcl_methods_as_tools` → `StructuredTool.from_function`, `_replay_bfcl_ground_truth` + `_bfcl_state_diff` state 비교 (21.3)
+  - `libs/evals/tests/evals/test_external_benchmarks.py` — `test_bfcl_v3` pytest entrypoint (21.3)
+  - `libs/evals/deepagents_harbor/deepagents_wrapper.py` — `DeepAgentsWrapper(BaseAgent)`, `run()` → `HarborSandbox` + `use_cli_agent` 분기 + ATIF trajectory (21.4)
+  - `libs/evals/deepagents_harbor/backend.py` — `HarborSandbox(SandboxBackendProtocol)`, async-only, sync는 `NotImplementedError` (21.4)
+  - `libs/evals/deepagents_harbor/langsmith.py` — `add_feedback()` reward → `harbor_reward` feedback (21.4)
+  - `.github/workflows/harbor.yml` — `agent_mode` 기본 `sdk`, `--agent-kwarg use_cli_agent=...` 조건부 (21.4)
+  - `libs/evals/Makefile` — `AGENT_MODE ?= cli`, `run-terminal-bench-{docker,daytona,modal,runloop}` (21.4)
+
+## Tests
+
+- `libs/evals/tests/evals/test_external_benchmarks.py::test_bfcl_v3` — `@pytest.mark.eval_category("tool_use")`, `@pytest.mark.langsmith`, `parametrize("case", ...)`로 5개 BFCL v3 case 실행 (21.3)
 
 ## 미해결 질문
 
