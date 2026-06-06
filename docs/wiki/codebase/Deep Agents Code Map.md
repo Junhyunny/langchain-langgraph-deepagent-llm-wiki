@@ -94,21 +94,23 @@ Source: `deepagents-source-graph-2026-05-19` (import 분석) + `deepagents-venv-
 | `create_deep_agent` | `deepagents/graph.py` | ✅ 소스 읽음 |
 | `_DeepAgentState` | `deepagents/graph.py` | ✅ 소스 읽음 |
 | `BASE_AGENT_PROMPT` | `deepagents/graph.py` | ✅ 소스 읽음 |
-| `FilesystemMiddleware` | `deepagents/middleware/filesystem.py` | ❌ 미읽음 |
+| `FilesystemMiddleware` | `deepagents/middleware/filesystem.py` | ✅ 소스 읽음 |
 | `SubAgentMiddleware` | `deepagents/middleware/subagents.py` | ❌ 미읽음 |
 | `SubagentTransformer` | `deepagents/_subagent_transformer.py` | ❌ 미읽음 |
 | `HarnessProfile` | `deepagents/profiles/harness/harness_profiles.py` | ✅ 소스 읽음 |
 | `HarnessProfileConfig` | `deepagents/profiles/harness/harness_profiles.py` | ✅ 소스 읽음 |
 | `GeneralPurposeSubagentProfile` | `deepagents/profiles/harness/harness_profiles.py` | ✅ 소스 읽음 |
 | `register_harness_profile` | `deepagents/profiles/harness/harness_profiles.py` | ✅ 소스 읽음 |
-| `StateBackend` | `deepagents/backends/state.py` | ❌ 미읽음 |
-| `SandboxBackendProtocol` | `deepagents/backends/protocol.py` | ❌ 미읽음 |
+| `StateBackend` | `deepagents/backends/state.py` | ✅ 소스 읽음 |
+| `SandboxBackendProtocol` | `deepagents/backends/protocol.py` | ✅ 소스 읽음 |
+| `BaseSandbox` | `deepagents/backends/sandbox.py` | ✅ 소스 읽음 |
+| `CompositeBackend` | `deepagents/backends/composite.py` | ✅ 소스 읽음 |
 
 ---
 
 ## 다음 읽어야 할 파일 (우선순위순)
 
-1. `deepagents/middleware/filesystem.py` — FilesystemMiddleware의 tool 주입 방식, 권한 처리
+1. ~~`deepagents/middleware/filesystem.py`~~ — ✅ 완료 (2026-06-06)
 2. `deepagents/middleware/subagents.py` — SubAgent/SubAgentMiddleware, task tool 구현
 3. `deepagents/_subagent_transformer.py` — SubagentTransformer scope 활용 방식
 4. `langchain/agents/__init__.py` + `create_agent` — 실제 LangGraph graph 조립 위치

@@ -972,3 +972,65 @@ sources:
     used_by:
       - "docs/wiki/concepts/LLM API 첫 호출.md"
     notes: "ollama-python README. ollama pull + ollama.chat() 로컬 모델 호출, streaming, 모델 관리. 책 1.2(로컬 모델 연결) 근거."
+  - id: deepagents-source-filesystem-middleware-2026-06-06
+    title: "Deep Agents — middleware/filesystem.py source reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/FilesystemMiddleware.md"
+      - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
+    notes: "FilesystemMiddleware 전체 구현 분석. tool 주입 방식(StructuredTool), permissions(wcmatch glob), wrap_model_call에서 execute 조건부 제거, wrap_tool_call에서 대용량 결과 오프로드. WebFetch로 GitHub raw 소스 분석."
+  - id: deepagents-source-backends-protocol-2026-06-06
+    title: "Deep Agents — backends/protocol.py source reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/FilesystemMiddleware.md"
+      - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
+    notes: "BackendProtocol, SandboxBackendProtocol, BackendFactory 타입 및 데이터 클래스 전체 필드(FileInfo, GrepMatch, ReadResult, WriteResult, EditResult, ExecuteResponse 등) 확인."
+  - id: deepagents-source-backends-state-2026-06-06
+    title: "Deep Agents — backends/state.py source reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
+    notes: "StateBackend 내부 구현. LangGraph state의 files 채널에 파일 저장. execute 미구현(SandboxBackendProtocol 미구현). CONFIG_KEY_READ/SEND로 state 접근."
+  - id: deepagents-source-backends-sandbox-2026-06-06
+    title: "Deep Agents — backends/sandbox.py source reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
+    notes: "BaseSandbox 추상 클래스. execute/upload_files/download_files는 추상 메서드. ls/read/write/edit/grep/glob은 execute()를 호출하는 방식으로 구현(shell command delegation). 하위 클래스가 실제 sandbox 연결 담당."
+  - id: deepagents-source-backends-composite-2026-06-06
+    title: "Deep Agents — backends/composite.py source reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
+    notes: "CompositeBackend: default + routes(경로 prefix → 백엔드) 조합. execute 지원 여부는 default가 SandboxBackendProtocol 구현하는지로 판단."
