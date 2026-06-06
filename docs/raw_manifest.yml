@@ -57,6 +57,7 @@ sources:
       - "docs/wiki/flows/Deep Agents create_deep_agent flow.md"
       - "docs/wiki/frameworks/Deep Agents.md"
       - "docs/wiki/concepts/Agent Harness.md"
+      - "docs/wiki/concepts/Reasoning and Planning.md"
     notes: "create_deep_agent 핵심 구현. middleware 조립 순서, LangGraph create_agent 위임, _DeepAgentState(DeltaChannel), BASE_AGENT_PROMPT, HarnessProfile 적용 로직 포함."
   - id: deepagents-venv-create-deep-agent-2026-05-28
     title: "Deep Agents local venv create_deep_agent reading"
@@ -87,6 +88,7 @@ sources:
       - "docs/wiki/frameworks/Deep Agents.md"
       - "docs/wiki/flows/Deep Agents create_deep_agent flow.md"
       - "docs/wiki/concepts/Context Engineering.md"
+      - "docs/wiki/concepts/Reasoning and Planning.md"
     notes: "하네스 8가지 구성요소(planning, filesystem, permissions, subagents, context, code execution, human-in-the-loop, profiles), Skills/Memory 개요, HarnessProfile 등록 코드 예제 포함."
   - id: deepagents-source-harness-profiles-2026-05-19
     title: "Deep Agents — harness_profiles.py (HarnessProfile 소스코드)"
@@ -542,6 +544,7 @@ sources:
     status: public
     used_by:
       - "docs/wiki/concepts/Agent Runtime.md"
+      - "docs/wiki/concepts/Reasoning and Planning.md"
     notes: "Agent 구성 속성 전체 목록(instructions, tools, handoffs, guardrails, output_type, hooks 등), context DI 패턴."
   - id: openai-agents-sdk-guardrails-2026-05-23
     title: "OpenAI Agents SDK — Guardrails"
@@ -586,6 +589,7 @@ sources:
     status: public
     used_by:
       - "docs/wiki/concepts/Agent Runtime.md"
+      - "docs/wiki/concepts/Reasoning and Planning.md"
     notes: "Runner 클래스 3가지 메서드(run/run_sync/run_streamed), agent loop(LLM→final_output|handoff|tool_calls), RunConfig 파라미터."
   - id: langgraph-tests-pregel-2026-05-24
     title: "LangGraph test_pregel.py — checkpoint errors, invoke_checkpoint_two, pending_writes_resume"
@@ -790,6 +794,7 @@ sources:
     status: public
     used_by:
       - "docs/wiki/flows/LangGraph create_react_agent flow.md"
+      - "docs/wiki/concepts/Reasoning and Planning.md"
     notes: "1015 lines. create_react_agent(deprecated), StateGraph 조립, v1/v2 ToolNode dispatch 차이, should_continue, call_model, remaining_steps 안전 종료, pre/post_model_hook, response_format, 동적 모델."
   - id: langchain-agents-factory-2026-05-28
     title: "LangChain agents/factory.py — create_agent 소스 분석"
@@ -807,6 +812,7 @@ sources:
       - "docs/wiki/experiments/2026-05-28 langgraph toolnode direct.md"
       - "docs/wiki/comparisons/ToolNode in LangGraph vs LangChain create_agent.md"
       - "docs/wiki/concepts/Agent Harness.md"
+      - "docs/wiki/concepts/Reasoning and Planning.md"
     notes: "1885 lines. create_agent(L697), _chain_model_call_handlers(L221), _get_bound_model(L1162), model_node(L1318), 동적 노드/엣지 조립(L1477-1679), recursion_limit 9999(L1665). Middleware 시스템, entry/loop_entry/loop_exit/exit_node 구조."
   - id: langchain-agents-middleware-types-2026-05-28
     title: "LangChain agents/middleware/types.py — AgentMiddleware 타입 정의"
