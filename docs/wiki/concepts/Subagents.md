@@ -4,9 +4,9 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-30
+last_reviewed: 2026-06-06
 sources:
   - deepagents-docs-harness-2026-05-19
   - deepagents-source-graph-2026-05-19
@@ -19,8 +19,6 @@ sources:
 ## 요약
 
 Subagents는 더 큰 워크플로의 일부로 부모(오케스트레이션) agent에 의해 호출되는 agent다. 각 서브에이전트는 자신만의 도구, 상태, 프롬프트를 가질 수 있다.
-
-*상태: 초안 스텁이다. 소스 검증이 필요하다.*
 
 ## 중요한 이유
 

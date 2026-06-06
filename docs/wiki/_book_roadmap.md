@@ -169,7 +169,7 @@
   - 위키: [[Memory]]
 - [ ] **9.2** Event Streaming — astream_events 완전 가이드, v1/v2/v3 차이 ✅
   - 위키: [[Event Streaming]]
-- [ ] **9.3** RAG 파이프라인 — 임베딩, 벡터 스토어, 리트리버, 청크 전략 🟡
+- [ ] **9.3** RAG 파이프라인 — 임베딩, 벡터 스토어, 리트리버, 청크 전략 🟠
   - 위키: [[RAG]]
 
 ---
@@ -227,7 +227,7 @@
 
 ### 15장. 고급 LangGraph 패턴
 
-- [ ] **15.1** Subgraph — 모듈화와 parent ↔ child 상태 스키마 호환성 🟡
+- [ ] **15.1** Subgraph — 모듈화와 parent ↔ child 상태 스키마 호환성 🟠
   - 위키: [[Subagents]]
 - [ ] **15.2** Send / Map-Reduce — 병렬 worker 패턴, reducer 집계 설계 ✅
   - 위키: [[LangGraph ToolNode flow]]
