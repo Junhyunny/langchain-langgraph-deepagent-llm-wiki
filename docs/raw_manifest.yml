@@ -1034,3 +1034,15 @@ sources:
     used_by:
       - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
     notes: "CompositeBackend: default + routes(경로 prefix → 백엔드) 조합. execute 지원 여부는 default가 SandboxBackendProtocol 구현하는지로 판단."
+  - id: deepagents-agents-md-contributing-2026-06-06
+    title: "Deep Agents — AGENTS.md (Contributing Guide)"
+    type: official_docs
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/codebase/Deep Agents Contributing Guide.md"
+    notes: "AGENTS.md 기여 가이드. uv 개발환경, make test/lint/format, Conventional Commits, PR 제목 형식, 브랜치 명명 규칙, 테스트 위치(unit/integration). WebFetch로 GitHub 페이지 분석."
