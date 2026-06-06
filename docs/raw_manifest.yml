@@ -396,6 +396,7 @@ sources:
     status: current
     used_by:
       - "docs/wiki/concepts/Checkpointing.md"
+      - "docs/wiki/concepts/Memory.md"
     notes: "BaseCheckpointSaver 추상 클래스 전체 인터페이스(get_tuple/list/put/put_writes + async 버전). InMemorySaver 내부 storage/writes/blobs 구조. MemorySaver = InMemorySaver (하위 호환 alias) 확인. SqliteSaver: 단일 스레드용, from_conn_string 패턴. PostgresSaver: 프로덕션 권장, setup() 필수 호출, pipeline 옵션, AsyncPostgresSaver 비동기 버전 별도. Checkpoint/CheckpointTuple/CheckpointMetadata TypedDict 전체 필드."
 
   - id: deepagents-source-subagents-2026-05-23

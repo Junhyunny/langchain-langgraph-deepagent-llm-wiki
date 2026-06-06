@@ -165,7 +165,7 @@
 
 ### 9장. 메모리, 스트리밍, RAG
 
-- [ ] **9.1** Memory API — 대화 히스토리 관리와 세션 간 기억 🟡
+- [ ] **9.1** Memory API — 대화 히스토리 관리와 세션 간 기억 🟠
   - 위키: [[Memory]]
 - [ ] **9.2** Event Streaming — astream_events 완전 가이드, v1/v2/v3 차이 ✅
   - 위키: [[Event Streaming]]
