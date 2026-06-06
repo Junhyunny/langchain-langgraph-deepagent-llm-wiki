@@ -4,7 +4,7 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: partial
+status: verified
 confidence: high
 last_reviewed: 2026-06-06
 sources:
@@ -12,6 +12,7 @@ sources:
   - deepagents-source-graph-2026-05-19
   - deepagents-source-subagents-2026-05-23
   - langgraph-docs-graph-api-2026-05-23
+  - langgraph-subgraph-experiment-2026-05-25
 ---
 
 # Subagents

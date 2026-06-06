@@ -972,3 +972,101 @@ sources:
     used_by:
       - "docs/wiki/concepts/LLM API 첫 호출.md"
     notes: "ollama-python README. ollama pull + ollama.chat() 로컬 모델 호출, streaming, 모델 관리. 책 1.2(로컬 모델 연결) 근거."
+  - id: deepagents-source-filesystem-middleware-2026-06-06
+    title: "Deep Agents — middleware/filesystem.py source reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/FilesystemMiddleware.md"
+      - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
+    notes: "FilesystemMiddleware 전체 구현 분석. tool 주입 방식(StructuredTool), permissions(wcmatch glob), wrap_model_call에서 execute 조건부 제거, wrap_tool_call에서 대용량 결과 오프로드. WebFetch로 GitHub raw 소스 분석."
+  - id: deepagents-source-backends-protocol-2026-06-06
+    title: "Deep Agents — backends/protocol.py source reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/FilesystemMiddleware.md"
+      - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
+    notes: "BackendProtocol, SandboxBackendProtocol, BackendFactory 타입 및 데이터 클래스 전체 필드(FileInfo, GrepMatch, ReadResult, WriteResult, EditResult, ExecuteResponse 등) 확인."
+  - id: deepagents-source-backends-state-2026-06-06
+    title: "Deep Agents — backends/state.py source reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
+    notes: "StateBackend 내부 구현. LangGraph state의 files 채널에 파일 저장. execute 미구현(SandboxBackendProtocol 미구현). CONFIG_KEY_READ/SEND로 state 접근."
+  - id: deepagents-source-backends-sandbox-2026-06-06
+    title: "Deep Agents — backends/sandbox.py source reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
+    notes: "BaseSandbox 추상 클래스. execute/upload_files/download_files는 추상 메서드. ls/read/write/edit/grep/glob은 execute()를 호출하는 방식으로 구현(shell command delegation). 하위 클래스가 실제 sandbox 연결 담당."
+  - id: deepagents-source-backends-composite-2026-06-06
+    title: "Deep Agents — backends/composite.py source reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/flows/Deep Agents execute sandbox flow.md"
+    notes: "CompositeBackend: default + routes(경로 prefix → 백엔드) 조합. execute 지원 여부는 default가 SandboxBackendProtocol 구현하는지로 판단."
+  - id: deepagents-agents-md-contributing-2026-06-06
+    title: "Deep Agents — AGENTS.md (Contributing Guide)"
+    type: official_docs
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/codebase/Deep Agents Contributing Guide.md"
+    notes: "AGENTS.md 기여 가이드. uv 개발환경, make test/lint/format, Conventional Commits, PR 제목 형식, 브랜치 명명 규칙, 테스트 위치(unit/integration). WebFetch로 GitHub 페이지 분석."
+  - id: deepagents-source-skills-middleware-2026-06-06
+    title: "Deep Agents — SkillsMiddleware source (skills.py)"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Context Engineering.md"
+    notes: "SkillsMiddleware 소스 분석. SKILL.md frontmatter 필드(name/description/license/compatibility/metadata/allowed-tools), SkillMetadata 모델, before_agent()에서 frontmatter 로드, modify_request()에서 시스템 프롬프트 주입, skills_metadata/skills_load_errors PrivateStateAttr. WebFetch로 소스 추출."
+  - id: langsmith-sdk-readme-2026-06-06
+    title: "LangSmith Python SDK — README"
+    type: official_docs
+    framework: LangSmith
+    repo: "https://github.com/langchain-ai/langsmith-sdk"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Tracing.md"
+    notes: "LangSmith tracing 활성화 환경 변수(LANGSMITH_TRACING, LANGSMITH_API_KEY, LANGSMITH_PROJECT), run types(llm/chain/tool), @traceable 데코레이터, wrap_openai. WebFetch로 GitHub raw README 분석."

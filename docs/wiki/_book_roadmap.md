@@ -227,7 +227,7 @@
 
 ### 15장. 고급 LangGraph 패턴
 
-- [ ] **15.1** Subgraph — 모듈화와 parent ↔ child 상태 스키마 호환성 🟠
+- [ ] **15.1** Subgraph — 모듈화와 parent ↔ child 상태 스키마 호환성 ✅
   - 위키: [[Subagents]]
 - [ ] **15.2** Send / Map-Reduce — 병렬 worker 패턴, reducer 집계 설계 ✅
   - 위키: [[LangGraph ToolNode flow]]
@@ -262,10 +262,12 @@
 
 - [ ] **18.1** Middleware 스택의 조립 원리 — wrap_model_call 중첩 순서와 실행 방향 ✅
   - 위키: [[Agent Harness]], [[Deep Agents]]
-- [ ] **18.2** FilesystemMiddleware — write_file / read_file 도구의 내부 구현 ❌
+- [ ] **18.2** FilesystemMiddleware — write_file / read_file 도구의 내부 구현 🟠
+  - 위키: [[FilesystemMiddleware]]
 - [ ] **18.3** SubAgentMiddleware — task 도구 실행, subagent 생성, 상태 격리 흐름 🟠
   - 위키: [[Deep Agents SubAgentMiddleware task tool flow]]
-- [ ] **18.4** 병렬 task 도구 호출 — 단일 AIMessage의 다중 task call 동시 실행 🟡
+- [ ] **18.4** 병렬 task 도구 호출 — 단일 AIMessage의 다중 task call 동시 실행 🟠
+  - 위키: [[Deep Agents parallel task tool calls]]
 - [ ] **18.5** _EXCLUDED_STATE_KEYS — parent / child 상태 격리 패턴의 설계 이유 🟠
   - 위키: [[Deep Agents SubAgentMiddleware task tool flow]]
 
@@ -280,18 +282,20 @@
 
 ### 20장. Sandbox와 코드 실행
 
-- [ ] **20.1** FilesystemMiddleware의 execute 도구 — sandbox backend가 없을 때 동작 방식 ❌
-- [ ] **20.2** Sandbox backend 연결 — 실제 코드 실행 환경과 execute 결과 payload ❌
+- [ ] **20.1** FilesystemMiddleware의 execute 도구 — sandbox backend가 없을 때 동작 방식 🟠
+  - 위키: [[Deep Agents execute sandbox flow]]
+- [ ] **20.2** Sandbox backend 연결 — 실제 코드 실행 환경과 execute 결과 payload 🟡
+  - 위키: [[Deep Agents execute sandbox flow]]
 
 ### 21장. Evaluation
 
-- [ ] **21.1** Deep Agents eval 구조 — evals/ 디렉터리와 평가 파이프라인 🟠
+- [ ] **21.1** Deep Agents eval 구조 — evals/ 디렉터리와 평가 파이프라인 ✅
   - 위키: [[Evaluation]]
-- [ ] **21.2** LLM-as-a-judge — 판정 모델 결정 경로와 MODEL_GROUPS.md 🟠
+- [ ] **21.2** LLM-as-a-judge — 판정 모델 결정 경로와 MODEL_GROUPS.md ✅
   - 위키: [[Evaluation]]
-- [ ] **21.3** BFCL 벤치마크 — tool calling 능력을 숫자로 측정하는 방법 🟠
+- [ ] **21.3** BFCL 벤치마크 — tool calling 능력을 숫자로 측정하는 방법 ✅
   - 위키: [[Evaluation]]
-- [ ] **21.4** Harbor 통합 — 평가 파이프라인 오케스트레이션 🟠
+- [ ] **21.4** Harbor 통합 — 평가 파이프라인 오케스트레이션 ✅
   - 위키: [[Evaluation]]
 
 ---
@@ -300,7 +304,7 @@
 
 ### 22장. 아키텍처 비교
 
-- [ ] **22.1** Tool Calling 내부 비교 — LangChain vs LangGraph vs Deep Agents의 실행 경로 🟡
+- [ ] **22.1** Tool Calling 내부 비교 — LangChain vs LangGraph vs Deep Agents의 실행 경로 🟠
   - 위키: [[ToolNode in LangGraph vs LangChain create_agent]], [[LangGraph ToolNode Command vs Deep Agents task tool]]
 - [ ] **22.2** 상태 관리 비교 — TypedDict / Pydantic / middleware state의 트레이드오프 🟠
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]
@@ -313,13 +317,13 @@
 
 ### 23장. 언제 무엇을 쓰는가
 
-- [ ] **23.1** 프레임워크 선택 의사결정 가이드 — 10가지 기준으로 비교 🟡
+- [ ] **23.1** 프레임워크 선택 의사결정 가이드 — 10가지 기준으로 비교 🟠
   - 위키: [[When to use LangGraph vs Deep Agents for orchestration]]
-- [ ] **23.2** LangGraph vs Deep Agents 오케스트레이션 심층 비교 🟡
+- [ ] **23.2** LangGraph vs Deep Agents 오케스트레이션 심층 비교 🟠
   - 위키: [[create_agent vs create_deep_agent]]
-- [ ] **23.3** Guardrails 구현 비교 — 세 프레임워크에서 입출력을 어떻게 통제하는가 🟡
+- [ ] **23.3** Guardrails 구현 비교 — 세 프레임워크에서 입출력을 어떻게 통제하는가 🟠
   - 위키: [[Guardrails]]
-- [ ] **23.4** Tracing과 관찰 가능성 — LangSmith 통합, 그래프 스텝별 디버깅 🟡
+- [ ] **23.4** Tracing과 관찰 가능성 — LangSmith 통합, 그래프 스텝별 디버깅 🟠
   - 위키: [[Tracing]]
 
 ### 24장. 실전 프로젝트: 리서치 에이전트 3가지 버전
@@ -338,7 +342,8 @@
 
 - [ ] **25.1** 이슈 분석에서 PR까지 — LangGraph #5225 Pydantic default_factory 버그 사례 ✅
   - 위키: [[LangGraph issue 5225 pydantic default factory]]
-- [ ] **25.2** 기여자가 되는 법 — CONTRIBUTING.md 읽기, maintainer 소통, 테스트 작성 ❌
+- [ ] **25.2** 기여자가 되는 법 — CONTRIBUTING.md 읽기, maintainer 소통, 테스트 작성 🟡
+  - 위키: [[Deep Agents Contributing Guide]]
 
 ---
 
