@@ -321,9 +321,9 @@
   - 위키: [[When to use LangGraph vs Deep Agents for orchestration]]
 - [ ] **23.2** LangGraph vs Deep Agents 오케스트레이션 심층 비교 🟠
   - 위키: [[create_agent vs create_deep_agent]]
-- [ ] **23.3** Guardrails 구현 비교 — 세 프레임워크에서 입출력을 어떻게 통제하는가 🟡
+- [ ] **23.3** Guardrails 구현 비교 — 세 프레임워크에서 입출력을 어떻게 통제하는가 🟠
   - 위키: [[Guardrails]]
-- [ ] **23.4** Tracing과 관찰 가능성 — LangSmith 통합, 그래프 스텝별 디버깅 🟡
+- [ ] **23.4** Tracing과 관찰 가능성 — LangSmith 통합, 그래프 스텝별 디버깅 🟠
   - 위키: [[Tracing]]
 
 ### 24장. 실전 프로젝트: 리서치 에이전트 3가지 버전

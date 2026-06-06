@@ -1046,3 +1046,15 @@ sources:
     used_by:
       - "docs/wiki/codebase/Deep Agents Contributing Guide.md"
     notes: "AGENTS.md 기여 가이드. uv 개발환경, make test/lint/format, Conventional Commits, PR 제목 형식, 브랜치 명명 규칙, 테스트 위치(unit/integration). WebFetch로 GitHub 페이지 분석."
+  - id: langsmith-sdk-readme-2026-06-06
+    title: "LangSmith Python SDK — README"
+    type: official_docs
+    framework: LangSmith
+    repo: "https://github.com/langchain-ai/langsmith-sdk"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Tracing.md"
+    notes: "LangSmith tracing 활성화 환경 변수(LANGSMITH_TRACING, LANGSMITH_API_KEY, LANGSMITH_PROJECT), run types(llm/chain/tool), @traceable 데코레이터, wrap_openai. WebFetch로 GitHub raw README 분석."
