@@ -328,7 +328,8 @@
 
 ### 24장. 실전 프로젝트: 리서치 에이전트 3가지 버전
 
-- [ ] **24.1** 리서치 에이전트 설계 — 공통 요구사항과 각 프레임워크 접근 방식 ❌
+- [ ] **24.1** 리서치 에이전트 설계 — 공통 요구사항과 각 프레임워크 접근 방식 🟠
+  - 위키: [[Research Agent Design]]
 - [ ] **24.2** LangChain 버전 — create_agent + 미들웨어 스택으로 구현 ✅
   - 위키: [[LangChain create_agent flow]]
 - [ ] **24.3** LangGraph 버전 — StateGraph + ToolNode + Checkpointing으로 구현 ✅
