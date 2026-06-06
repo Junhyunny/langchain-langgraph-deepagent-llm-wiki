@@ -4,9 +4,9 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: partial
+status: verified
 confidence: high
-last_reviewed: 2026-06-03
+last_reviewed: 2026-06-06
 sources:
   - tiktoken-bpe-2026-05-30
   - langchain-docs-models-2026-05-30

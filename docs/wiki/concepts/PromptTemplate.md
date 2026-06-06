@@ -2,7 +2,7 @@
 type: concept
 framework:
   - LangChain
-status: partial
+status: verified
 confidence: high
 last_reviewed: 2026-06-06
 sources:
@@ -217,8 +217,6 @@ chain = (
     | llm
 )
 ```
-
----
 
 ---
 

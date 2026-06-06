@@ -77,18 +77,18 @@
 
 ### 1장. LLM 기초
 
-- [ ] **1.1** LLM이란 무엇인가? — 토큰, 컨텍스트 윈도우, 온도, 샘플링 🟠
+- [ ] **1.1** LLM이란 무엇인가? — 토큰, 컨텍스트 윈도우, 온도, 샘플링 ✅
   - 위키: [[Token]], [[Context Window]], [[Sampling]]
 - [ ] **1.2** LLM API 첫 호출 — OpenAI / Anthropic / 로컬 모델 직접 연결하기 🟠
   - 위키: [[LLM API 첫 호출]]
-- [ ] **1.3** 프롬프트 엔지니어링 기초 — System / User / Assistant 메시지 구조 🟠
+- [ ] **1.3** 프롬프트 엔지니어링 기초 — System / User / Assistant 메시지 구조 ✅
   - 위키: [[PromptTemplate]], [[Messages]]
 
 ### 2장. AI 에이전트란 무엇인가?
 
 - [ ] **2.1** 에이전트의 정의 — LLM + 도구 + 오케스트레이션이 만나는 지점 🟠
   - 위키: [[Agent Runtime]], [[Reasoning and Planning]]
-- [ ] **2.2** ReAct 패턴 — Reasoning + Acting, 생각하고 행동하고 관찰한다 🟡
+- [ ] **2.2** ReAct 패턴 — Reasoning + Acting, 생각하고 행동하고 관찰한다 🟠
   - 위키: [[Reasoning and Planning]]
 - [ ] **2.3** Tool Calling이란? — LLM이 함수를 호출하는 원리 ✅
   - 위키: [[Tool Calling]]
@@ -123,7 +123,7 @@
 
 ### 5장. 프롬프트와 출력 파싱
 
-- [ ] **5.1** PromptTemplate — ChatPromptTemplate, FewShotPromptTemplate 내부 구조 🟠
+- [ ] **5.1** PromptTemplate — ChatPromptTemplate, FewShotPromptTemplate 내부 구조 ✅
   - 위키: [[PromptTemplate]]
 - [ ] **5.2** OutputParser — StrOutputParser, JsonOutputParser, 구조화 출력 ✅
   - 위키: [[OutputParser]]
@@ -169,7 +169,7 @@
   - 위키: [[Memory]]
 - [ ] **9.2** Event Streaming — astream_events 완전 가이드, v1/v2/v3 차이 ✅
   - 위키: [[Event Streaming]]
-- [ ] **9.3** RAG 파이프라인 — 임베딩, 벡터 스토어, 리트리버, 청크 전략 🟠
+- [ ] **9.3** RAG 파이프라인 — 임베딩, 벡터 스토어, 리트리버, 청크 전략 ✅
   - 위키: [[RAG]]
 
 ---
@@ -304,7 +304,7 @@
 
 ### 22장. 아키텍처 비교
 
-- [ ] **22.1** Tool Calling 내부 비교 — LangChain vs LangGraph vs Deep Agents의 실행 경로 🟠
+- [ ] **22.1** Tool Calling 내부 비교 — LangChain vs LangGraph vs Deep Agents의 실행 경로 ✅
   - 위키: [[ToolNode in LangGraph vs LangChain create_agent]], [[LangGraph ToolNode Command vs Deep Agents task tool]]
 - [ ] **22.2** 상태 관리 비교 — TypedDict / Pydantic / middleware state의 트레이드오프 🟠
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]
@@ -334,7 +334,7 @@
   - 위키: [[LangChain create_agent flow]]
 - [ ] **24.3** LangGraph 버전 — StateGraph + ToolNode + Checkpointing으로 구현 ✅
   - 위키: [[LangGraph StateGraph compile invoke flow]], [[LangGraph ToolNode flow]]
-- [ ] **24.4** Deep Agents 버전 — SubAgentMiddleware + task tool로 구현 🟠
+- [ ] **24.4** Deep Agents 버전 — SubAgentMiddleware + task tool로 구현 ✅
   - 위키: [[Deep Agents create_deep_agent flow]], [[Deep Agents SubAgentMiddleware task tool flow]]
 - [ ] **24.5** 세 버전 코드 비교 — 같은 문제를 다르게 푸는 방식에서 배우는 것 🟠
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]
