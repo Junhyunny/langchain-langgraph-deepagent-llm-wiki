@@ -9,6 +9,7 @@ sources:
     status: current
     used_by:
       - "docs/wiki/frameworks/Deep Agents.md"
+      - "docs/wiki/comparisons/LangChain vs LangGraph vs Deep Agents.md"
     notes: "Official overview page for the Deep Agents SDK."
   - id: deepagents-docs-context-engineering-2026-05-18
     title: "Deep Agents — Context Engineering"
@@ -131,6 +132,7 @@ sources:
     used_by:
       - "docs/wiki/concepts/Checkpointing.md"
       - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
+      - "docs/wiki/comparisons/LangChain vs LangGraph vs Deep Agents.md"
     notes: "Official durable execution documentation. Used for resume semantics, deterministic replay, side-effect guidance, and durability modes (exit/async/sync)."
   - id: langgraph-reference-stategraph-compile-2026-05-20
     title: "LangGraph reference — StateGraph.compile"
@@ -409,6 +411,7 @@ sources:
       - "docs/wiki/experiments/2026-05-30 deepagents subagentmiddleware task tool.md"
       - "docs/wiki/experiments/2026-05-30 deepagents parallel task tool calls.md"
       - "docs/wiki/comparisons/LangGraph ToolNode Command vs Deep Agents task tool.md"
+      - "docs/wiki/comparisons/LangChain vs LangGraph vs Deep Agents.md"
     notes: "SubAgent/CompiledSubAgent TypedDict 전체 필드. _EXCLUDED_STATE_KEYS(messages/todos/structured_response/skills_metadata/skills_load_errors/memory_contents) 입력·출력 양방향 필터링으로 subagent state isolation 구현. _build_subagent_config: callbacks/tags/configurable만 전파, recursion_limit/metadata 의도적 제외. task tool 실행 흐름, 결과 추출 우선순위(structured_response → AIMessage text), LangSmith tracing 태깅."
 
   - id: langgraph-source-pregel-interrupts-2026-05-23

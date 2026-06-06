@@ -4,11 +4,14 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-06-06
 sources:
   - langchain-docs-products-2026-05-23
+  - deepagents-docs-overview-2026-05-18
+  - langgraph-docs-durable-execution-2026-05-20
+  - deepagents-source-subagents-2026-05-23
 ---
 
 # LangChain vs LangGraph vs Deep Agents
@@ -63,19 +66,63 @@ Source: `langchain-docs-products-2026-05-23`
 
 ### LangGraph (Runtime)
 - 낮은 수준 오케스트레이션 프레임워크
-- Durable execution: 실패 후 재개, 장기 실행
+- Durable execution: 실패 후 재개, 장기 실행. 3가지 durability 모드 지원:
+  - `exit` — 그래프 종료 시점에만 저장. 성능 최적, 프로세스 크래시 복구 불가
+  - `async` — 다음 스텝 실행 중 비동기 저장. 성능/내구성 균형, 소규모 크래시 윈도우 존재
+  - `sync` — 다음 스텝 시작 전 동기 저장. 최강 내구성, 오버헤드 있음
+- Resume은 동일 Python call stack을 재개하지 않음. 중단 노드 시작점부터 replay
 - Thread-level + cross-thread persistence
 - 사용 시점: 세밀한 제어, durable execution, 결정론적+비결정론적 스텝 혼합
+
+Source: `langgraph-docs-durable-execution-2026-05-20`
 
 ### Deep Agents SDK (Harness — [[Agent Harness]])
 - Opinionated, batteries-included
 - Planning: to-do list 기반 멀티 태스크 추적
 - Task delegation: subagents로 컨텍스트 격리
-- File system: pluggable storage backends
+- File system: pluggable storage backends (in-memory / local disk / durable store / sandbox / custom)
 - Token management: 히스토리 요약 + 대형 tool result eviction
-- 사용 시점: 장기 실행, 복잡한 멀티 스텝, predefined tools (filesystem, bash), predefined prompts
+- LangGraph runtime 위에서 durable execution, streaming, HITL 상속
+- 저장소 구성: Deep Agents SDK (에이전트 패키지) + Deep Agents Code (터미널 코딩 에이전트) + ACP integration (코드 에디터 커넥터)
+- 사용 시점 (공식 문서):
+  - 복잡한 multi-step 태스크 (planning and decomposition 필요)
+  - 대규모 context 관리 (filesystem tools, summarization)
+  - shell 명령어 실행 (`execute` tool)
+  - specialized subagent에 작업 위임 (context isolation)
+  - 대화/스레드 간 memory 지속
+  - human-in-the-loop workflows (sensitive operations 승인)
+  - 더 단순한 에이전트 → LangChain `create_agent` 또는 직접 LangGraph 사용 권장
 
-Source: `langchain-docs-products-2026-05-23`
+Source: `langchain-docs-products-2026-05-23`, `deepagents-docs-overview-2026-05-18`
+
+## Subagent 상태 격리 비교 (Verified)
+
+각 프레임워크가 subagent(하위 에이전트)에게 상태를 전달하는 방식이 다르다.
+
+| | LangChain | LangGraph | Deep Agents |
+|---|---|---|---|
+| **Subagent 단위** | 없음 (단일 agent loop) | Subgraph (별도 StateGraph) | `task` tool + `SubAgentMiddleware` |
+| **상태 격리 방식** | 해당 없음 | 별도 state schema 정의 | `_EXCLUDED_STATE_KEYS` 필터 |
+| **격리 대상** | — | schema가 다른 key | `messages`, `todos`, `structured_response`, `skills_metadata` 등 |
+| **결과 전달 방식** | — | parent ↔ child schema 호환 key | subagent 마지막 AIMessage → ToolMessage |
+| **병렬 실행** | RunnableParallel | Send API | 단일 AIMessage 내 다중 task call |
+
+### Deep Agents `_EXCLUDED_STATE_KEYS` 동작 (Verified)
+
+```python
+_EXCLUDED_STATE_KEYS = {
+    "messages", "todos", "structured_response",
+    "skills_metadata", "skills_load_errors", "memory_contents",
+}
+```
+
+- **입력 필터링:** parent의 메시지 히스토리 대신 단일 `HumanMessage(task description)`만 subagent에 전달
+- **출력 필터링:** subagent의 마지막 비어있지 않은 AIMessage text만 `ToolMessage`로 parent에 반환
+- **로컬 검증 완료 (2026-05-30):** `messages`, `todos`는 subagent 입력에서 제외됨, 일반 state key(`project_id` 등)는 전달됨
+
+Source: `deepagents-source-subagents-2026-05-23`
+
+---
 
 ## 트레이드오프
 
@@ -161,3 +208,6 @@ Source: `langchain-docs-products-2026-05-23`
 ## Sources
 
 - `langchain-docs-products-2026-05-23`
+- `deepagents-docs-overview-2026-05-18`
+- `langgraph-docs-durable-execution-2026-05-20`
+- `deepagents-source-subagents-2026-05-23`
