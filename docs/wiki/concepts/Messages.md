@@ -2,9 +2,9 @@
 type: concept
 framework:
   - LangChain
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-30
+last_reviewed: 2026-06-06
 sources:
   - langchain-docs-messages-2026-05-30
 ---

@@ -5,13 +5,14 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: partial
+status: verified
 confidence: medium
 last_reviewed: 2026-06-06
 sources:
   - openai-agents-sdk-tracing-2026-05-23
   - langsmith-sdk-readme-2026-06-06
   - langgraph-source-streaming-2026-05-23
+  - deepagents-source-backends-sandbox-2026-06-06
 ---
 
 # Tracing
@@ -275,3 +276,4 @@ LangGraph `CompiledStateGraph.invoke()` 호출이기 때문에 다음이 추적�
 - `openai-agents-sdk-tracing-2026-05-23`
 - `langsmith-sdk-readme-2026-06-06`
 - `langgraph-source-streaming-2026-05-23`
+- `deepagents-source-backends-sandbox-2026-06-06`

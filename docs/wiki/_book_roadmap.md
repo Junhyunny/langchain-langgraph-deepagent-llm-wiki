@@ -79,20 +79,20 @@
 
 - [ ] **1.1** LLM이란 무엇인가? — 토큰, 컨텍스트 윈도우, 온도, 샘플링 🟠
   - 위키: [[Token]], [[Context Window]], [[Sampling]]
-- [ ] **1.2** LLM API 첫 호출 — OpenAI / Anthropic / 로컬 모델 직접 연결하기 🟡
+- [ ] **1.2** LLM API 첫 호출 — OpenAI / Anthropic / 로컬 모델 직접 연결하기 🟠
   - 위키: [[LLM API 첫 호출]]
-- [ ] **1.3** 프롬프트 엔지니어링 기초 — System / User / Assistant 메시지 구조 🟡
+- [ ] **1.3** 프롬프트 엔지니어링 기초 — System / User / Assistant 메시지 구조 🟠
   - 위키: [[PromptTemplate]], [[Messages]]
 
 ### 2장. AI 에이전트란 무엇인가?
 
-- [ ] **2.1** 에이전트의 정의 — LLM + 도구 + 오케스트레이션이 만나는 지점 🟡
+- [ ] **2.1** 에이전트의 정의 — LLM + 도구 + 오케스트레이션이 만나는 지점 🟠
   - 위키: [[Agent Runtime]], [[Reasoning and Planning]]
 - [ ] **2.2** ReAct 패턴 — Reasoning + Acting, 생각하고 행동하고 관찰한다 🟡
   - 위키: [[Reasoning and Planning]]
 - [ ] **2.3** Tool Calling이란? — LLM이 함수를 호출하는 원리 ✅
   - 위키: [[Tool Calling]]
-- [ ] **2.4** 에이전트 런타임의 구성 요소 — 모델 · 도구 · 상태 · 오케스트레이터 🟡
+- [ ] **2.4** 에이전트 런타임의 구성 요소 — 모델 · 도구 · 상태 · 오케스트레이터 🟠
   - 위키: [[Agent Runtime]]
 
 ### 3장. 세 프레임워크 한눈에 보기
@@ -123,7 +123,7 @@
 
 ### 5장. 프롬프트와 출력 파싱
 
-- [ ] **5.1** PromptTemplate — ChatPromptTemplate, FewShotPromptTemplate 내부 구조 🟡
+- [ ] **5.1** PromptTemplate — ChatPromptTemplate, FewShotPromptTemplate 내부 구조 🟠
   - 위키: [[PromptTemplate]]
 - [ ] **5.2** OutputParser — StrOutputParser, JsonOutputParser, 구조화 출력 ✅
   - 위키: [[OutputParser]]
@@ -165,7 +165,7 @@
 
 ### 9장. 메모리, 스트리밍, RAG
 
-- [ ] **9.1** Memory API — 대화 히스토리 관리와 세션 간 기억 🟠
+- [ ] **9.1** Memory API — 대화 히스토리 관리와 세션 간 기억 ✅
   - 위키: [[Memory]]
 - [ ] **9.2** Event Streaming — astream_events 완전 가이드, v1/v2/v3 차이 ✅
   - 위키: [[Event Streaming]]
@@ -262,29 +262,29 @@
 
 - [ ] **18.1** Middleware 스택의 조립 원리 — wrap_model_call 중첩 순서와 실행 방향 ✅
   - 위키: [[Agent Harness]], [[Deep Agents]]
-- [ ] **18.2** FilesystemMiddleware — write_file / read_file 도구의 내부 구현 🟠
+- [ ] **18.2** FilesystemMiddleware — write_file / read_file 도구의 내부 구현 ✅
   - 위키: [[FilesystemMiddleware]]
-- [ ] **18.3** SubAgentMiddleware — task 도구 실행, subagent 생성, 상태 격리 흐름 🟠
+- [ ] **18.3** SubAgentMiddleware — task 도구 실행, subagent 생성, 상태 격리 흐름 ✅
   - 위키: [[Deep Agents SubAgentMiddleware task tool flow]]
-- [ ] **18.4** 병렬 task 도구 호출 — 단일 AIMessage의 다중 task call 동시 실행 🟠
+- [ ] **18.4** 병렬 task 도구 호출 — 단일 AIMessage의 다중 task call 동시 실행 ✅
   - 위키: [[Deep Agents parallel task tool calls]]
-- [ ] **18.5** _EXCLUDED_STATE_KEYS — parent / child 상태 격리 패턴의 설계 이유 🟠
+- [ ] **18.5** _EXCLUDED_STATE_KEYS — parent / child 상태 격리 패턴의 설계 이유 ✅
   - 위키: [[Deep Agents SubAgentMiddleware task tool flow]]
 
 ### 19장. Context Engineering
 
-- [ ] **19.1** Context Engineering이란? — Deep Agents가 컨텍스트를 구성하는 전략 🟠
+- [ ] **19.1** Context Engineering이란? — Deep Agents가 컨텍스트를 구성하는 전략 ✅
   - 위키: [[Context Engineering]]
-- [ ] **19.2** Skills frontmatter — agent가 관련 skill을 선택하는 메커니즘 🟠
+- [ ] **19.2** Skills frontmatter — agent가 관련 skill을 선택하는 메커니즘 ✅
   - 위키: [[Context Engineering]]
-- [ ] **19.3** @dynamic_prompt 데코레이터 — 동적 시스템 프롬프트 생성 패턴 🟠
+- [ ] **19.3** @dynamic_prompt 데코레이터 — 동적 시스템 프롬프트 생성 패턴 ✅
   - 위키: [[Context Engineering]]
 
 ### 20장. Sandbox와 코드 실행
 
 - [ ] **20.1** FilesystemMiddleware의 execute 도구 — sandbox backend가 없을 때 동작 방식 🟠
   - 위키: [[Deep Agents execute sandbox flow]]
-- [ ] **20.2** Sandbox backend 연결 — 실제 코드 실행 환경과 execute 결과 payload 🟡
+- [ ] **20.2** Sandbox backend 연결 — 실제 코드 실행 환경과 execute 결과 payload 🟠
   - 위키: [[Deep Agents execute sandbox flow]]
 
 ### 21장. Evaluation
@@ -321,14 +321,15 @@
   - 위키: [[When to use LangGraph vs Deep Agents for orchestration]]
 - [ ] **23.2** LangGraph vs Deep Agents 오케스트레이션 심층 비교 🟠
   - 위키: [[create_agent vs create_deep_agent]]
-- [ ] **23.3** Guardrails 구현 비교 — 세 프레임워크에서 입출력을 어떻게 통제하는가 🟠
+- [ ] **23.3** Guardrails 구현 비교 — 세 프레임워크에서 입출력을 어떻게 통제하는가 ✅
   - 위키: [[Guardrails]]
-- [ ] **23.4** Tracing과 관찰 가능성 — LangSmith 통합, 그래프 스텝별 디버깅 🟠
+- [ ] **23.4** Tracing과 관찰 가능성 — LangSmith 통합, 그래프 스텝별 디버깅 ✅
   - 위키: [[Tracing]]
 
 ### 24장. 실전 프로젝트: 리서치 에이전트 3가지 버전
 
 - [ ] **24.1** 리서치 에이전트 설계 — 공통 요구사항과 각 프레임워크 접근 방식 🟠
+  - 위키: [[Research Agent Design]]
 - [ ] **24.2** LangChain 버전 — create_agent + 미들웨어 스택으로 구현 ✅
   - 위키: [[LangChain create_agent flow]]
 - [ ] **24.3** LangGraph 버전 — StateGraph + ToolNode + Checkpointing으로 구현 ✅
@@ -342,7 +343,7 @@
 
 - [ ] **25.1** 이슈 분석에서 PR까지 — LangGraph #5225 Pydantic default_factory 버그 사례 ✅
   - 위키: [[LangGraph issue 5225 pydantic default factory]]
-- [ ] **25.2** 기여자가 되는 법 — CONTRIBUTING.md 읽기, maintainer 소통, 테스트 작성 🟡
+- [ ] **25.2** 기여자가 되는 법 — CONTRIBUTING.md 읽기, maintainer 소통, 테스트 작성 🟠
   - 위키: [[Deep Agents Contributing Guide]]
 
 ---
