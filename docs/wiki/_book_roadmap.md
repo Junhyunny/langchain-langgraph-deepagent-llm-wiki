@@ -88,7 +88,7 @@
 
 - [ ] **2.1** 에이전트의 정의 — LLM + 도구 + 오케스트레이션이 만나는 지점 🟠
   - 위키: [[Agent Runtime]], [[Reasoning and Planning]]
-- [ ] **2.2** ReAct 패턴 — Reasoning + Acting, 생각하고 행동하고 관찰한다 🟡
+- [ ] **2.2** ReAct 패턴 — Reasoning + Acting, 생각하고 행동하고 관찰한다 🟠
   - 위키: [[Reasoning and Planning]]
 - [ ] **2.3** Tool Calling이란? — LLM이 함수를 호출하는 원리 ✅
   - 위키: [[Tool Calling]]
@@ -334,7 +334,7 @@
   - 위키: [[LangChain create_agent flow]]
 - [ ] **24.3** LangGraph 버전 — StateGraph + ToolNode + Checkpointing으로 구현 ✅
   - 위키: [[LangGraph StateGraph compile invoke flow]], [[LangGraph ToolNode flow]]
-- [ ] **24.4** Deep Agents 버전 — SubAgentMiddleware + task tool로 구현 🟠
+- [ ] **24.4** Deep Agents 버전 — SubAgentMiddleware + task tool로 구현 ✅
   - 위키: [[Deep Agents create_deep_agent flow]], [[Deep Agents SubAgentMiddleware task tool flow]]
 - [ ] **24.5** 세 버전 코드 비교 — 같은 문제를 다르게 푸는 방식에서 배우는 것 🟠
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]
