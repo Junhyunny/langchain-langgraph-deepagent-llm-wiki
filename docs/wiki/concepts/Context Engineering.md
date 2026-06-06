@@ -4,11 +4,12 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
-confidence: medium
-last_reviewed: 2026-05-23
+status: partial
+confidence: high
+last_reviewed: 2026-06-06
 sources:
   - deepagents-docs-context-engineering-2026-05-18
+  - deepagents-docs-harness-2026-05-19
   - langchain-source-prompts-2026-05-23
   - langchain-source-runnable-2026-05-23
   - langchain-source-bind-tools-function-calling-2026-05-23
@@ -95,6 +96,18 @@ agent = create_agent(model, middleware=[context_aware_prompt])
 
 > ⚠️ **문서 오류 주의**: 일부 공식 문서 예제는 `(user_query: str) -> list` 서명을 사용하지만, 이는 실제 `@dynamic_prompt` API가 아니다. 올바른 서명은 위와 같다. (Source: `langchain-source-dynamic-prompt-2026-05-23`)
 
+**AgentMiddleware 개입 시점 (Verified):**
+*Source: `langchain-source-dynamic-prompt-2026-05-23`*
+
+| 메서드 | 시점 | 용도 |
+|--------|------|------|
+| `before_agent` | agent 실행 전 | 초기 상태 설정 |
+| `after_agent` | agent 실행 후 | 결과 후처리 |
+| `before_model` | 모델 호출 전 | state 기반 전처리 |
+| `after_model` | 모델 호출 후 | 응답 가공 |
+| `wrap_model_call` | 모델 호출 래핑 | **`@dynamic_prompt`가 구현하는 hook** — 시스템 프롬프트 교체 |
+| `wrap_tool_call` | 도구 호출 래핑 | 도구 실행 전후 개입 |
+
 **도구 스키마 주입 (bind_tools):**
 *Source: `langchain-source-bind-tools-function-calling-2026-05-23`*
 
@@ -157,13 +170,36 @@ Deep Agents는 5가지 context 타입으로 구분하여 체계적으로 관리�
 8. 사용자 제공 미들웨어 prompts
 9. Human-in-the-loop prompt (`interrupt_on` 설정 시)
 
+#### Skills (Verified)
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+- **표준:** Agent Skills standard (`agentskills.io`) 준수
+- **구조:** 각 skill = 디렉터리 + `SKILL.md` 파일 (instructions + metadata frontmatter)
+- 추가 리소스 포함 가능: scripts, reference docs, templates
+- **Progressive disclosure 동작:**
+  1. Startup 시 `SKILL.md`의 **frontmatter만** 로드 → 토큰 절약
+  2. agent가 현재 작업과 관련성 판단 시 **전체 SKILL.md 로드**
+- `skills=` 파라미터로 skill 디렉터리 경로 목록 전달
+
+#### Memory (Verified)
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+- **표준:** `AGENTS.md` 파일 (agents.md 표준) 사용
+- **항상 로드** — skills와 달리 progressive disclosure 없음, 매 실행마다 시스템 프롬프트에 포함
+- `memory=` 파라미터로 파일 경로 목록 전달
+- backend에 저장됨 (StateBackend, StoreBackend, FilesystemBackend)
+- agent가 interaction/feedback 기반으로 memory 파일 직접 업데이트 가능
+
 #### Memory vs Skills
 
-| | Memory | Skills |
+| | Memory (`AGENTS.md`) | Skills (`SKILL.md`) |
 |---|---|---|
 | 로드 시점 | **항상** 시스템 프롬프트에 포함 | frontmatter만 읽고, 관련성 판단 시 전체 로드 |
 | 패턴 | No progressive disclosure | **Progressive disclosure** |
+| 표준 | agents.md 표준 | agentskills.io 표준 |
 | 용도 | 항상 필요한 프로젝트 규칙, 선호도 | 상황별 특화 워크플로우 |
+
+Source: `deepagents-docs-context-engineering-2026-05-18`, `deepagents-docs-harness-2026-05-19`
 
 #### Context Compression
 
@@ -195,7 +231,7 @@ Deep Agents는 5가지 context 타입으로 구분하여 체계적으로 관리�
 - LangChain, LangGraph에서 컨텍스트 윈도우 초과를 어떻게 처리하는가? (Deep Agents에서만 확인됨) — Needs Source
 - ~~도구 설명은 어떤 형식으로 구성되고 주입되는가?~~ → 위 "도구 스키마 주입" 섹션 참조. (Source: `langchain-source-bind-tools-function-calling-2026-05-23`) ✅
 - Deep Agents의 `graph.py#L37` base agent prompt는 어떤 내용인가? 커스터마이징 가능한가?
-- Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가?
+- ~~Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가?~~ → 부분 해소: `SKILL.md` = instructions + metadata frontmatter, `agentskills.io` 표준 준수. 전체 frontmatter 필드 목록은 소스 확인 필요. (Source: `deepagents-docs-harness-2026-05-19`) 🟡
 - LangChain에서 `RunnableParallel` 병렬 실행 시 thread pool 크기 제한은? — Source: `langchain-source-runnable-2026-05-23`
 
 **해소됨 (2026-05-23):**
@@ -213,6 +249,7 @@ Deep Agents는 5가지 context 타입으로 구분하여 체계적으로 관리�
 ## 소스
 
 - `deepagents-docs-context-engineering-2026-05-18`
+- `deepagents-docs-harness-2026-05-19`
 - `langchain-source-prompts-2026-05-23`
 - `langchain-source-runnable-2026-05-23`
 - `langchain-source-bind-tools-function-calling-2026-05-23`

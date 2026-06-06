@@ -86,6 +86,7 @@ sources:
       - "docs/wiki/concepts/Agent Harness.md"
       - "docs/wiki/frameworks/Deep Agents.md"
       - "docs/wiki/flows/Deep Agents create_deep_agent flow.md"
+      - "docs/wiki/concepts/Context Engineering.md"
     notes: "하네스 8가지 구성요소(planning, filesystem, permissions, subagents, context, code execution, human-in-the-loop, profiles), Skills/Memory 개요, HarnessProfile 등록 코드 예제 포함."
   - id: deepagents-source-harness-profiles-2026-05-19
     title: "Deep Agents — harness_profiles.py (HarnessProfile 소스코드)"
