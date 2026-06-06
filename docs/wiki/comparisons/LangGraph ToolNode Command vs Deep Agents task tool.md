@@ -3,9 +3,9 @@ type: comparison
 framework:
   - LangGraph
   - Deep Agents
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-30
+last_reviewed: 2026-06-06
 sources:
   - langgraph-prebuilt-tool-node-2026-05-27
   - deepagents-source-subagents-2026-05-23
@@ -51,6 +51,17 @@ LangGraph 방식은 더 직접적이고 강력하지만, 상태 스키마와 rou
 - Deep Agents는 LangGraph 위에 만들어진 harness지만, subagent 사용자 경험은 graph node handoff보다 tool delegation에 가깝다.
 - Deep Agents `task`는 [[Context Engineering]]을 위해 parent message history를 줄이는 데 초점이 있다.
 - LangGraph `Command`는 runtime graph 제어에 초점이 있다.
+
+## Source Code References
+
+- Repo: `https://github.com/langchain-ai/langgraph`
+- Files:
+  - `libs/langgraph/langgraph/prebuilt/tool_node.py` — `ToolNode`, `Command` 반환 처리
+  - `libs/langgraph/langgraph/types.py` — `Command`, `Send` 타입 정의
+
+- Repo: `https://github.com/langchain-ai/deepagents`
+- Files:
+  - `libs/deepagents/deepagents/middleware/subagents.py` — `SubAgentMiddleware`, `_EXCLUDED_STATE_KEYS`, `_run_task`
 
 ## Open Questions
 

@@ -304,7 +304,7 @@
 
 ### 22장. 아키텍처 비교
 
-- [ ] **22.1** Tool Calling 내부 비교 — LangChain vs LangGraph vs Deep Agents의 실행 경로 🟡
+- [ ] **22.1** Tool Calling 내부 비교 — LangChain vs LangGraph vs Deep Agents의 실행 경로 🟠
   - 위키: [[ToolNode in LangGraph vs LangChain create_agent]], [[LangGraph ToolNode Command vs Deep Agents task tool]]
 - [ ] **22.2** 상태 관리 비교 — TypedDict / Pydantic / middleware state의 트레이드오프 🟠
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]
@@ -317,9 +317,9 @@
 
 ### 23장. 언제 무엇을 쓰는가
 
-- [ ] **23.1** 프레임워크 선택 의사결정 가이드 — 10가지 기준으로 비교 🟡
+- [ ] **23.1** 프레임워크 선택 의사결정 가이드 — 10가지 기준으로 비교 🟠
   - 위키: [[When to use LangGraph vs Deep Agents for orchestration]]
-- [ ] **23.2** LangGraph vs Deep Agents 오케스트레이션 심층 비교 🟡
+- [ ] **23.2** LangGraph vs Deep Agents 오케스트레이션 심층 비교 🟠
   - 위키: [[create_agent vs create_deep_agent]]
 - [ ] **23.3** Guardrails 구현 비교 — 세 프레임워크에서 입출력을 어떻게 통제하는가 🟡
   - 위키: [[Guardrails]]
