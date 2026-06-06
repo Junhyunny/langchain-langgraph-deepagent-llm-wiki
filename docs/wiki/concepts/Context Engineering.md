@@ -4,7 +4,7 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: partial
+status: verified
 confidence: high
 last_reviewed: 2026-06-06
 sources:
@@ -15,6 +15,7 @@ sources:
   - langchain-source-runnable-2026-05-23
   - langchain-source-bind-tools-function-calling-2026-05-23
   - langchain-source-dynamic-prompt-2026-05-23
+  - langgraph-docs-graph-api-2026-05-23
 ---
 
 # Context Engineering
@@ -135,14 +136,16 @@ _format_tool_to_openai_function()  ← dict schema or Pydantic model 분기 처�
 - `tool_choice` 정규화: 이름 → `{"type": "function", "function": {"name": ...}}`, `"any"` → `"required"`
 
 **컨텍스트 압축:**
-- *소스 필요* — `ConversationSummaryMemory` 등 요약 기반 압축 기능의 내부 구현 확인 필요
+- LangChain native 요약 메모리: [[Memory]] 참조 (partial — `ConversationSummaryMemory` 내부 구현 미확인)
+- Deep Agents `SummarizationMiddleware` 기반 압축: [[SummarizationMiddleware]] 참조 (verified)
 
 ### LangGraph
+*Source: `langgraph-docs-graph-api-2026-05-23`*
 
-- 상태(`State`)의 메시지 목록이 LLM 노드에 직접 전달된다
+- `State`(TypedDict/Pydantic 스키마)의 `messages` 필드가 LLM 노드에 직접 전달된다
 - `add_messages` reducer가 메시지 히스토리 누적을 관리 — ID 기반 중복 제거/업데이트 포함
 - 프롬프트는 보통 노드 함수 내부에서 `ChatPromptTemplate`으로 조립된다
-- *LangGraph 전용 컨텍스트 압축 메커니즘 소스 필요*
+- 컨텍스트 압축: LangGraph 전용 메커니즘은 미확인 — `SummarizationMiddleware`(Deep Agents) 또는 `pre_model_hook`에서 직접 처리하는 패턴 참조
 
 ### Deep Agents
 *Source: `deepagents-docs-context-engineering-2026-05-18`*
@@ -293,3 +296,4 @@ Source: `deepagents-docs-context-engineering-2026-05-18`, `deepagents-docs-harne
 - `langchain-source-runnable-2026-05-23`
 - `langchain-source-bind-tools-function-calling-2026-05-23`
 - `langchain-source-dynamic-prompt-2026-05-23`
+- `langgraph-docs-graph-api-2026-05-23`

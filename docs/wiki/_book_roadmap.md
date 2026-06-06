@@ -273,11 +273,11 @@
 
 ### 19장. Context Engineering
 
-- [ ] **19.1** Context Engineering이란? — Deep Agents가 컨텍스트를 구성하는 전략 🟠
+- [ ] **19.1** Context Engineering이란? — Deep Agents가 컨텍스트를 구성하는 전략 ✅
   - 위키: [[Context Engineering]]
-- [ ] **19.2** Skills frontmatter — agent가 관련 skill을 선택하는 메커니즘 🟠
+- [ ] **19.2** Skills frontmatter — agent가 관련 skill을 선택하는 메커니즘 ✅
   - 위키: [[Context Engineering]]
-- [ ] **19.3** @dynamic_prompt 데코레이터 — 동적 시스템 프롬프트 생성 패턴 🟠
+- [ ] **19.3** @dynamic_prompt 데코레이터 — 동적 시스템 프롬프트 생성 패턴 ✅
   - 위키: [[Context Engineering]]
 
 ### 20장. Sandbox와 코드 실행
