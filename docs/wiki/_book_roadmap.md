@@ -81,7 +81,7 @@
   - 위키: [[Token]], [[Context Window]], [[Sampling]]
 - [ ] **1.2** LLM API 첫 호출 — OpenAI / Anthropic / 로컬 모델 직접 연결하기 🟠
   - 위키: [[LLM API 첫 호출]]
-- [ ] **1.3** 프롬프트 엔지니어링 기초 — System / User / Assistant 메시지 구조 🟠
+- [ ] **1.3** 프롬프트 엔지니어링 기초 — System / User / Assistant 메시지 구조 ✅
   - 위키: [[PromptTemplate]], [[Messages]]
 
 ### 2장. AI 에이전트란 무엇인가?
@@ -123,7 +123,7 @@
 
 ### 5장. 프롬프트와 출력 파싱
 
-- [ ] **5.1** PromptTemplate — ChatPromptTemplate, FewShotPromptTemplate 내부 구조 🟠
+- [ ] **5.1** PromptTemplate — ChatPromptTemplate, FewShotPromptTemplate 내부 구조 ✅
   - 위키: [[PromptTemplate]]
 - [ ] **5.2** OutputParser — StrOutputParser, JsonOutputParser, 구조화 출력 ✅
   - 위키: [[OutputParser]]
@@ -169,7 +169,7 @@
   - 위키: [[Memory]]
 - [ ] **9.2** Event Streaming — astream_events 완전 가이드, v1/v2/v3 차이 ✅
   - 위키: [[Event Streaming]]
-- [ ] **9.3** RAG 파이프라인 — 임베딩, 벡터 스토어, 리트리버, 청크 전략 🟠
+- [ ] **9.3** RAG 파이프라인 — 임베딩, 벡터 스토어, 리트리버, 청크 전략 ✅
   - 위키: [[RAG]]
 
 ---
@@ -304,7 +304,7 @@
 
 ### 22장. 아키텍처 비교
 
-- [ ] **22.1** Tool Calling 내부 비교 — LangChain vs LangGraph vs Deep Agents의 실행 경로 🟠
+- [ ] **22.1** Tool Calling 내부 비교 — LangChain vs LangGraph vs Deep Agents의 실행 경로 ✅
   - 위키: [[ToolNode in LangGraph vs LangChain create_agent]], [[LangGraph ToolNode Command vs Deep Agents task tool]]
 - [ ] **22.2** 상태 관리 비교 — TypedDict / Pydantic / middleware state의 트레이드오프 🟠
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]
