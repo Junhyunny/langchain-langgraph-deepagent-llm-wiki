@@ -1046,6 +1046,18 @@ sources:
     used_by:
       - "docs/wiki/codebase/Deep Agents Contributing Guide.md"
     notes: "AGENTS.md 기여 가이드. uv 개발환경, make test/lint/format, Conventional Commits, PR 제목 형식, 브랜치 명명 규칙, 테스트 위치(unit/integration). WebFetch로 GitHub 페이지 분석."
+  - id: deepagents-source-skills-middleware-2026-06-06
+    title: "Deep Agents — SkillsMiddleware source (skills.py)"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-06-06"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Context Engineering.md"
+    notes: "SkillsMiddleware 소스 분석. SKILL.md frontmatter 필드(name/description/license/compatibility/metadata/allowed-tools), SkillMetadata 모델, before_agent()에서 frontmatter 로드, modify_request()에서 시스템 프롬프트 주입, skills_metadata/skills_load_errors PrivateStateAttr. WebFetch로 소스 추출."
   - id: langsmith-sdk-readme-2026-06-06
     title: "LangSmith Python SDK — README"
     type: official_docs

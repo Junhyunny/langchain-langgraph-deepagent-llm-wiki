@@ -10,6 +10,7 @@ last_reviewed: 2026-06-06
 sources:
   - deepagents-docs-context-engineering-2026-05-18
   - deepagents-docs-harness-2026-05-19
+  - deepagents-source-skills-middleware-2026-06-06
   - langchain-source-prompts-2026-05-23
   - langchain-source-runnable-2026-05-23
   - langchain-source-bind-tools-function-calling-2026-05-23
@@ -171,15 +172,52 @@ Deep Agents는 5가지 context 타입으로 구분하여 체계적으로 관리�
 9. Human-in-the-loop prompt (`interrupt_on` 설정 시)
 
 #### Skills (Verified)
-*Source: `deepagents-docs-harness-2026-05-19`*
+*Source: `deepagents-docs-harness-2026-05-19`, `deepagents-source-skills-middleware-2026-06-06`*
 
 - **표준:** Agent Skills standard (`agentskills.io`) 준수
 - **구조:** 각 skill = 디렉터리 + `SKILL.md` 파일 (instructions + metadata frontmatter)
 - 추가 리소스 포함 가능: scripts, reference docs, templates
-- **Progressive disclosure 동작:**
-  1. Startup 시 `SKILL.md`의 **frontmatter만** 로드 → 토큰 절약
-  2. agent가 현재 작업과 관련성 판단 시 **전체 SKILL.md 로드**
 - `skills=` 파라미터로 skill 디렉터리 경로 목록 전달
+
+**SKILL.md frontmatter 필드 (소스 검증됨)**
+*Source: `deepagents-source-skills-middleware-2026-06-06`*
+
+| 필드 | 타입 | 제약 | 필수 여부 |
+|------|------|------|-----------|
+| `name` | str | 최대 64자, 소문자·숫자·하이픈만 | 필수 |
+| `description` | str | 최대 1024자 | 필수 |
+| `license` | str | — | 선택 |
+| `compatibility` | str | 최대 500자 | 선택 |
+| `metadata` | dict[str, str] | — | 선택 |
+| `allowed-tools` | str | 공백 구분 도구 이름 목록 | 선택 |
+
+```markdown
+---
+name: code-review
+description: Helps with reviewing code changes for correctness, style, and potential bugs.
+license: MIT
+compatibility: Deep Agents 1.0+
+metadata:
+  author: team-a
+allowed-tools: read_file glob grep
+---
+
+# Code Review Skill
+
+이 파일의 instructions...
+```
+
+**Progressive disclosure 동작 (소스 검증됨):**
+
+1. `before_agent()` — 모든 SKILL.md의 **frontmatter만** 파싱 → `skills_metadata: list[SkillMetadata]` 에 저장
+2. `modify_request()` / `wrap_model_call()` — 시스템 프롬프트에 각 skill의 `name` + `description`만 주입 (토큰 절약)
+3. Agent가 LLM 판단으로 현재 작업에 관련 skill 식별 → `read_file("SKILL.md")` 직접 호출로 전체 내용 로드
+
+시스템 프롬프트 주입 지시문 예시:
+> "Recognize when a skill applies: Check if the user's task matches a skill's description. If a skill is applicable, read the SKILL.md file to learn how to execute the skill."
+
+- `skills_metadata`: `PrivateStateAttr` — parent state에 저장되지 않음 (subagent로 전파 안 됨)
+- `skills_load_errors`: `PrivateStateAttr` — 로드 실패 skill 진단용, 시스템 프롬프트에 표시됨
 
 #### Memory (Verified)
 *Source: `deepagents-docs-harness-2026-05-19`*
@@ -231,7 +269,7 @@ Source: `deepagents-docs-context-engineering-2026-05-18`, `deepagents-docs-harne
 - LangChain, LangGraph에서 컨텍스트 윈도우 초과를 어떻게 처리하는가? (Deep Agents에서만 확인됨) — Needs Source
 - ~~도구 설명은 어떤 형식으로 구성되고 주입되는가?~~ → 위 "도구 스키마 주입" 섹션 참조. (Source: `langchain-source-bind-tools-function-calling-2026-05-23`) ✅
 - Deep Agents의 `graph.py#L37` base agent prompt는 어떤 내용인가? 커스터마이징 가능한가?
-- ~~Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가?~~ → 부분 해소: `SKILL.md` = instructions + metadata frontmatter, `agentskills.io` 표준 준수. 전체 frontmatter 필드 목록은 소스 확인 필요. (Source: `deepagents-docs-harness-2026-05-19`) 🟡
+- ~~Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가?~~ → **완전 해소**: 필드 목록 `name/description/license/compatibility/metadata/allowed-tools` 소스 검증됨. 관련성 판단은 LLM이 task description과 skill description 비교로 수행. Progressive disclosure: `before_agent()`에서 frontmatter 로드, agent가 `read_file()` 직접 호출로 전체 로드. (Source: `deepagents-source-skills-middleware-2026-06-06`) ✅
 - LangChain에서 `RunnableParallel` 병렬 실행 시 thread pool 크기 제한은? — Source: `langchain-source-runnable-2026-05-23`
 
 **해소됨 (2026-05-23):**
@@ -250,6 +288,7 @@ Source: `deepagents-docs-context-engineering-2026-05-18`, `deepagents-docs-harne
 
 - `deepagents-docs-context-engineering-2026-05-18`
 - `deepagents-docs-harness-2026-05-19`
+- `deepagents-source-skills-middleware-2026-06-06`
 - `langchain-source-prompts-2026-05-23`
 - `langchain-source-runnable-2026-05-23`
 - `langchain-source-bind-tools-function-calling-2026-05-23`

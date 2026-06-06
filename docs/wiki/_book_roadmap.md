@@ -227,7 +227,7 @@
 
 ### 15장. 고급 LangGraph 패턴
 
-- [ ] **15.1** Subgraph — 모듈화와 parent ↔ child 상태 스키마 호환성 🟠
+- [ ] **15.1** Subgraph — 모듈화와 parent ↔ child 상태 스키마 호환성 ✅
   - 위키: [[Subagents]]
 - [ ] **15.2** Send / Map-Reduce — 병렬 worker 패턴, reducer 집계 설계 ✅
   - 위키: [[LangGraph ToolNode flow]]
@@ -289,13 +289,13 @@
 
 ### 21장. Evaluation
 
-- [ ] **21.1** Deep Agents eval 구조 — evals/ 디렉터리와 평가 파이프라인 🟠
+- [ ] **21.1** Deep Agents eval 구조 — evals/ 디렉터리와 평가 파이프라인 ✅
   - 위키: [[Evaluation]]
-- [ ] **21.2** LLM-as-a-judge — 판정 모델 결정 경로와 MODEL_GROUPS.md 🟠
+- [ ] **21.2** LLM-as-a-judge — 판정 모델 결정 경로와 MODEL_GROUPS.md ✅
   - 위키: [[Evaluation]]
-- [ ] **21.3** BFCL 벤치마크 — tool calling 능력을 숫자로 측정하는 방법 🟠
+- [ ] **21.3** BFCL 벤치마크 — tool calling 능력을 숫자로 측정하는 방법 ✅
   - 위키: [[Evaluation]]
-- [ ] **21.4** Harbor 통합 — 평가 파이프라인 오케스트레이션 🟠
+- [ ] **21.4** Harbor 통합 — 평가 파이프라인 오케스트레이션 ✅
   - 위키: [[Evaluation]]
 
 ---
