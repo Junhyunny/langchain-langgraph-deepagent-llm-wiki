@@ -6,9 +6,10 @@ framework:
   - Deep Agents
   - OpenAI Agents SDK
 status: draft
-confidence: low
-last_reviewed: 2026-05-23
-sources: []
+confidence: medium
+last_reviewed: 2026-06-06
+sources:
+  - langgraph-prebuilt-chat-agent-executor-2026-05-28
 ---
 
 # Reasoning and Planning
@@ -84,11 +85,13 @@ LLM에게 `Thought:` → `Action:` → `Observation:` 형식을 따르도록 유
 
 ### LangGraph
 
-*Source: Needs Source*
+*Source: `langgraph-prebuilt-chat-agent-executor-2026-05-28` (verified)*
 
-- `create_react_agent` (LangGraph prebuilt): 암묵적 ReAct 패턴
-- Plan-and-Execute: `StateGraph`로 Planner/Executor/Replanner 노드를 명시적으로 구성
-- Reflection: 자기 평가 노드를 그래프에 추가하는 패턴
+- `create_react_agent` (LangGraph prebuilt): **LLM + ToolNode + StateGraph**를 조립해 ReAct 루프를 구성한다. `agent` 노드(call_model) → `should_continue` 조건부 엣지 → `tools` 노드(ToolNode) → 다시 `agent` 노드의 반복이 암묵적 ReAct 구조다. 소스: `langgraph/prebuilt/chat_agent_executor.py`
+- `pre_model_hook` / `post_model_hook`: 모델 호출 전후 커스터마이징 포인트. CoT 유도 프롬프트 주입이나 출력 검토(Reflection) 패턴을 여기에 연결할 수 있다.
+- ⚠️ v1.0부터 `langchain.agents.create_agent`로 이동. `langgraph.prebuilt.create_react_agent`는 하위 호환용.
+- Plan-and-Execute: `StateGraph`로 Planner/Executor/Replanner 노드를 명시적으로 구성. (*Needs Source — 공식 예제 미확인*)
+- Reflection: 자기 평가 노드를 그래프에 추가하는 패턴. (*Needs Source*)
 
 ### LangChain
 
@@ -130,4 +133,4 @@ LLM에게 `Thought:` → `Action:` → `Observation:` 형식을 따르도록 유
 
 ## Sources
 
-*(소스 없음 — 개념 스텁)*
+- `langgraph-prebuilt-chat-agent-executor-2026-05-28` (LangGraph ReAct 구현 확인)

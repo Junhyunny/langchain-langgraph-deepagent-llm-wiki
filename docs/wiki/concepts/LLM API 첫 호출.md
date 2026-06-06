@@ -5,9 +5,9 @@ framework:
   - Anthropic
   - OpenAI
   - Ollama
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-30
+last_reviewed: 2026-06-06
 sources:
   - langchain-docs-models-2026-05-30
   - anthropic-api-quickstart-2026-05-30
