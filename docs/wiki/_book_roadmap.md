@@ -90,7 +90,7 @@
   - 위키: [[Agent Runtime]], [[Reasoning and Planning]]
 - [ ] **2.2** ReAct 패턴 — Reasoning + Acting, 생각하고 행동하고 관찰한다 🟡
   - 위키: [[Reasoning and Planning]]
-- [ ] **2.3** Tool Calling이란? — LLM이 함수를 호출하는 원리 🟡
+- [ ] **2.3** Tool Calling이란? — LLM이 함수를 호출하는 원리 ✅
   - 위키: [[Tool Calling]]
 - [ ] **2.4** 에이전트 런타임의 구성 요소 — 모델 · 도구 · 상태 · 오케스트레이터 🟡
   - 위키: [[Agent Runtime]]
@@ -103,7 +103,7 @@
   - 위키: [[LangGraph]], [[StateGraph]]
 - [ ] **3.3** Deep Agents란? — LangChain 위에 올라간 미들웨어 스택의 철학 ✅
   - 위키: [[Deep Agents]], [[Agent Harness]]
-- [ ] **3.4** 세 프레임워크 한눈에 비교 — 언제 무엇을 선택하는가 🟡
+- [ ] **3.4** 세 프레임워크 한눈에 비교 — 언제 무엇을 선택하는가 🟠
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]
 
 ---
@@ -167,7 +167,7 @@
 
 - [ ] **9.1** Memory API — 대화 히스토리 관리와 세션 간 기억 🟡
   - 위키: [[Memory]]
-- [ ] **9.2** Event Streaming — astream_events 완전 가이드, v1/v2/v3 차이 🟡
+- [ ] **9.2** Event Streaming — astream_events 완전 가이드, v1/v2/v3 차이 ✅
   - 위키: [[Event Streaming]]
 - [ ] **9.3** RAG 파이프라인 — 임베딩, 벡터 스토어, 리트리버, 청크 전략 🟡
   - 위키: [[RAG]]
@@ -233,7 +233,7 @@
   - 위키: [[LangGraph ToolNode flow]]
 - [ ] **15.3** child ToolNode의 Command.PARENT + Send — fan-out 실험 분석 ✅
   - 위키: [[LangGraph ToolNode flow]]
-- [ ] **15.4** Streaming 7가지 모드 — values / updates / custom / checkpoints / tasks / messages / debug 🟡
+- [ ] **15.4** Streaming 7가지 모드 — values / updates / custom / checkpoints / tasks / messages / debug ✅
   - 위키: [[Event Streaming]]
 - [ ] **15.5** InMemoryStore — namespace, vector search, cosine similarity 내부 ✅
   - 위키: [[Store]]
@@ -262,7 +262,7 @@
 
 - [ ] **18.1** Middleware 스택의 조립 원리 — wrap_model_call 중첩 순서와 실행 방향 ✅
   - 위키: [[Agent Harness]], [[Deep Agents]]
-- [ ] **18.2** FilesystemMiddleware — write_file / read_file 도구의 내부 구현 🟡
+- [ ] **18.2** FilesystemMiddleware — write_file / read_file 도구의 내부 구현 ❌
 - [ ] **18.3** SubAgentMiddleware — task 도구 실행, subagent 생성, 상태 격리 흐름 🟡
   - 위키: [[Deep Agents SubAgentMiddleware task tool flow]]
 - [ ] **18.4** 병렬 task 도구 호출 — 단일 AIMessage의 다중 task call 동시 실행 🟡
@@ -280,7 +280,7 @@
 
 ### 20장. Sandbox와 코드 실행
 
-- [ ] **20.1** FilesystemMiddleware의 execute 도구 — sandbox backend가 없을 때 동작 방식 🟡
+- [ ] **20.1** FilesystemMiddleware의 execute 도구 — sandbox backend가 없을 때 동작 방식 ❌
 - [ ] **20.2** Sandbox backend 연결 — 실제 코드 실행 환경과 execute 결과 payload ❌
 
 ### 21장. Evaluation
@@ -302,9 +302,9 @@
 
 - [ ] **22.1** Tool Calling 내부 비교 — LangChain vs LangGraph vs Deep Agents의 실행 경로 🟡
   - 위키: [[ToolNode in LangGraph vs LangChain create_agent]], [[LangGraph ToolNode Command vs Deep Agents task tool]]
-- [ ] **22.2** 상태 관리 비교 — TypedDict / Pydantic / middleware state의 트레이드오프 🟡
+- [ ] **22.2** 상태 관리 비교 — TypedDict / Pydantic / middleware state의 트레이드오프 🟠
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]
-- [ ] **22.3** Checkpointing 비교 — 세 프레임워크의 지속성 전략 🟡
+- [ ] **22.3** Checkpointing 비교 — 세 프레임워크의 지속성 전략 ✅
   - 위키: [[Checkpointing]]
 - [ ] **22.4** 병렬 실행 비교 — Send / RunnableParallel / parallel task의 설계 차이 ✅
   - 위키: [[RunnableParallel]], [[LangGraph ToolNode flow]]
@@ -324,14 +324,14 @@
 
 ### 24장. 실전 프로젝트: 리서치 에이전트 3가지 버전
 
-- [ ] **24.1** 리서치 에이전트 설계 — 공통 요구사항과 각 프레임워크 접근 방식 🟡
+- [ ] **24.1** 리서치 에이전트 설계 — 공통 요구사항과 각 프레임워크 접근 방식 🟠
 - [ ] **24.2** LangChain 버전 — create_agent + 미들웨어 스택으로 구현 ✅
   - 위키: [[LangChain create_agent flow]]
 - [ ] **24.3** LangGraph 버전 — StateGraph + ToolNode + Checkpointing으로 구현 ✅
   - 위키: [[LangGraph StateGraph compile invoke flow]], [[LangGraph ToolNode flow]]
 - [ ] **24.4** Deep Agents 버전 — SubAgentMiddleware + task tool로 구현 🟠
   - 위키: [[Deep Agents create_deep_agent flow]], [[Deep Agents SubAgentMiddleware task tool flow]]
-- [ ] **24.5** 세 버전 코드 비교 — 같은 문제를 다르게 푸는 방식에서 배우는 것 🟡
+- [ ] **24.5** 세 버전 코드 비교 — 같은 문제를 다르게 푸는 방식에서 배우는 것 🟠
   - 위키: [[LangChain vs LangGraph vs Deep Agents]]
 
 ### 25장. 오픈소스 기여
