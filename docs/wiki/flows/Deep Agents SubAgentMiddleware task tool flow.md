@@ -3,9 +3,9 @@ type: flow
 framework:
   - Deep Agents
   - LangChain
-status: draft
+status: verified
 confidence: high
-last_reviewed: 2026-05-30
+last_reviewed: 2026-06-06
 sources:
   - deepagents-source-subagents-2026-05-23
 ---
@@ -22,6 +22,8 @@ sources:
 
 ## Entry Point
 
+**SubAgent (declarative) 방식:**
+
 ```python
 from deepagents.middleware import SubAgentMiddleware
 from langchain.agents import create_agent
@@ -32,11 +34,33 @@ agent = create_agent(
     middleware=[
         SubAgentMiddleware(
             backend=StateBackend(),
-            subagents=[compiled_subagent],
+            subagents=[SubAgent(
+                name="researcher",
+                description="Searches the web and summarizes results.",
+                system_prompt="You are a research specialist.",
+            )],
         )
     ],
 )
 ```
+
+**CompiledSubAgent (pre-compiled runnable) 방식 (Verified):**
+
+```python
+# 직접 컴파일된 runnable을 subagent로 주입
+SubAgentMiddleware(
+    subagents=[CompiledSubAgent(
+        name="specialist",
+        description="...",
+        runnable=my_precompiled_graph,  # state schema에 반드시 "messages" key 필요
+    )]
+)
+```
+
+- `CompiledSubAgent.runnable`의 상태 스키마에는 반드시 `messages` key가 포함되어야 한다.
+- `structured_response`가 non-None이면 JSON 직렬화 후 `ToolMessage.content`로 반환된다.
+
+Source: `deepagents-source-subagents-2026-05-23`
 
 `create_deep_agent()`를 쓰면 이 middleware 조립은 내부에서 수행된다. 이 페이지는 핵심 runtime 흐름을 보기 위해 `create_agent()`에 middleware를 직접 붙인 경로를 기준으로 설명한다.
 
@@ -106,11 +130,48 @@ state_update = {
 }
 ```
 
-## Result Extraction
+## Result Extraction (Verified)
 
-- `structured_response`가 있으면 JSON 직렬화 후 `ToolMessage.content`로 사용한다.
-- 없으면 subagent `messages`를 뒤에서부터 읽어 마지막 non-empty `AIMessage.text`를 `ToolMessage.content`로 사용한다.
-- subagent의 전체 message history는 parent에 직접 병합되지 않는다.
+결과 추출 우선순위:
+
+1. **`structured_response`가 non-None** → JSON 직렬화:
+   - Pydantic model → `model_dump_json()`
+   - dataclass → `asdict()` → `json.dumps()`
+   - 기타 → `json.dumps()`
+2. **없으면** → `messages`를 역순으로 순회, 마지막 비어있지 않은 `AIMessage.text`
+
+**Anthropic trailing empty AIMessage 방어 로직:**
+- Anthropic은 `tool_use` 블록 뒤에 빈 `end_turn` AIMessage를 추가하는 경우가 있다.
+- 역순 순회 시 빈 text AIMessage는 건너뛰고 마지막 non-empty AIMessage를 찾는다.
+
+subagent의 전체 message history는 parent에 직접 병합되지 않는다.
+
+Source: `deepagents-source-subagents-2026-05-23`
+
+## wrap_model_call — System Prompt 조립 (Verified)
+
+`SubAgentMiddleware.wrap_model_call`은 모델 호출 전에 system message에 task tool 사용법과 available subagent 목록을 append한다.
+
+```python
+def wrap_model_call(self, request, handler):
+    if self.system_prompt is not None:
+        new_system_message = append_to_system_message(
+            request.system_message, self.system_prompt
+        )
+        return handler(request.override(system_message=new_system_message))
+    return handler(request)
+```
+
+`self.system_prompt`에 포함되는 내용 (빌드 시점에 결정됨):
+
+| 상수 | 역할 |
+|------|------|
+| `TASK_TOOL_DESCRIPTION` | `{available_agents}` placeholder 포함. task tool의 LLM 설명. |
+| `TASK_SYSTEM_PROMPT` | task tool 사용 가이드라인 — 언제 써야 하는지/쓰지 말아야 하는지. |
+| `DEFAULT_SUBAGENT_PROMPT` | 기본 subagent 지시사항. 중간 작업 결과가 아닌 최종 응답에 완전한 답 포함 요구. |
+| `GENERAL_PURPOSE_SUBAGENT` | 기본으로 자동 추가되는 general-purpose subagent 스펙. |
+
+Source: `deepagents-source-subagents-2026-05-23`
 
 ## Config Flow
 
@@ -158,7 +219,8 @@ parent runtime config 중 subagent로 전달되는 키:
 
 ## Tests
 
-- TBD: upstream Deep Agents 테스트에서 `SubAgentMiddleware` state filtering을 직접 검증하는 테스트 확인 필요.
+- 실험으로 주요 동작 확인: `_EXCLUDED_STATE_KEYS` 필터링, config 전파, 결과 추출 우선순위 — [[2026-05-30 deepagents subagentmiddleware task tool]], [[2026-05-30 deepagents parallel task tool calls]]
+- upstream 소스 테스트 직접 확인은 미완료: `SubAgentMiddleware` state filtering 유닛 테스트 위치 미확인
 
 ## Related Pages
 

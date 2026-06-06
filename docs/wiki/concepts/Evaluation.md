@@ -6,7 +6,7 @@ framework:
   - Deep Agents
 status: verified
 confidence: high
-last_reviewed: 2026-06-05
+last_reviewed: 2026-06-06
 sources:
   - deepagents-blog-evals-2026-05-23
   - deepagents-source-evals-structure-2026-05-23

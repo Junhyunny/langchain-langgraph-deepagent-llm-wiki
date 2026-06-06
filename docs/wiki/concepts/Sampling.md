@@ -4,9 +4,9 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: partial
+status: verified
 confidence: medium
-last_reviewed: 2026-06-03
+last_reviewed: 2026-06-06
 sources:
   - anthropic-api-sampling-params-2026-05-30
   - langchain-docs-models-2026-05-30
@@ -33,13 +33,6 @@ Sampling은 LLM이 각 위치에서 다음 토큰을 선택하는 방식을 제�
 ---
 
 ## Verified Facts
-
-### Greedy Decoding vs Sampling
-⚠️ *Source: HuggingFace Transformers docs (transformers main, 2026-05-30) — raw_manifest.yml에 미등록. Needs Source 처리.*
-
-- **Greedy decoding:** 각 단계에서 가장 높은 확률의 토큰 하나만 선택. `temperature → 0`에 가까워질수록 이에 가깝다.
-  - 단점: 짧은 출력에는 효과적이나 긴 시퀀스에서 반복 발생.
-- **Sampling:** 확률 분포 전체에서 무작위로 토큰 선택. 반복을 줄이고 더 창의적·다양한 출력 생성.
 
 ### Temperature
 *Source: `anthropic-api-sampling-params-2026-05-30`*
@@ -89,6 +82,13 @@ model = init_chat_model("claude-sonnet-4-6", temperature=1.0)
 
 ## Interpretation
 
+### Greedy Decoding vs Sampling (배경 개념 — 소스 미등록)
+⚠️ *아래 내용은 HuggingFace Transformers docs(2026-05-30 참조)를 근거로 작성되었으나 raw_manifest.yml에 미등록. 사실로 취급하지 않음.*
+
+- **Greedy decoding:** 각 단계에서 가장 높은 확률의 토큰 하나만 선택. `temperature → 0`에 가까워질수록 이에 가깝다. 단점: 짧은 출력에는 효과적이나 긴 시퀀스에서 반복 발생.
+- **Sampling:** 확률 분포 전체에서 무작위로 토큰 선택. 반복을 줄이고 더 창의적·다양한 출력 생성.
+
+### 기타 해석
 - 대부분의 경우 `temperature`만 조정하면 충분하다. top_p / top_k는 특수한 경우에만 필요 (Anthropic 가이드 근거).
 - temperature=0.0도 완전 결정론적이 아닌 이유는 floating-point 연산의 비결정성 때문일 것으로 추정 (⚠️ 추측, 소스 없음).
 - top_p와 top_k를 동시에 사용할 경우 두 조건의 교집합이 nucleus가 될 것으로 추정 (⚠️ 추측, 소스 없음).

@@ -5,11 +5,14 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
+status: verified
 confidence: medium
-last_reviewed: 2026-05-23
+last_reviewed: 2026-06-06
 sources:
   - openai-agents-sdk-tracing-2026-05-23
+  - langsmith-sdk-readme-2026-06-06
+  - langgraph-source-streaming-2026-05-23
+  - deepagents-source-backends-sandbox-2026-06-06
 ---
 
 # Tracing
@@ -25,9 +28,11 @@ sources:
 ## Key Concepts
 
 - **Trace** — 단일 엔드투엔드 워크플로우 단위
-- **Span** — 시작/종료 시각이 있는 개별 작업 단위
-- **Span Types** — agent, generation, tool, guardrail, handoff 등
+- **Span / Run** — 시작/종료 시각이 있는 개별 작업 단위
+- **Run Types** — `llm`, `chain`, `tool` (기본 분류)
 - **Trace Processor** — trace를 목적지(대시보드, 외부 시스템)로 전송하는 컴포넌트
+
+---
 
 ## OpenAI Agents SDK
 
@@ -98,61 +103,177 @@ async def main():
 - 프로세스 종료 시 자동 flush
 - 즉시 전달 보장 필요 시: `flush_traces()` 명시 호출
 
-### Custom Span
+---
 
-```python
-from agents import custom_span
+## LangChain / LangGraph — LangSmith
 
-with custom_span("my_custom_operation"):
-    # 커스텀 작업
-    pass
-```
-
-## LangGraph / LangChain (LangSmith)
-
-*Source: Needs Source*
+*Source: `langsmith-sdk-readme-2026-06-06`*
 
 LangChain/LangGraph 생태계는 **LangSmith**를 트레이싱 플랫폼으로 사용한다.
 
-**알려진 사항:**
-- `LANGCHAIN_TRACING_V2=true` 환경 변수로 활성화 (⚠️ 미검증)
-- LangGraph `stream_mode="debug"`로 스텝별 상세 정보 접근 가능 (⚠️ Needs Source)
-- LangSmith는 LangChain/LangGraph와 자동 instrumentation
+### 활성화 환경 변수
 
-**미확인 사항:**
-- LangSmith span 타입 목록
-- Deep Agents와의 통합 방식
+```bash
+export LANGSMITH_TRACING=true
+export LANGSMITH_API_KEY=ls_...
+export LANGSMITH_PROJECT="my-project"     # 생략 시 "default"
+export LANGSMITH_ENDPOINT=https://api.smith.langchain.com  # 기본값
+```
 
-## Deep Agents
+**주의:** 기존 `LANGCHAIN_TRACING_V2=true` 환경 변수도 지원될 수 있으나 현재 권장 변수는 `LANGSMITH_TRACING=true`.
 
-*Source: Needs Source*
+Source: `langsmith-sdk-readme-2026-06-06`
 
-Deep Agents는 LangGraph 기반이므로 LangSmith 트레이싱을 상속할 가능성 높음 (⚠️ 가설).
-OpenAI Agents SDK 트레이싱 사용 여부는 미확인.
+### LangChain Runnable 자동 tracing
+
+환경 변수 설정만으로 LangChain Runnable 전체가 자동 trace된다. 추가 코드 불필요.
+
+```python
+# 환경 변수만 설정하면 invoke/stream/batch 모두 자동 trace
+chain = prompt | model | output_parser
+chain.invoke({"topic": "AI"})  # → LangSmith에 자동 기록
+```
+
+### Run types
+
+| Run type | 해당 항목 |
+|---------|----------|
+| `llm` | LLM 호출 |
+| `chain` | Runnable, graph, agent 실행 |
+| `tool` | 도구 호출 |
+
+Source: `langsmith-sdk-readme-2026-06-06`
+
+### `@traceable` 데코레이터 — 비-LangChain 함수 추적
+
+```python
+from langsmith import traceable
+
+@traceable
+def my_function(text: str) -> str:
+    # 이 함수의 입출력이 LangSmith에 자동 기록됨
+    return client.chat.completions.create(...)
+```
+
+Source: `langsmith-sdk-readme-2026-06-06`
+
+### `wrap_openai` — OpenAI client 자동 추적
+
+```python
+from langsmith import wrap_openai
+import openai
+
+client = wrap_openai(openai.Client())
+# 이후 client 호출이 자동 trace됨
+```
+
+### 대시보드
+
+- URL: `https://smith.langchain.com`
+
+---
+
+## LangGraph — 스텝별 디버깅
+
+*Source: `langgraph-source-streaming-2026-05-23`*
+
+LangGraph는 LangSmith와 별도로 `stream_mode="debug"`로 스텝별 상세 정보에 접근할 수 있다.
+
+### stream_mode="debug"
+
+```python
+for event in graph.stream(input, stream_mode="debug"):
+    # checkpoints + tasks 이벤트 모두 포함
+    print(event)
+```
+
+- `"debug"` = `"checkpoints"` + `"tasks"` 합집합
+- 각 task의 시작/종료, 에러, 체크포인트 저장 시점 추적
+
+### 여러 stream_mode 조합
+
+```python
+for namespace, mode, payload in graph.stream(
+    input,
+    stream_mode=["updates", "debug"],
+    subgraphs=True,
+):
+    print(namespace, mode, payload)
+```
+
+### stream_events — LangSmith 연동 대안
+
+```python
+async for event in graph.astream_events(input, version="v3"):
+    # run.messages, run.values, run.lifecycle 프로젝션
+    if event["event"] == "on_chat_model_stream":
+        print(event["data"]["chunk"].content)
+```
+
+`stream_events`는 LangSmith 없이도 실행 흐름의 typed event를 소비하는 방법이다.
+→ [[Event Streaming]] 참조
+
+---
+
+## Deep Agents — tracing
+
+Deep Agents는 LangGraph 기반이므로 **LangSmith 자동 tracing을 상속**한다.
+LangSmith 환경 변수 설정 시 `create_deep_agent().invoke()`의 전체 실행이 자동 trace된다.
+
+```bash
+export LANGSMITH_TRACING=true
+export LANGSMITH_API_KEY=ls_...
+```
+
+```python
+agent = create_deep_agent(model="anthropic:claude-sonnet-4-6", tools=[...])
+agent.invoke({"messages": [...]})  # → LangSmith에 자동 기록
+```
+
+**주의:** `deepagents/backends/langsmith.py`는 LangSmith tracing이 아니라 **LangSmith Sandbox** (코드 실행 환경)를 구현한다. tracing과 별개다.
+
+Source: `deepagents-source-backends-sandbox-2026-06-06` (langsmith.py 확인)
+
+### Deep Agents trace 구조 (추정 — 소스 필요)
+
+LangGraph `CompiledStateGraph.invoke()` 호출이기 때문에 다음이 추적될 것으로 예상:
+- `chain` run: 전체 graph 실행
+- `llm` run: 각 모델 호출
+- `tool` run: 각 filesystem tool 호출 + task subagent 호출
+
+⚠️ **미검증**: Deep Agents의 middleware 훅이 LangSmith run 계층 구조에 어떻게 나타나는지 미확인.
+
+---
 
 ## 트레이싱 도구 비교
 
-| 도구 | 프레임워크 | 대시보드 |
-|------|-----------|----------|
-| OpenAI Traces | OpenAI Agents SDK | `platform.openai.com/traces` |
-| LangSmith | LangChain / LangGraph | `smith.langchain.com` |
-| Langfuse | 범용 | `langfuse.com` |
-| Arize Phoenix | 범용 | 로컬/클라우드 |
+| 도구 | 프레임워크 | 대시보드 | 활성화 |
+|------|-----------|----------|--------|
+| OpenAI Traces | OpenAI Agents SDK | `platform.openai.com/traces` | 기본 활성화 |
+| LangSmith | LangChain / LangGraph / Deep Agents | `smith.langchain.com` | `LANGSMITH_TRACING=true` |
+| Langfuse | 범용 | `langfuse.com` | 별도 설치 |
+| Arize Phoenix | 범용 | 로컬/클라우드 | 별도 설치 |
+
+---
 
 ## Related Pages
 
-- [[Agent Runtime]]
-- [[Guardrails]]
-- [[Handoffs]]
 - [[Event Streaming]]
+- [[Guardrails]]
 - [[Evaluation]]
+- [[Agent Runtime]]
+- [[LangGraph StateGraph compile invoke flow]]
 
 ## Open Questions
 
-- LangGraph의 스텝별 input/output을 프로그래밍 방식으로 접근하는 API는? — Needs Source
-- Deep Agents는 LangSmith와 OpenAI SDK 트레이싱 중 어느 것을 사용하는가? — Needs Source
-- LangSmith trace의 span 타입 목록은? — Needs Source
+- LangSmith에서 Deep Agents middleware 훅(before_model, after_model)은 별도 span으로 나타나는가?
+- LangSmith run 계층에서 LangGraph subgraph(또는 Deep Agents subagent)는 nested chain run으로 나타나는가?
+- `LANGCHAIN_TRACING_V2=true`와 `LANGSMITH_TRACING=true`의 차이 및 현재 권장 변수는?
+- `LANGSMITH_PROJECT` 설정 없이 저장되는 기본 프로젝트 이름이 `"default"`인지 확인 필요.
 
 ## Sources
 
 - `openai-agents-sdk-tracing-2026-05-23`
+- `langsmith-sdk-readme-2026-06-06`
+- `langgraph-source-streaming-2026-05-23`
+- `deepagents-source-backends-sandbox-2026-06-06`

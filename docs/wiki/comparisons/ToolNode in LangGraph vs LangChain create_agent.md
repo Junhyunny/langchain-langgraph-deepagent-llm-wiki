@@ -3,9 +3,9 @@ type: comparison
 framework:
   - LangGraph
   - LangChain
-status: draft
+status: verified
 confidence: high
-last_reviewed: 2026-05-29
+last_reviewed: 2026-06-06
 sources:
   - langgraph-prebuilt-tool-node-2026-05-27
   - langchain-agents-factory-2026-05-28
@@ -56,6 +56,16 @@ create_agent(...)
 - [[2026-05-28 langgraph toolnode direct]] shows direct `ToolNode` input/output shapes and `wrap_tool_call`.
 - [[2026-05-29 langgraph toolnode command outputs]] shows `Command(update=...)`, `Command(goto=...)`, and matching `ToolMessage` validation.
 - [[2026-05-28 langchain create_agent fake tool loop]] shows the same tool execution boundary inside `create_agent()`.
+
+## Source Code References
+
+- Repo: `https://github.com/langchain-ai/langgraph`
+- Files:
+  - `libs/langgraph/langgraph/prebuilt/tool_node.py` — `ToolNode`, `run_one`, `executor.map()`
+
+- Repo: `https://github.com/langchain-ai/langchain`
+- Files:
+  - `libs/langchain/langchain/agents/` — `create_agent()`, `factory.py`, `_get_bound_model()`
 
 ## Open Questions
 

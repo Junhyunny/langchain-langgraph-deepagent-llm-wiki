@@ -5,12 +5,18 @@ framework:
   - LangGraph
   - Deep Agents
   - OpenAI Agents SDK
-status: draft
+status: partial
 confidence: medium
-last_reviewed: 2026-05-23
+last_reviewed: 2026-06-06
 sources:
   - openai-agents-sdk-agent-overview-2026-05-23
   - openai-agents-sdk-running-agents-2026-05-23
+  - langgraph-docs-graph-api-2026-05-23
+  - langgraph-docs-persistence-2026-05-20
+  - langgraph-store-base-2026-05-23
+  - langgraph-prebuilt-chat-agent-executor-2026-05-28
+  - deepagents-source-graph-2026-05-19
+  - deepagents-docs-harness-2026-05-19
 ---
 
 # Agent Runtime
@@ -94,31 +100,31 @@ sources:
 
 ### LangGraph
 
-*Source: 별도 탐구 필요*
+*Source: `langgraph-docs-graph-api-2026-05-23`, `langgraph-docs-persistence-2026-05-20`, `langgraph-store-base-2026-05-23`, `langgraph-prebuilt-chat-agent-executor-2026-05-28`*
 
 | 런타임 요소 | 구현 |
 |------------|------|
-| 모델 | `ChatModel` (LangChain provider) |
-| 오케스트레이션 | `StateGraph` + `Pregel` 실행 엔진 |
-| 인스트럭션 | `SystemMessage` 또는 `@dynamic_prompt` 미들웨어 |
-| 도구 | `@tool` 데코레이터 또는 `StructuredTool` |
-| 가드레일 | 표준 API 없음 (⚠️ Needs Source) |
+| 모델 | `ChatModel` (LangChain provider — init_chat_model 또는 직접 생성) |
+| 오케스트레이션 | `StateGraph` + `Pregel` 실행 엔진 (`SyncPregelLoop` → superstep 반복) |
+| 인스트럭션 | `SystemMessage` 주입 또는 `pre_model_hook` 콜백 (create_react_agent 기준) |
+| 도구 | `@tool` 데코레이터 또는 `StructuredTool` → `ToolNode`로 래핑 |
+| 가드레일 | 전용 API 없음 — 조건부 엣지, 입출력 검증 노드로 직접 구현 (⚠️ 공식 가드레일 추상화 미확인) |
 | 핸드오프 | `Command(goto=...)` 또는 subgraph 전환 |
-| 메모리 | Checkpointer (단기) + Store (장기) |
+| 메모리 | `BaseCheckpointSaver` (단기, 실행 내 persistence) + `BaseStore` (장기, cross-thread) |
 
 ### Deep Agents
 
-*Source: 별도 탐구 필요*
+*Source: `deepagents-source-graph-2026-05-19`, `deepagents-docs-harness-2026-05-19`*
 
 | 런타임 요소 | 구현 |
 |------------|------|
-| 모델 | LangGraph 위임 |
-| 오케스트레이션 | `create_deep_agent()` → `langchain.agents.create_agent` 위임 |
-| 인스트럭션 | `BASE_AGENT_PROMPT` + `HarnessProfile.base_system_prompt` |
-| 도구 | filesystem tools + custom tools (harness 기반) |
-| 가드레일 | Middleware 기반 (⚠️ 전용 가드레일 API 미확인) |
-| 핸드오프 | subagent tool call 방식 |
-| 메모리 | `MemoryMiddleware`, `CompositeBackend` |
+| 모델 | LangGraph(→ LangChain) 위임 — `HarnessProfile`에 모델 설정 포함 |
+| 오케스트레이션 | `create_deep_agent()` → `langchain.agents.create_agent` (LangGraph StateGraph 기반) |
+| 인스트럭션 | `BASE_AGENT_PROMPT` + `HarnessProfile.base_system_prompt` 조합 |
+| 도구 | `FilesystemMiddleware`가 주입하는 file/execute 도구 + 개발자 추가 도구 |
+| 가드레일 | Middleware 훅(`wrap_model_call`, `wrap_tool_call`) 기반 — 전용 가드레일 클래스는 미확인 (⚠️) |
+| 핸드오프 | `SubAgentMiddleware`가 주입하는 `task` 도구 호출 방식 |
+| 메모리 | `MemoryMiddleware` + `CompositeBackend` (단기/장기 통합) |
 
 ## Source Code References
 
@@ -152,3 +158,9 @@ sources:
 
 - `openai-agents-sdk-agent-overview-2026-05-23`
 - `openai-agents-sdk-running-agents-2026-05-23`
+- `langgraph-docs-graph-api-2026-05-23`
+- `langgraph-docs-persistence-2026-05-20`
+- `langgraph-store-base-2026-05-23`
+- `langgraph-prebuilt-chat-agent-executor-2026-05-28`
+- `deepagents-source-graph-2026-05-19`
+- `deepagents-docs-harness-2026-05-19`

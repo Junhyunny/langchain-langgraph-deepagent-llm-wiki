@@ -4,15 +4,16 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
-confidence: medium
-last_reviewed: 2026-05-23
+status: verified
+confidence: high
+last_reviewed: 2026-06-06
 sources:
   - deepagents-docs-harness-2026-05-19
   - deepagents-docs-context-engineering-2026-05-18
   - langgraph-docs-persistence-2026-05-20
   - langgraph-store-base-2026-05-23
   - langchain-source-memory-api-2026-05-23
+  - langgraph-source-checkpoint-savers-2026-05-23
 ---
 
 # Memory
@@ -20,8 +21,6 @@ sources:
 ## 요약
 
 Memory는 LLM agent가 여러 턴, 세션, 작업에 걸쳐 정보를 유지하고 다시 불러올 수 있게 하는 메커니즘을 뜻한다. Memory는 단기적일 수도 있고(세션 내), 장기적일 수도 있다(세션 간).
-
-*상태: LangGraph Store 인터페이스 + LangChain 레거시 API deprecated 현황 추가됨.*
 
 ## 중요한 이유
 
@@ -155,6 +154,15 @@ search_item.score  # float | None (vector search 시 relevance score)
 - `InMemoryStore` 기본값: keyword filter만 지원, vector search 미지원
 - Vector search 활성화: `IndexConfig(dims=..., embed=...)` 설정으로 `InMemoryStore` 또는 외부 Store에서 지원 가능
 
+**Checkpointer 구현체 (Verified):**
+*Source: `langgraph-source-checkpoint-savers-2026-05-23`*
+
+| 구현체 | 용도 | 비고 |
+|--------|------|------|
+| `InMemorySaver` | 개발/테스트 | `MemorySaver = InMemorySaver` (하위 호환 alias) |
+| `SqliteSaver` | 단일 스레드 개발 | `from_conn_string(":memory:")` 패턴 |
+| `PostgresSaver` | 프로덕션 권장 | `setup()` 필수 호출, `pipeline` 옵션, `AsyncPostgresSaver` 비동기 버전 별도 |
+
 **프로덕션 Store 구현체:**
 - `InMemoryStore` — 개발/테스트용 (vector search 기본 미지원)
 - Redis, PostgreSQL 기반 구현체 — `langgraph-checkpoint-redis` 등 별도 패키지 필요 (source: 미수집)
@@ -227,3 +235,5 @@ Source: `deepagents-docs-context-engineering-2026-05-18`
 - `deepagents-docs-context-engineering-2026-05-18`
 - `langgraph-docs-persistence-2026-05-20`
 - `langgraph-store-base-2026-05-23`
+- `langchain-source-memory-api-2026-05-23`
+- `langgraph-source-checkpoint-savers-2026-05-23`

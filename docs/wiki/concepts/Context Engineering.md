@@ -4,15 +4,18 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: draft
-confidence: medium
-last_reviewed: 2026-05-23
+status: verified
+confidence: high
+last_reviewed: 2026-06-06
 sources:
   - deepagents-docs-context-engineering-2026-05-18
+  - deepagents-docs-harness-2026-05-19
+  - deepagents-source-skills-middleware-2026-06-06
   - langchain-source-prompts-2026-05-23
   - langchain-source-runnable-2026-05-23
   - langchain-source-bind-tools-function-calling-2026-05-23
   - langchain-source-dynamic-prompt-2026-05-23
+  - langgraph-docs-graph-api-2026-05-23
 ---
 
 # Context Engineering
@@ -95,6 +98,18 @@ agent = create_agent(model, middleware=[context_aware_prompt])
 
 > ⚠️ **문서 오류 주의**: 일부 공식 문서 예제는 `(user_query: str) -> list` 서명을 사용하지만, 이는 실제 `@dynamic_prompt` API가 아니다. 올바른 서명은 위와 같다. (Source: `langchain-source-dynamic-prompt-2026-05-23`)
 
+**AgentMiddleware 개입 시점 (Verified):**
+*Source: `langchain-source-dynamic-prompt-2026-05-23`*
+
+| 메서드 | 시점 | 용도 |
+|--------|------|------|
+| `before_agent` | agent 실행 전 | 초기 상태 설정 |
+| `after_agent` | agent 실행 후 | 결과 후처리 |
+| `before_model` | 모델 호출 전 | state 기반 전처리 |
+| `after_model` | 모델 호출 후 | 응답 가공 |
+| `wrap_model_call` | 모델 호출 래핑 | **`@dynamic_prompt`가 구현하는 hook** — 시스템 프롬프트 교체 |
+| `wrap_tool_call` | 도구 호출 래핑 | 도구 실행 전후 개입 |
+
 **도구 스키마 주입 (bind_tools):**
 *Source: `langchain-source-bind-tools-function-calling-2026-05-23`*
 
@@ -121,14 +136,16 @@ _format_tool_to_openai_function()  ← dict schema or Pydantic model 분기 처�
 - `tool_choice` 정규화: 이름 → `{"type": "function", "function": {"name": ...}}`, `"any"` → `"required"`
 
 **컨텍스트 압축:**
-- *소스 필요* — `ConversationSummaryMemory` 등 요약 기반 압축 기능의 내부 구현 확인 필요
+- LangChain native 요약 메모리: [[Memory]] 참조 (partial — `ConversationSummaryMemory` 내부 구현 미확인)
+- Deep Agents `SummarizationMiddleware` 기반 압축: [[SummarizationMiddleware]] 참조 (verified)
 
 ### LangGraph
+*Source: `langgraph-docs-graph-api-2026-05-23`*
 
-- 상태(`State`)의 메시지 목록이 LLM 노드에 직접 전달된다
+- `State`(TypedDict/Pydantic 스키마)의 `messages` 필드가 LLM 노드에 직접 전달된다
 - `add_messages` reducer가 메시지 히스토리 누적을 관리 — ID 기반 중복 제거/업데이트 포함
 - 프롬프트는 보통 노드 함수 내부에서 `ChatPromptTemplate`으로 조립된다
-- *LangGraph 전용 컨텍스트 압축 메커니즘 소스 필요*
+- 컨텍스트 압축: LangGraph 전용 메커니즘은 미확인 — `SummarizationMiddleware`(Deep Agents) 또는 `pre_model_hook`에서 직접 처리하는 패턴 참조
 
 ### Deep Agents
 *Source: `deepagents-docs-context-engineering-2026-05-18`*
@@ -157,13 +174,73 @@ Deep Agents는 5가지 context 타입으로 구분하여 체계적으로 관리�
 8. 사용자 제공 미들웨어 prompts
 9. Human-in-the-loop prompt (`interrupt_on` 설정 시)
 
+#### Skills (Verified)
+*Source: `deepagents-docs-harness-2026-05-19`, `deepagents-source-skills-middleware-2026-06-06`*
+
+- **표준:** Agent Skills standard (`agentskills.io`) 준수
+- **구조:** 각 skill = 디렉터리 + `SKILL.md` 파일 (instructions + metadata frontmatter)
+- 추가 리소스 포함 가능: scripts, reference docs, templates
+- `skills=` 파라미터로 skill 디렉터리 경로 목록 전달
+
+**SKILL.md frontmatter 필드 (소스 검증됨)**
+*Source: `deepagents-source-skills-middleware-2026-06-06`*
+
+| 필드 | 타입 | 제약 | 필수 여부 |
+|------|------|------|-----------|
+| `name` | str | 최대 64자, 소문자·숫자·하이픈만 | 필수 |
+| `description` | str | 최대 1024자 | 필수 |
+| `license` | str | — | 선택 |
+| `compatibility` | str | 최대 500자 | 선택 |
+| `metadata` | dict[str, str] | — | 선택 |
+| `allowed-tools` | str | 공백 구분 도구 이름 목록 | 선택 |
+
+```markdown
+---
+name: code-review
+description: Helps with reviewing code changes for correctness, style, and potential bugs.
+license: MIT
+compatibility: Deep Agents 1.0+
+metadata:
+  author: team-a
+allowed-tools: read_file glob grep
+---
+
+# Code Review Skill
+
+이 파일의 instructions...
+```
+
+**Progressive disclosure 동작 (소스 검증됨):**
+
+1. `before_agent()` — 모든 SKILL.md의 **frontmatter만** 파싱 → `skills_metadata: list[SkillMetadata]` 에 저장
+2. `modify_request()` / `wrap_model_call()` — 시스템 프롬프트에 각 skill의 `name` + `description`만 주입 (토큰 절약)
+3. Agent가 LLM 판단으로 현재 작업에 관련 skill 식별 → `read_file("SKILL.md")` 직접 호출로 전체 내용 로드
+
+시스템 프롬프트 주입 지시문 예시:
+> "Recognize when a skill applies: Check if the user's task matches a skill's description. If a skill is applicable, read the SKILL.md file to learn how to execute the skill."
+
+- `skills_metadata`: `PrivateStateAttr` — parent state에 저장되지 않음 (subagent로 전파 안 됨)
+- `skills_load_errors`: `PrivateStateAttr` — 로드 실패 skill 진단용, 시스템 프롬프트에 표시됨
+
+#### Memory (Verified)
+*Source: `deepagents-docs-harness-2026-05-19`*
+
+- **표준:** `AGENTS.md` 파일 (agents.md 표준) 사용
+- **항상 로드** — skills와 달리 progressive disclosure 없음, 매 실행마다 시스템 프롬프트에 포함
+- `memory=` 파라미터로 파일 경로 목록 전달
+- backend에 저장됨 (StateBackend, StoreBackend, FilesystemBackend)
+- agent가 interaction/feedback 기반으로 memory 파일 직접 업데이트 가능
+
 #### Memory vs Skills
 
-| | Memory | Skills |
+| | Memory (`AGENTS.md`) | Skills (`SKILL.md`) |
 |---|---|---|
 | 로드 시점 | **항상** 시스템 프롬프트에 포함 | frontmatter만 읽고, 관련성 판단 시 전체 로드 |
 | 패턴 | No progressive disclosure | **Progressive disclosure** |
+| 표준 | agents.md 표준 | agentskills.io 표준 |
 | 용도 | 항상 필요한 프로젝트 규칙, 선호도 | 상황별 특화 워크플로우 |
+
+Source: `deepagents-docs-context-engineering-2026-05-18`, `deepagents-docs-harness-2026-05-19`
 
 #### Context Compression
 
@@ -195,7 +272,7 @@ Deep Agents는 5가지 context 타입으로 구분하여 체계적으로 관리�
 - LangChain, LangGraph에서 컨텍스트 윈도우 초과를 어떻게 처리하는가? (Deep Agents에서만 확인됨) — Needs Source
 - ~~도구 설명은 어떤 형식으로 구성되고 주입되는가?~~ → 위 "도구 스키마 주입" 섹션 참조. (Source: `langchain-source-bind-tools-function-calling-2026-05-23`) ✅
 - Deep Agents의 `graph.py#L37` base agent prompt는 어떤 내용인가? 커스터마이징 가능한가?
-- Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가?
+- ~~Skills frontmatter 형식은 무엇이며 agent는 어떻게 관련성을 판단하는가?~~ → **완전 해소**: 필드 목록 `name/description/license/compatibility/metadata/allowed-tools` 소스 검증됨. 관련성 판단은 LLM이 task description과 skill description 비교로 수행. Progressive disclosure: `before_agent()`에서 frontmatter 로드, agent가 `read_file()` 직접 호출로 전체 로드. (Source: `deepagents-source-skills-middleware-2026-06-06`) ✅
 - LangChain에서 `RunnableParallel` 병렬 실행 시 thread pool 크기 제한은? — Source: `langchain-source-runnable-2026-05-23`
 
 **해소됨 (2026-05-23):**
@@ -213,7 +290,10 @@ Deep Agents는 5가지 context 타입으로 구분하여 체계적으로 관리�
 ## 소스
 
 - `deepagents-docs-context-engineering-2026-05-18`
+- `deepagents-docs-harness-2026-05-19`
+- `deepagents-source-skills-middleware-2026-06-06`
 - `langchain-source-prompts-2026-05-23`
 - `langchain-source-runnable-2026-05-23`
 - `langchain-source-bind-tools-function-calling-2026-05-23`
 - `langchain-source-dynamic-prompt-2026-05-23`
+- `langgraph-docs-graph-api-2026-05-23`

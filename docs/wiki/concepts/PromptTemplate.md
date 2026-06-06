@@ -2,9 +2,9 @@
 type: concept
 framework:
   - LangChain
-status: draft
+status: verified
 confidence: high
-last_reviewed: 2026-05-23
+last_reviewed: 2026-06-06
 sources:
   - langchain-source-prompts-2026-05-23
   - langchain-source-output-parsers-2026-05-23
@@ -217,8 +217,6 @@ chain = (
     | llm
 )
 ```
-
----
 
 ---
 

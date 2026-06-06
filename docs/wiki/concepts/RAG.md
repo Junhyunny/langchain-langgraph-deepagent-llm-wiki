@@ -2,9 +2,9 @@
 type: concept
 framework:
   - LangChain
-status: draft
-confidence: medium
-last_reviewed: 2026-05-23
+status: verified
+confidence: high
+last_reviewed: 2026-06-06
 sources:
   - langchain-docs-rag-2026-05-23
   - langchain-source-text-splitters-2026-05-23
@@ -277,13 +277,15 @@ Source: `langchain-docs-rag-2026-05-23`
 **해소됨 (2026-05-23):**
 - ✅ RAG 문서의 `@dynamic_prompt(user_query: str) -> list` 패턴 — **문서 오류 확정.** 실제 `@dynamic_prompt` 서명: `(request: ModelRequest) -> str | SystemMessage`. 문서 예제는 실제 API가 아닌 일반 함수 패턴을 잘못 표기한 것. (Source: `langchain-source-dynamic-prompt-2026-05-23`)
 
+**해소됨 (2026-05-23, 페이지 내 확인):**
+- ✅ `as_retriever()` `search_type` 옵션: `similarity`/`mmr`/`similarity_score_threshold` 차이 → 위 Retrievers 섹션 표 참조. (Source: `langchain-source-vectorstore-embeddings-2026-05-23`)
+- ✅ MMR 작동 방식: `fetch_k`개 후보 → `maximal_marginal_relevance()` 알고리즘으로 `k`개 선택. `lambda_mult` 0~1 관련성/다양성 균형. (Source: `langchain-source-vectorstore-embeddings-2026-05-23`)
+- ✅ `BaseRetriever` 계약: `_get_relevant_documents(query, *, run_manager)` 구현 필수. 공개 API는 `invoke()`. (Source: `langchain-source-vectorstore-embeddings-2026-05-23`)
+
 **잔여 질문:**
-- `init_embeddings("openai:text-embedding-3-small")` 형식은 새로운 API인가? 구버전 `OpenAIEmbeddings()`와의 차이는? — Source: `langchain-docs-rag-2026-05-23`
-- `response_format="content_and_artifact"` 옵션의 정확한 의미는? — Source: `langchain-docs-rag-2026-05-23`
+- `init_embeddings("openai:text-embedding-3-small")` 형식은 새로운 API인가? 구버전 `OpenAIEmbeddings()`와의 차이는? — Needs Source
+- `response_format="content_and_artifact"` 옵션의 정확한 의미는? — Needs Source
 - FAISS `similarity_search`의 내부 알고리즘은? (L2 거리 기본값인가?) — Needs Source
-- `as_retriever()`의 `search_type` 옵션: `similarity`, `mmr`, `similarity_score_threshold` 차이는? — Needs Source
-- MMR(Maximal Marginal Relevance)의 구체적인 작동 방식은? — Needs Source
-- `BaseRetriever`의 `get_relevant_documents` 메서드 계약은? — Needs Source
 - `_merge_splits()`의 `chunk_overlap` 구현 방식 — 슬라이딩 윈도우 방식인가? — Source: `langchain-source-text-splitters-2026-05-23`
 
 ## 관련 페이지
@@ -304,4 +306,5 @@ Source: `langchain-docs-rag-2026-05-23`
 
 - `langchain-docs-rag-2026-05-23`
 - `langchain-source-text-splitters-2026-05-23`
+- `langchain-source-vectorstore-embeddings-2026-05-23`
 - `langchain-source-dynamic-prompt-2026-05-23`

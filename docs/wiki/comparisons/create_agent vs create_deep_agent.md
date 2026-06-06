@@ -3,9 +3,9 @@ type: comparison
 framework:
   - LangChain
   - Deep Agents
-status: draft
+status: partial
 confidence: high
-last_reviewed: 2026-05-28
+last_reviewed: 2026-06-06
 sources:
   - langchain-source-create-agent-factory-2026-05-23
   - langchain-agents-factory-2026-05-28
