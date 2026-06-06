@@ -165,7 +165,7 @@
 
 ### 9장. 메모리, 스트리밍, RAG
 
-- [ ] **9.1** Memory API — 대화 히스토리 관리와 세션 간 기억 🟠
+- [ ] **9.1** Memory API — 대화 히스토리 관리와 세션 간 기억 ✅
   - 위키: [[Memory]]
 - [ ] **9.2** Event Streaming — astream_events 완전 가이드, v1/v2/v3 차이 ✅
   - 위키: [[Event Streaming]]
@@ -262,13 +262,13 @@
 
 - [ ] **18.1** Middleware 스택의 조립 원리 — wrap_model_call 중첩 순서와 실행 방향 ✅
   - 위키: [[Agent Harness]], [[Deep Agents]]
-- [ ] **18.2** FilesystemMiddleware — write_file / read_file 도구의 내부 구현 🟠
+- [ ] **18.2** FilesystemMiddleware — write_file / read_file 도구의 내부 구현 ✅
   - 위키: [[FilesystemMiddleware]]
-- [ ] **18.3** SubAgentMiddleware — task 도구 실행, subagent 생성, 상태 격리 흐름 🟠
+- [ ] **18.3** SubAgentMiddleware — task 도구 실행, subagent 생성, 상태 격리 흐름 ✅
   - 위키: [[Deep Agents SubAgentMiddleware task tool flow]]
-- [ ] **18.4** 병렬 task 도구 호출 — 단일 AIMessage의 다중 task call 동시 실행 🟠
+- [ ] **18.4** 병렬 task 도구 호출 — 단일 AIMessage의 다중 task call 동시 실행 ✅
   - 위키: [[Deep Agents parallel task tool calls]]
-- [ ] **18.5** _EXCLUDED_STATE_KEYS — parent / child 상태 격리 패턴의 설계 이유 🟠
+- [ ] **18.5** _EXCLUDED_STATE_KEYS — parent / child 상태 격리 패턴의 설계 이유 ✅
   - 위키: [[Deep Agents SubAgentMiddleware task tool flow]]
 
 ### 19장. Context Engineering
@@ -321,9 +321,9 @@
   - 위키: [[When to use LangGraph vs Deep Agents for orchestration]]
 - [ ] **23.2** LangGraph vs Deep Agents 오케스트레이션 심층 비교 🟠
   - 위키: [[create_agent vs create_deep_agent]]
-- [ ] **23.3** Guardrails 구현 비교 — 세 프레임워크에서 입출력을 어떻게 통제하는가 🟠
+- [ ] **23.3** Guardrails 구현 비교 — 세 프레임워크에서 입출력을 어떻게 통제하는가 ✅
   - 위키: [[Guardrails]]
-- [ ] **23.4** Tracing과 관찰 가능성 — LangSmith 통합, 그래프 스텝별 디버깅 🟠
+- [ ] **23.4** Tracing과 관찰 가능성 — LangSmith 통합, 그래프 스텝별 디버깅 ✅
   - 위키: [[Tracing]]
 
 ### 24장. 실전 프로젝트: 리서치 에이전트 3가지 버전

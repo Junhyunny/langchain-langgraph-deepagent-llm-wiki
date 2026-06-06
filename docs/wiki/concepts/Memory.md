@@ -4,7 +4,7 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: partial
+status: verified
 confidence: high
 last_reviewed: 2026-06-06
 sources:
@@ -21,8 +21,6 @@ sources:
 ## 요약
 
 Memory는 LLM agent가 여러 턴, 세션, 작업에 걸쳐 정보를 유지하고 다시 불러올 수 있게 하는 메커니즘을 뜻한다. Memory는 단기적일 수도 있고(세션 내), 장기적일 수도 있다(세션 간).
-
-*상태: LangGraph Store 인터페이스 + LangChain 레거시 API deprecated 현황 추가됨.*
 
 ## 중요한 이유
 

@@ -3,7 +3,7 @@ type: flow
 framework:
   - Deep Agents
   - LangChain
-status: partial
+status: verified
 confidence: high
 last_reviewed: 2026-06-06
 sources:
@@ -219,7 +219,8 @@ parent runtime config 중 subagent로 전달되는 키:
 
 ## Tests
 
-- TBD: upstream Deep Agents 테스트에서 `SubAgentMiddleware` state filtering을 직접 검증하는 테스트 확인 필요.
+- 실험으로 주요 동작 확인: `_EXCLUDED_STATE_KEYS` 필터링, config 전파, 결과 추출 우선순위 — [[2026-05-30 deepagents subagentmiddleware task tool]], [[2026-05-30 deepagents parallel task tool calls]]
+- upstream 소스 테스트 직접 확인은 미완료: `SubAgentMiddleware` state filtering 유닛 테스트 위치 미확인
 
 ## Related Pages
 

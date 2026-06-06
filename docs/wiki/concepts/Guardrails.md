@@ -5,12 +5,14 @@ framework:
   - LangChain
   - LangGraph
   - Deep Agents
-status: partial
+status: verified
 confidence: high
 last_reviewed: 2026-06-06
 sources:
   - openai-agents-sdk-guardrails-2026-05-23
   - langchain-source-builtin-middleware-2026-05-25
+  - langgraph-prebuilt-tool-node-2026-05-27
+  - deepagents-source-filesystem-middleware-2026-06-06
 ---
 
 # Guardrails
@@ -215,7 +217,7 @@ def guardrail_wrapper(request, handler):
 tool_node = ToolNode(tools, wrap_tool_call=guardrail_wrapper)
 ```
 
-**소스 필요**: `ToolNode(wrap_tool_call=...)` API는 소스 코드에서 확인됨 (`langgraph-prebuilt-tool-node-2026-05-27`). 공식 문서 예제는 미확인.
+*Source: `langgraph-prebuilt-tool-node-2026-05-27` (소스 코드 기준 — 공식 문서 예제 미확인)*
 
 ---
 
@@ -306,3 +308,5 @@ agent = create_deep_agent(
 
 - `openai-agents-sdk-guardrails-2026-05-23`
 - `langchain-source-builtin-middleware-2026-05-25`
+- `langgraph-prebuilt-tool-node-2026-05-27`
+- `deepagents-source-filesystem-middleware-2026-06-06`

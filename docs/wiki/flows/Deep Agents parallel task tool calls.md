@@ -1,7 +1,7 @@
 ---
 type: flow
 framework: Deep Agents
-status: partial
+status: verified
 confidence: high
 last_reviewed: 2026-06-06
 sources:
