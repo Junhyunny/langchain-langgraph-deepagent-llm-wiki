@@ -263,10 +263,10 @@
 - [ ] **18.1** Middleware 스택의 조립 원리 — wrap_model_call 중첩 순서와 실행 방향 ✅
   - 위키: [[Agent Harness]], [[Deep Agents]]
 - [ ] **18.2** FilesystemMiddleware — write_file / read_file 도구의 내부 구현 ❌
-- [ ] **18.3** SubAgentMiddleware — task 도구 실행, subagent 생성, 상태 격리 흐름 🟡
+- [ ] **18.3** SubAgentMiddleware — task 도구 실행, subagent 생성, 상태 격리 흐름 🟠
   - 위키: [[Deep Agents SubAgentMiddleware task tool flow]]
 - [ ] **18.4** 병렬 task 도구 호출 — 단일 AIMessage의 다중 task call 동시 실행 🟡
-- [ ] **18.5** _EXCLUDED_STATE_KEYS — parent / child 상태 격리 패턴의 설계 이유 🟡
+- [ ] **18.5** _EXCLUDED_STATE_KEYS — parent / child 상태 격리 패턴의 설계 이유 🟠
   - 위키: [[Deep Agents SubAgentMiddleware task tool flow]]
 
 ### 19장. Context Engineering
