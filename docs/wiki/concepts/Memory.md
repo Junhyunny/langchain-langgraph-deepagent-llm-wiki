@@ -6,8 +6,11 @@ framework:
   - Deep Agents
 status: verified
 confidence: high
-last_reviewed: 2026-06-06
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
+langchain_version: 1.3.14
 sources:
+  - langchain-source-1-3-14-2026-07-30
   - deepagents-docs-harness-2026-05-19
   - deepagents-docs-context-engineering-2026-05-18
   - langgraph-docs-persistence-2026-05-20
@@ -57,7 +60,7 @@ Memory가 없으면 모든 agent 턴은 무상태다. Memory는 연속성, 개�
 **단기 메모리 (thread-scoped):**
 ```python
 from langchain.agents import create_agent
-from langchain.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.memory import InMemorySaver
 
 # add_messages reducer로 메시지 히스토리 자동 관리
 agent = create_agent(
@@ -76,8 +79,9 @@ agent = create_agent(
     model="...",
     middleware=[
         SummarizationMiddleware(
+            model="openai:gpt-5-nano",  # 요약 전용 모델
             trigger=("fraction", 0.8),  # 컨텍스트 80% 차면 요약
-            keep=10,                    # 최근 10개 메시지 보존
+            keep=("messages", 10),      # 최근 10개 메시지 보존
         )
     ],
     checkpointer=InMemorySaver(),
@@ -231,6 +235,7 @@ Source: `deepagents-docs-context-engineering-2026-05-18`
 
 ## 소스
 
+- `langchain-source-1-3-14-2026-07-30`
 - `deepagents-docs-harness-2026-05-19`
 - `deepagents-docs-context-engineering-2026-05-18`
 - `langgraph-docs-persistence-2026-05-20`

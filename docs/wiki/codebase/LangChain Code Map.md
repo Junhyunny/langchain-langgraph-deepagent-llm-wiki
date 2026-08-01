@@ -3,8 +3,13 @@ type: code_map
 framework: LangChain
 status: partial
 confidence: medium
-last_reviewed: 2026-05-24
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
+langchain_version: 1.3.14
+langchain_core_version: 1.5.2
 sources:
+  - langchain-source-1-3-14-2026-07-30
+  - langchain-core-source-1-5-2-2026-07-30
   - langchain-source-prompts-2026-05-23
   - langchain-source-runnable-2026-05-23
   - langchain-source-tools-2026-05-23
@@ -31,10 +36,8 @@ libs/
   core/
     langchain_core/
       runnables/          ← LCEL 핵심 (Runnable, RunnableSequence, RunnableParallel...)
-        base.py           ← Runnable 추상 클래스
+        base.py           ← Runnable, RunnableSequence, RunnableParallel, RunnableLambda
         passthrough.py    ← RunnablePassthrough, RunnableAssign, RunnablePick
-        parallel.py       ← RunnableParallel
-        lambda_.py        ← RunnableLambda
         branch.py         ← RunnableBranch
         utils.py          ← coerce_to_runnable
       tools/              ← Tool 시스템 핵심
@@ -58,8 +61,13 @@ libs/
     langchain/
       agents/
         factory.py        ← create_agent (현재 공식 API, LangGraph StateGraph 기반)
-  langchain/              ← 구버전 패키지 (master에서 부분 유지)
-    agents/               ← create_react_agent, AgentExecutor (deprecated)
+        _subagent_transformer.py ← v3 stream의 subagent projection
+        middleware/
+          types.py        ← AgentMiddleware hook + transformer factory
+          provider_tool_search.py ← provider-native tool search
+          tool_error.py   ← 선택적 tool 실행 예외 처리
+  langchain/              ← `langchain-classic` 배포 소스
+    langchain_classic/    ← 레거시 chains/agents/memory
 ```
 
 ## 핵심 파일별 역할
@@ -142,8 +150,10 @@ libs/
 | `_chain_tool_call_wrappers` | middleware tool call wrapper 체이닝 |
 | `_resolve_schemas` | middleware state schema + base_state 병합 |
 | `ResponseFormat` | `ToolStrategy | ProviderStrategy | AutoStrategy` 유형 |
+| `transformers` | scope-aware stream transformer factory 추가 인자 |
+| `SubagentTransformer` | 중첩 agent 실행을 v3 typed projection으로 노출 |
 
-**검증됨 (v0.6.3 .venv 직접 확인):**
+**검증됨 (`langchain==1.3.14` tag 직접 확인):**
 
 1. **초기화 시점 작업 (create_agent 호출 시):**
    - `init_chat_model(model)` — model이 string일 때만 실행 (provider 패키지 import 포함)
@@ -218,10 +228,22 @@ libs/
 
 ## 불명확한 영역
 
-- `_chain_model_call_handlers()`의 구체적인 체이닝 구현은?
 - `create_react_agent`(LangGraph prebuilt)과 `create_agent`(LangChain)의 차이는?
 - Anthropic provider `bind_tools`의 변환 경로는?
 - `init_chat_model("provider:model_name")` 형식의 문자열 파싱 규칙은?
+
+## Source Code References
+
+- Repo: `langchain-ai/langchain`
+- LangChain Commit: `185119f98e6286253a2326d7cf4f59592678023d`
+- langchain-core Commit: `c1ab807b1f62ad04274c28f2b7d8c3141d8ba1f2`
+- Files:
+  - `libs/langchain_v1/langchain/agents/factory.py`
+  - `libs/langchain_v1/langchain/agents/_subagent_transformer.py`
+  - `libs/langchain_v1/langchain/agents/middleware/types.py`
+  - `libs/langchain_v1/langchain/agents/middleware/provider_tool_search.py`
+  - `libs/langchain_v1/langchain/agents/middleware/tool_error.py`
+  - `libs/core/langchain_core/runnables/base.py`
 
 ## 관련 페이지
 
@@ -231,6 +253,8 @@ libs/
 
 ## 소스
 
+- `langchain-source-1-3-14-2026-07-30`
+- `langchain-core-source-1-5-2-2026-07-30`
 - `langchain-source-tools-2026-05-23`
 - `langchain-source-runnable-2026-05-23`
 - `langchain-source-prompts-2026-05-23`

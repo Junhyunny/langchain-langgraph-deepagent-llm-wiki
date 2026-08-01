@@ -351,7 +351,7 @@ python examples/langgraph_core/01_stategraph_basics.py
   → **✅ 해소 (2026-05-24):** `CompiledStateGraph(Pregel 상속)` 생성. 상세 흐름은 [[LangGraph Code Map]], [[LangGraph StateGraph compile invoke flow]] 참고.
 - `NodeRuntime.control`과 `NodeRuntime.heartbeat`의 구체적인 사용 사례는? — Needs Source
 - `interrupt()`와 `Command(resume=value, ...)` 패턴은 내부적으로 어떻게 연동되는가?
-  → **✅ 해소 (2026-05-24):** `types.py` + `_loop.py` 직접 확인. 상세는 [[Human-in-the-Loop]] 참고.
+  → **✅ 해소 (2026-05-24):** `types.py` + `_loop.py` 직접 확인. 상세는 [[HumanInTheLoop]] 참고.
   - 단일 노드 내 순차 interrupt N개 → N+1회 invoke 필요 (매 interrupt마다 즉시 중단)
   - 병렬 노드 각 interrupt → 동시 pending → `{id: value}` dict로 1회 resume 가능
   - `interrupt_before`: `tasks[0].interrupts == ()`, `interrupt()`: Interrupt 객체 있음

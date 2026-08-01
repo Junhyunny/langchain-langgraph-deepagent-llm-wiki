@@ -35,7 +35,10 @@ python reproductions/langgraph_checkpoint_pending_writes/pending_writes_resume.p
 - `libs/langgraph/tests/test_pregel.py::test_pending_writes_resume`
 - `libs/langgraph/tests/test_pregel.py::test_run_from_checkpoint_id_retains_previous_writes`
 
-## 검증된 사실 (LangGraph 1.2.1)
+## 검증된 사실
+
+최초 검증은 LangGraph 1.2.1에서 수행했고, `langchain==1.3.14`가 해석한
+LangGraph 1.2.10에서도 2026-07-30에 동일한 assertion을 통과했다.
 
 - 성공한 노드의 pending write는 체크포인트에 보존된다 ✓
 - 재개 시 성공한 노드는 재실행되지 않는다 (멱등성 보장 불필요) ✓

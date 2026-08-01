@@ -5,8 +5,11 @@ framework:
   - LangGraph
 status: verified
 confidence: high
-last_reviewed: 2026-05-28
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
+langchain_version: 1.3.14
 sources:
+  - langchain-source-1-3-14-2026-07-30
   - langchain-source-tools-2026-05-23
   - langchain-source-create-agent-factory-2026-05-23
   - langchain-source-bind-tools-function-calling-2026-05-23
@@ -25,8 +28,10 @@ deprecated된 `create_react_agent` + `AgentExecutor` 조합의 후속이다.
 **핵심 차이**: `create_react_agent`가 `pre_model_hook`/`post_model_hook` 2개 확장점을 제공하는 반면,
 `create_agent`는 최대 6가지 훅 포인트를 가진 `AgentMiddleware` 플러그인 시스템을 제공한다.
 
-- 파일 위치: `langchain/agents/factory.py` (1,885 lines), `langchain/agents/middleware/types.py` (600+ lines)
-- Repo: `langchain-ai/langchain`, Commit: UNKNOWN (.venv에서 읽음)
+- 태그 소스 위치: `libs/langchain_v1/langchain/agents/factory.py`,
+  `libs/langchain_v1/langchain/agents/middleware/types.py`
+- Repo: `langchain-ai/langchain`
+- Commit: `185119f98e6286253a2326d7cf4f59592678023d`
 
 ---
 
@@ -41,11 +46,15 @@ agent = create_agent(
     system_prompt="...",                          # optional
     middleware=[SummarizationMiddleware(), ...],  # optional
     response_format=MySchema,                    # optional
+    transformers=[MyTransformerFactory],         # optional, v3 stream extension
 )
 result = agent.invoke({"messages": [HumanMessage("...")]})
 ```
 
-**검증됨:** `create_agent`는 `langchain/agents/factory.py` L697에 구현됨. `StateGraph`를 동적으로 구성하는 팩토리 함수다.
+**검증됨:** `create_agent`는
+`libs/langchain_v1/langchain/agents/factory.py`에 구현된 `StateGraph` 동적
+구성 팩토리다. 위치가 바뀔 수 있는 line number 대신 태그 commit과 심볼을
+근거로 추적한다.
 
 ---
 
@@ -66,12 +75,16 @@ result = agent.invoke({"messages": [HumanMessage("...")]})
 
 모든 훅은 `async` 버전(`a` 접두사)도 제공된다.
 
+훅 6개와 별도로 `transformers`는 실행 hook이 아니라 v3 event stream의
+typed projection을 추가하는 factory 목록이다.
+
 ### AgentMiddleware 기본 클래스 (types.py L380)
 
 ```python
 class AgentMiddleware(Generic[StateT, ContextT, ResponseT]):
     state_schema: type[StateT]  # 미들웨어 전용 상태 스키마
     tools: Sequence[BaseTool]   # 미들웨어가 추가하는 도구
+    transformers: Sequence[TransformerFactory] = ()
 
     def before_agent(state, runtime) -> dict | None: ...
     def before_model(state, runtime) -> dict | None: ...
@@ -80,6 +93,32 @@ class AgentMiddleware(Generic[StateT, ContextT, ResponseT]):
     def wrap_tool_call(request, handler) -> ToolMessage | Command: ...
     def after_agent(state, runtime) -> dict | None: ...
 ```
+
+---
+
+## 1.3.14 stream transformer 조립
+
+*Source: `langchain-source-1-3-14-2026-07-30`*
+
+`create_agent`가 compiled graph에 등록하는 순서는 다음과 같다.
+
+```text
+ToolCallTransformer
+→ SubagentTransformer
+→ 각 AgentMiddleware.transformers
+→ create_agent(transformers=...)
+```
+
+`SubagentTransformer`는 중첩 agent 실행을 별도 run handle로 투영한다.
+`AgentMiddleware.transformers`와 호출 인자는 factory여야 하며, 실행 scope마다
+새 transformer 인스턴스를 만든다.
+
+1.3.14에서 함께 추가된 공개 미들웨어:
+
+- `ProviderToolSearchMiddleware`: Anthropic/OpenAI provider-native tool
+  search를 이용해 선택한 tool schema를 지연 로딩
+- `ToolErrorMiddleware`: 명시적으로 처리한 tool 실행 예외만
+  `ToolMessage(status="error")`로 변환
 
 ---
 
@@ -318,22 +357,13 @@ AIMessage.tool_calls → BaseTool.invoke(ToolCall)
 ## Source Code References
 
 - Repo: `langchain-ai/langchain`
-- Commit: UNKNOWN (.venv에서 읽음)
+- Commit: `185119f98e6286253a2326d7cf4f59592678023d`
 - Files:
-  - `langchain/agents/factory.py` (1,885 lines)
-    - `create_agent`: L697
-    - `_chain_model_call_handlers`: L221
-    - `_get_bound_model`: L1162
-    - `model_node`: L1318
-    - 그래프 노드/엣지 동적 조립: L1477–1679
-    - `recursion_limit: 9_999`: L1665
-  - `langchain/agents/middleware/types.py` (600+ lines)
-    - `AgentMiddleware`: L380
-    - `ModelRequest`: L89
-    - `ModelResponse`: L271
-    - `ExtendedModelResponse`: L289
-    - `AgentState`: L350
-    - `OmitFromSchema`: L329
+  - `libs/langchain_v1/langchain/agents/factory.py`
+  - `libs/langchain_v1/langchain/agents/_subagent_transformer.py`
+  - `libs/langchain_v1/langchain/agents/middleware/types.py`
+  - `libs/langchain_v1/langchain/agents/middleware/provider_tool_search.py`
+  - `libs/langchain_v1/langchain/agents/middleware/tool_error.py`
 
 ---
 
@@ -344,7 +374,7 @@ AIMessage.tool_calls → BaseTool.invoke(ToolCall)
 - [[LangGraph ToolNode flow]]
 - [[Tool Calling]]
 - [[StateGraph]]
-- [[Human-in-the-Loop]]
+- [[HumanInTheLoop]]
 - [[Guardrails]]
 - [[2026-05-28 langchain create_agent fake tool loop]]
 - [[create_agent vs create_deep_agent]]
@@ -363,6 +393,7 @@ AIMessage.tool_calls → BaseTool.invoke(ToolCall)
 
 ## Sources
 
+- `langchain-source-1-3-14-2026-07-30`
 - `langchain-source-tools-2026-05-23`
 - `langchain-source-create-agent-factory-2026-05-23`
 - `langchain-source-bind-tools-function-calling-2026-05-23`

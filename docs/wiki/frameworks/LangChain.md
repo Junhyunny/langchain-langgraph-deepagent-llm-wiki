@@ -3,8 +3,15 @@ type: framework
 framework: LangChain
 status: verified
 confidence: high
-last_reviewed: 2026-06-03
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
+langchain_version: 1.3.14
+langchain_core_version: 1.5.2
 sources:
+  - langchain-pypi-1-3-14-2026-07-30
+  - langchain-source-1-3-14-2026-07-30
+  - langchain-core-source-1-5-2-2026-07-30
+  - langchain-docs-event-streaming-2026-07-30
   - langchain-docs-event-streaming-2026-05-18
   - langchain-docs-messages-2026-05-23
   - langchain-docs-rag-2026-05-23
@@ -22,6 +29,23 @@ sources:
 ## 요약
 
 LangChain은 LLM 기반 애플리케이션을 구축하기 위한 프레임워크다. 채팅 모델, 메시지, 도구, RAG 파이프라인을 위한 추상화를 제공한다. LangGraph와 Deep Agents는 모두 LangChain 추상화 위에 구축된다.
+
+## 현재 검증 기준
+
+**검증됨 (2026-07-30):**
+
+| 항목 | 값 |
+|------|----|
+| 최신 안정 `langchain` | `1.3.14` (2026-07-16 배포) |
+| 이 저장소의 이전 버전 | `1.3.1` |
+| 해석된 `langchain-core` | `1.5.2` |
+| 해석된 `langgraph` | `1.2.10` |
+| LangChain tag commit | `185119f98e6286253a2326d7cf4f59592678023d` |
+| langchain-core tag commit | `c1ab807b1f62ad04274c28f2b7d8c3141d8ba1f2` |
+
+1.3.1→1.3.14는 patch 구간이지만 agent 미들웨어와 typed event
+streaming 확장점에는 문서화할 기능 추가가 있다. 자세한 근거는
+`langchain-release-1.3.14-2026-07-30`을 참조한다.
 
 ## 중요한 이유
 
@@ -249,6 +273,22 @@ RAG의 주요 보안 위협 — 악성 지시가 문서에 포함되어 검색 �
 
 `create_agent`는 내부에서 `StateGraph`를 직접 구성한다. 루프 제어는 `add_conditional_edges()`로 구현되며, `tool_calls`가 없으면 `END`, 있으면 tools node → model node 루프.
 
+### 1.3.14에서 확인한 확장점
+
+- `create_agent(..., transformers=...)`로 scope-aware stream transformer
+  factory를 추가할 수 있다.
+- 최종 transformer 순서는 `ToolCallTransformer` →
+  `SubagentTransformer` → middleware의 `transformers` → 호출자가 전달한
+  `transformers`다.
+- `ProviderToolSearchMiddleware`는 많은 도구 중 일부를 provider-native
+  tool search 뒤로 지연 로딩한다. 태그 소스 기준 지원 provider는 Anthropic과
+  OpenAI다.
+- `ToolErrorMiddleware`는 선택한 도구 실행 예외만 명시적으로
+  `ToolMessage(status="error")`로 변환한다. 처리하지 않은 예외와 LangGraph
+  제어 흐름 신호는 그대로 전파된다.
+- `InputAgentState`, `OutputAgentState`, `TriggerClause`가
+  `langchain.agents.middleware`에서 공개된다.
+
 자세한 흐름: [[LangChain create_agent flow]]
 
 ---
@@ -457,7 +497,8 @@ chain 내 dict literal(`{"key": step}`)이 자동으로 `RunnableParallel`로 �
 
 ## 미해결 질문
 
-- `AgentMiddleware`로 에러 핸들링을 구성하는 방법은? — Needs Source
+- `ToolErrorMiddleware`와 `ToolRetryMiddleware`의 순서가 실제 실패
+  분류·노출에 미치는 영향은 별도 실험이 필요한가?
 - `init_embeddings("openai:...")` 형식은 구버전 `OpenAIEmbeddings()`와 어떤 차이가 있는가? — Needs Source
 - `FewShotPromptTemplate`과 `ExampleSelector`는 어떻게 동작하는가? — Needs Source
 - `PipelinePromptTemplate`은 어떻게 여러 템플릿을 연결하는가? — Needs Source
@@ -480,6 +521,10 @@ chain 내 dict literal(`{"key": step}`)이 자동으로 `RunnableParallel`로 �
 
 ## 소스
 
+- `langchain-pypi-1-3-14-2026-07-30`
+- `langchain-source-1-3-14-2026-07-30`
+- `langchain-core-source-1-5-2-2026-07-30`
+- `langchain-docs-event-streaming-2026-07-30`
 - `langchain-docs-event-streaming-2026-05-18`
 - `langchain-docs-messages-2026-05-23`
 - `langchain-docs-rag-2026-05-23`

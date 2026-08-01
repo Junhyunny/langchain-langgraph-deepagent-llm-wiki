@@ -6,8 +6,13 @@ framework:
   - Deep Agents
 status: verified
 confidence: high
-last_reviewed: 2026-06-04
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
+langchain_version: 1.3.14
+langchain_core_version: 1.5.2
 sources:
+  - langchain-docs-event-streaming-2026-07-30
+  - langchain-core-source-1-5-2-2026-07-30
   - langchain-docs-event-streaming-2026-05-18
   - langgraph-source-streaming-2026-05-23
 ---
@@ -47,6 +52,10 @@ LangGraph의 기본 스트리밍 레이어. `graph.stream(input, stream_mode=...
 *Source: `langchain-docs-event-streaming-2026-05-18`, `langgraph-source-streaming-2026-05-23`*
 
 권장 API: `stream_events(..., version="v3")`
+
+**기본값 주의:** `langchain-core==1.5.2`의
+`Runnable.stream_events()` 기본 인자는 여전히 `version="v2"`다. typed
+projection을 쓰려면 `version="v3"`를 명시한다.
 
 ### Pregel stream_mode와의 연결 고리 (소스 확인됨)
 
@@ -161,7 +170,9 @@ raw protocol events 접근: `event["method"]`, `event["params"]["namespace"]`, `
 
 ### LangChain
 
-`create_agent`로 생성된 agent는 `stream_events(version="v3")` 완전 지원. compile 시 `ToolCallTransformer` + middleware transformers가 자동 등록되어 `run.tool_calls` 프로젝션 제공.
+`create_agent`로 생성된 agent는 `stream_events(version="v3")`를 지원한다.
+1.3.14 compile 순서는 `ToolCallTransformer` → `SubagentTransformer` →
+middleware transformers → call-site transformers다.
 
 Source: `langchain-docs-event-streaming-2026-05-18`
 
@@ -215,5 +226,7 @@ Source: `langgraph-venv-loop-py-2026-05-24`
 
 ## Sources
 
+- `langchain-docs-event-streaming-2026-07-30`
+- `langchain-core-source-1-5-2-2026-07-30`
 - `langchain-docs-event-streaming-2026-05-18`
 - `langgraph-source-streaming-2026-05-23`

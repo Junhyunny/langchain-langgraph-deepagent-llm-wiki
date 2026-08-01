@@ -259,7 +259,7 @@ create_react_agent
 - [[Tool Calling]]
 - [[LangGraph ToolNode flow]]
 - [[Checkpointing]]
-- [[Human in the Loop]]
+- [[HumanInTheLoop]]
 
 ---
 

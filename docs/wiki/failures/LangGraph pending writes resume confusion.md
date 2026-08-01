@@ -4,13 +4,18 @@ framework:
   - LangGraph
 status: verified
 confidence: high
-last_reviewed: 2026-06-04
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
 sources:
   - langgraph-tests-checkpoint-recovery-2026-05-23
   - langgraph-source-checkpoint-internals-2026-05-23
 ---
 
 # LangGraph pending writes resume confusion
+
+> **재검증 (2026-07-30):** `langgraph==1.2.10`에서 최소 재현의 모든
+> assertion이 통과했다. 성공한 sibling의 pending write가 실패한 superstep
+> 이후 재개 시 재사용되는 동작은 유지된다.
 
 ## 문제
 노드 일부가 실패한 실행에서 `invoke(None, config)` 재개 시 어떤 노드가 재실행되고 어떤 값이 누적되는지 직관적으로 이해하기 어렵다.

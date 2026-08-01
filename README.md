@@ -30,6 +30,16 @@ scripts/            # Automation scripts
 
 현재 학습 로드맵은 [`docs/wiki/_roadmap.md`](docs/wiki/_roadmap.md)를 참조한다.
 
+## 검증된 LangChain 기준 버전
+
+- `langchain==1.3.14`
+- `langchain-core==1.5.2`
+- `langgraph==1.2.10` (의존성 해석 결과)
+- 검증일: `2026-07-30`
+
+전체 파일 감사 범위와 재검증 방법은
+[`docs/wiki/_langchain_version_audit.md`](docs/wiki/_langchain_version_audit.md)를 참조한다.
+
 ## 대상 AI assistant
 
 이 저장소는 Codex, Claude Code, GitHub Copilot 및 기타 코딩/작성 agent가 읽고 편집할 수 있도록 설계되었다. 모든 agent는 `AGENTS.md`의 규칙을 따라야 한다.

@@ -4,16 +4,22 @@ framework:
   - LangGraph
 status: verified
 confidence: high
-last_reviewed: 2026-05-25
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
 sources:
   - langgraph-venv-fields-py-2026-05-25
 ---
 
 # LangGraph Issue #5225 — Pydantic BaseModel default_factory + reducer 버그
 
+> **재검증 (2026-07-30):** `langchain==1.3.14` 설치로 해석된
+> `langgraph==1.2.10`에서도 `invoke({})`는 default factory의 초기값을
+> 적용하지 않아 재현됐다. `pytest==9.1.1`로 전체 재현 suite를 실행한 결과
+> `8 passed, 4 xfailed`였고, 이 이슈의 회귀 사례는 예상대로 xfail 처리됐다.
+
 **이슈 URL**: https://github.com/langchain-ai/langgraph/issues/5225  
 **레이블**: `bug`, `help wanted`, `external`  
-**상태**: Open (2026-05-25 기준)
+**상태**: Open (2026-07-30 재확인)
 
 ---
 

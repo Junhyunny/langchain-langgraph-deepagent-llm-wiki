@@ -5,6 +5,10 @@
 **Path:** `/usr/local/lib/python3.11/dist-packages/langchain/agents/middleware/`
 **Version:** langchain 1.3.1
 
+> **오래됨 / 이력 보존:** 이 파일은 1.3.1 소스의 요약이므로 당시 근거로
+> 유지한다. 현재 기준과 1.3.14 변경 사항은
+> `langchain-release-1.3.14-2026-07-30`을 함께 참조한다.
+
 ---
 
 ## 파일 목록

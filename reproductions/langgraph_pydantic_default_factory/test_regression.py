@@ -5,7 +5,7 @@ https://github.com/langchain-ai/langgraph/issues/5225
 Bug: Pydantic BaseModel + Annotated reducer + Field(default_factory=...)
      ignores default_factory when invoke({}) is called.
 
-Status: Bug confirmed in langgraph 1.2.1 (2026-05-25)
+Status: Bug confirmed in langgraph 1.2.1 (2026-05-25) and 1.2.10 (2026-07-30)
 Fix target: state.py attach_node._get_updates
   — coerce dict input through Pydantic schema for START node
   — so invoke({}) behaves identically to invoke(Schema())

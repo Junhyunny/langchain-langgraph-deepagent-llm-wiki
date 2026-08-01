@@ -4,6 +4,7 @@
 - [[_book_roadmap]] → `_book_roadmap.md` — 블로그 책 목차형 학습 로드맵 (100섹션 / ~500페이지)
 - [[_roadmap]] → `_roadmap.md` — 오픈소스 기여자 성장 로드맵 (7단계)
 - [[_open_questions]] → `_open_questions.md` — 리서치 리소스 수집 및 미해결 질문
+- [[_langchain_version_audit]] → `_langchain_version_audit.md` — 전체 관리 파일의 LangChain 버전 감사 기준
 
 ## 프레임워크
 - [[LangChain]] → `frameworks/LangChain.md`
@@ -46,10 +47,12 @@
 - [[Store]] → `concepts/Store.md`
 - [[RAG]] → `concepts/RAG.md`
 - [[PromptTemplate]] → `concepts/PromptTemplate.md`
-- [[Human-in-the-Loop]] → `concepts/HumanInTheLoop.md`
+- [[HumanInTheLoop]] → `concepts/HumanInTheLoop.md`
 - [[DeltaChannel]] → `concepts/DeltaChannel.md`
 - [[SummarizationMiddleware]] → `concepts/SummarizationMiddleware.md`
 - [[LLMToolSelectorMiddleware]] → `concepts/LLMToolSelectorMiddleware.md`
+- [[ProviderToolSearchMiddleware]] → `concepts/ProviderToolSearchMiddleware.md`
+- [[ToolErrorMiddleware]] → `concepts/ToolErrorMiddleware.md`
 - [[PIIMiddleware]] → `concepts/PIIMiddleware.md`
 - [[RetryMiddleware]] → `concepts/RetryMiddleware.md` (ModelRetryMiddleware + ToolRetryMiddleware)
 - [[ModelFallbackMiddleware]] → `concepts/ModelFallbackMiddleware.md`

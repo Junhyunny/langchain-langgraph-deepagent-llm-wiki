@@ -50,7 +50,7 @@ from langchain.agents.middleware.summarization import SummarizationMiddleware
 
 middleware = SummarizationMiddleware(
     trigger=("tokens", 3000),  # 또는 ("messages", 50), ("fraction", 0.8)
-    keep=5,                    # 보존할 최근 메시지 수
+    keep=("messages", 5),      # 보존할 최근 메시지 수
 )
 ```
 
@@ -97,7 +97,7 @@ from langchain.agents.middleware.summarization import SummarizationMiddleware
 
 agent = create_agent(
     model="...",
-    middleware=[SummarizationMiddleware(trigger=("fraction", 0.8), keep=10)],
+    middleware=[SummarizationMiddleware(trigger=("fraction", 0.8), keep=("messages", 10))],
     checkpointer=InMemorySaver(),
 )
 ```

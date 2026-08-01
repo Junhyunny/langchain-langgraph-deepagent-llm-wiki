@@ -59,7 +59,7 @@ create_deep_agent(...)
 
 ## Experiment Evidence
 
-- [[2026-05-28 LangChain create_agent fake tool loop]] shows `create_agent()` model/tool loop, middleware hook order, and late `bind_tools()`.
+- [[2026-05-28 langchain create_agent fake tool loop]] shows `create_agent()` model/tool loop, middleware hook order, and late `bind_tools()`.
 - [[2026-05-28 deepagents tool call and filesystem]] shows `create_deep_agent()` running on top of the same agent loop while adding Deep Agents filesystem behavior.
 
 ## Open Questions

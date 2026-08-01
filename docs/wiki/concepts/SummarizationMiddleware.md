@@ -4,8 +4,11 @@ framework:
   - LangChain
 status: verified
 confidence: high
-last_reviewed: 2026-05-28
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
+langchain_version: 1.3.14
 sources:
+  - langchain-source-1-3-14-2026-07-30
   - langchain-agents-summarization-middleware-2026-05-28
 ---
 
@@ -19,7 +22,7 @@ sources:
 
 핵심 메커니즘: `before_model` 훅에서 작동 → 모델 호출 직전에 메시지 히스토리를 요약된 HumanMessage로 교체.
 
-- 파일: `langchain/agents/middleware/summarization.py` (678 lines)
+- 태그 소스: `libs/langchain_v1/langchain/agents/middleware/summarization.py`
 - 상속: `AgentMiddleware[AgentState[ResponseT], ContextT, ResponseT]`
 
 ---
@@ -70,6 +73,10 @@ ContextSize = ("fraction", 0.8)   # 모델 최대 입력 토큰의 80%
 trigger=[("fraction", 0.8), ("messages", 100)]
 # 80% 초과 OR 100개 메시지 중 먼저 달성되면 요약
 ```
+
+1.3.14에서는 `TriggerClause`도
+`langchain.agents.middleware`에서 공개된다. `keep`은 계속 tagged tuple만
+받으므로 `keep=10`이 아니라 `keep=("messages", 10)`을 사용한다.
 
 ---
 
@@ -234,8 +241,8 @@ return {
 ## Source Code References
 
 - Repo: `langchain-ai/langchain`
-- Commit: UNKNOWN (.venv에서 읽음)
-- File: `langchain/agents/middleware/summarization.py` (678 lines)
+- Commit: `185119f98e6286253a2326d7cf4f59592678023d`
+- File: `libs/langchain_v1/langchain/agents/middleware/summarization.py`
   - `SummarizationMiddleware.__init__`: L178
   - `before_model`: L309
   - `_should_summarize`: L407
@@ -266,4 +273,5 @@ return {
 
 ## Sources
 
+- `langchain-source-1-3-14-2026-07-30`
 - `langchain-agents-summarization-middleware-2026-05-28`

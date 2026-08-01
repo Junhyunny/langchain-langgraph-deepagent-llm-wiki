@@ -5,8 +5,11 @@ framework:
   - LangChain
 status: verified
 confidence: high
-last_reviewed: 2026-06-03
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
+langchain_version: 1.3.14
 sources:
+  - langchain-source-1-3-14-2026-07-30
   - langchain-docs-products-2026-05-23
   - deepagents-source-harness-profiles-2026-05-19
   - deepagents-docs-harness-2026-05-19
@@ -162,6 +165,7 @@ Harness의 모든 미들웨어(SummarizationMiddleware, PIIMiddleware 등)는 `A
 class AgentMiddleware(Generic[StateT, ContextT, ResponseT]):
     state_schema: type[StateT]   # 미들웨어 전용 상태 스키마
     tools: Sequence[BaseTool]    # 미들웨어가 추가하는 도구
+    transformers: Sequence[TransformerFactory] = ()
 
     def before_agent(state, runtime) -> dict | None: ...
     def before_model(state, runtime) -> dict | None: ...
@@ -170,6 +174,10 @@ class AgentMiddleware(Generic[StateT, ContextT, ResponseT]):
     def wrap_tool_call(request, handler) -> ToolMessage | Command: ...
     def after_agent(state, runtime) -> dict | None: ...
 ```
+
+`transformers`는 6개 lifecycle hook과 별개다. v3 event stream에 scope별
+projection 또는 in-flight 변환을 추가한다. 1.3.14의 `PIIMiddleware`가 이
+확장점을 사용해 streamed delta도 필터링한다.
 
 ### 훅 선택 원칙
 

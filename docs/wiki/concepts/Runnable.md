@@ -4,8 +4,11 @@ framework:
   - LangChain
 status: verified
 confidence: high
-last_reviewed: 2026-05-31
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
+langchain_core_version: 1.5.2
 sources:
+  - langchain-core-source-1-5-2-2026-07-30
   - langchain-source-runnable-2026-05-23
 ---
 
@@ -149,4 +152,5 @@ chain = RunnableParallel({"context": retriever, "question": RunnablePassthrough(
 
 ## Sources
 
+- `langchain-core-source-1-5-2-2026-07-30`
 - `langchain-source-runnable-2026-05-23`

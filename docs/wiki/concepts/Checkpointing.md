@@ -5,8 +5,11 @@ framework:
   - LangChain
 status: verified
 confidence: high
-last_reviewed: 2026-06-03
+last_reviewed: 2026-07-30
 sources:
+  - langgraph-docs-checkpointers-2026-07-30
+  - langgraph-docs-interrupts-2026-07-30
+  - langgraph-docs-persistence-2026-07-30
   - langgraph-docs-persistence-2026-05-20
   - langgraph-docs-durable-execution-2026-05-20
   - langgraph-reference-stategraph-compile-2026-05-20
@@ -30,11 +33,19 @@ sources:
 
 짧은 답: `StateGraph.compile(checkpointer=...)`는 컴파일된 graph에 checkpointer를 연결한다. 실행 시 `thread_id`를 기준으로 super-step마다 `StateSnapshot` checkpoint를 저장하고, super-step 내부에서 완료된 node/task write도 pending write로 저장한다. 재개 시에는 같은 `thread_id` 또는 `checkpoint_id`로 checkpoint tuple을 불러와 저장된 state, next tasks, metadata, pending writes를 기준으로 graph runtime을 다시 진행한다.
 
+## 문서 구조 변경 안내 (2026-07-30 재확인)
+
+공식 문서 구조가 2026-05 대비 바뀌었다. 이 페이지의 사실 자체는 유효하나, **출처 위치가 이동**했다.
+
+- **`persistence` 페이지 축소** — 이전 상세 내용(threads / super-step / `StateSnapshot` 필드 / `get_state` / replay / `update_state` / durability modes)이 신규 **Checkpointers** 페이지로 이전됨. 현재 persistence 페이지는 개요 + Quickstart + Checkpointer vs Store 표 + Troubleshooting만 담는다. Source: `langgraph-docs-persistence-2026-07-30`
+- **`durable-execution` 페이지 폐지** — 해당 URL은 이제 HTTP 308 영구 리다이렉트 → persistence. durability modes·deterministic replay·side-effect 가이드는 Checkpointers 페이지로 흡수됨. Source: `langgraph-docs-checkpointers-2026-07-30`
+- 아래 본문에서 `langgraph-docs-persistence-2026-05-20` / `langgraph-docs-durable-execution-2026-05-20`으로 인용된 사실들은 현재 **Checkpointers 페이지**(`langgraph-docs-checkpointers-2026-07-30`)에서 재확인 가능하다.
+
 ## Why It Matters
 
 Checkpointing은 다음을 가능하게 한다.
 - 장기 실행 agent workflow의 일시 중지와 재개
-- [[Human in the Loop]] 승인/수정 지점
+- [[HumanInTheLoop]] 승인/수정 지점
 - 장애 이후 마지막 성공 지점부터의 복구
 - [[Time Travel]] debugging 및 과거 checkpoint replay
 - 같은 `thread_id` 안에서 유지되는 short-term memory
@@ -176,6 +187,70 @@ async with AsyncPostgresSaver.from_conn_string(DB_URI) as saver:
     await graph.ainvoke(inputs, {"configurable": {"thread_id": "1"}})
 ```
 
+### Serializer & 암호화
+
+*Source: `langgraph-docs-checkpointers-2026-07-30`*
+
+**검증됨:** checkpointer가 state를 저장할 때 channel 값 직렬화는 serializer 객체가 담당한다. 기본은 `JsonPlusSerializer`이며 내부적으로 ormsgpack + JSON을 쓴다. LangChain/LangGraph primitives, datetime, enum, Pydantic v2, dataclass, numpy 등을 처리한다.
+
+**검증됨:** msgpack encoder가 지원하지 않는 타입(예: Pandas DataFrame)은 `pickle_fallback`으로 처리할 수 있다.
+
+```python
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+
+graph.compile(
+    checkpointer=InMemorySaver(serde=JsonPlusSerializer(pickle_fallback=True))
+)
+```
+
+**검증됨:** `EncryptedSerializer`를 saver의 `serde` 인자로 넘기면 저장 상태 전체를 암호화한다. `from_pycryptodome_aes()`는 `LANGGRAPH_AES_KEY` 환경변수(또는 `key` 인자)에서 AES 키를 읽는다. LangSmith 실행 시 `LANGGRAPH_AES_KEY`가 있으면 암호화가 자동 활성화된다. 다른 암호화 방식은 `CipherProtocol` 구현으로 가능.
+
+```python
+from langgraph.checkpoint.serde.encrypted import EncryptedSerializer
+from langgraph.checkpoint.postgres import PostgresSaver
+
+serde = EncryptedSerializer.from_pycryptodome_aes()  # LANGGRAPH_AES_KEY 사용
+checkpointer = PostgresSaver.from_conn_string("postgresql://...", serde=serde)
+checkpointer.setup()
+```
+
+### 커스텀 Checkpointer 구현과 Conformance Suite
+
+*Source: `langgraph-docs-checkpointers-2026-07-30`*
+
+**검증됨:** persistence 계층은 두 storage 추상화 위에 있다 — **Checkpoints 테이블**(super-step당 1행, `channel_values`/`channel_versions`/`versions_seen` + parent 링크)과 **Writes 테이블**(super-step 내 node output당 1행, `(task_id, channel, value)`). custom saver는 두 테이블을 모두 관리하며 `BaseCheckpointSaver`를 상속해 `put`/`put_writes`/`get_tuple`/`list`/`delete_thread`(async는 `a*` 접두)를 구현한다. 누락 시 런타임 `NotImplementedError`.
+
+**검증됨:** 구현 시 주의점.
+- `put`은 `metadata`를 **전체 저장**해야 한다. LangGraph가 minor 릴리스에서 새 metadata 필드(예: delta channel용 `counters_since_delta_snapshot`)를 추가하므로 unknown key를 버리면 기능이 조용히 깨진다.
+- `get_tuple`은 `checkpoint_id`가 있으면 정확히 그 checkpoint를, 없으면 thread+ns의 최신을 반환해야 한다. **specific-id 경로는 time travel과 [[DeltaChannel]] 재구성의 단일 실패점**이며, 깨지면 delta channel 상태가 조용히 빈 값으로 손상된다.
+- `checkpoint_id`는 ULID라 사전식 정렬 시 큰 값이 최신 — "최신"은 `ORDER BY checkpoint_id DESC LIMIT 1`, "id 조회"는 PK 등치.
+- `WRITES_IDX_MAP`(`langgraph.checkpoint.base`)은 특수 채널(`__error__`, `__interrupt__` 등)을 예약 음수 인덱스로 매핑한다.
+
+**검증됨:** `langgraph-checkpoint-conformance` 패키지가 전체 계약(delta channel history 포함)을 검증한다. extended capability를 자동 감지해 관련 테스트를 돌린다. CI에서 실행 권장.
+
+```python
+from langgraph.checkpoint.conformance import checkpointer_test, validate
+# validate(my_checkpointer) → report.passed_all_base() 로 계약 통과 여부 확인
+```
+
+> 기여 관점: custom saver PR을 낼 때 conformance suite 통과가 사실상의 계약이다.
+
+### Extended Capabilities (Agent Server)
+
+*Source: `langgraph-docs-checkpointers-2026-07-30`*
+
+**검증됨:** 아래는 선택 구현이며, 구현 시 Agent Server가 startup에서 자동 감지해 해당 기능을 활성화한다.
+
+| 메서드 | 활성화되는 기능 |
+|--------|----------------|
+| `adelete_for_runs` | Rollback multitask 전략 |
+| `acopy_thread` | 효율적 thread forking |
+| `aprune` | Thread history pruning |
+| `aget_delta_channel_history` | 효율적 [[DeltaChannel]] 상태 재구성 |
+
+**검증됨:** 사용 가능한 built-in saver 라이브러리: `langgraph-checkpoint`(base + `InMemorySaver` 내장), `langgraph-checkpoint-sqlite`, `langgraph-checkpoint-postgres`(LangSmith에서 사용), `langchain-azure-cosmosdb`(`CosmosDBSaver`/`CosmosDBSaverSync`, Microsoft Entra ID 인증).
+
 ---
 
 ## Source Code References
@@ -191,13 +266,15 @@ async with AsyncPostgresSaver.from_conn_string(DB_URI) as saver:
   - `libs/checkpoint/langgraph/checkpoint/memory/__init__.py` — in-memory saver implementation
 
 ## Human-in-the-Loop (Interrupt)
-*Source: `langgraph-source-pregel-interrupts-2026-05-23`*
+*Source: `langgraph-source-pregel-interrupts-2026-05-23`, `langgraph-docs-interrupts-2026-07-30`*
 
 LangGraph는 checkpointing을 기반으로 두 가지 HITL 패턴을 제공한다. 두 방식 모두 **checkpointer와 thread_id가 필수**다.
 
-### 정적 중단: interrupt_before / interrupt_after
+> **최신 문서 기준(2026-07-30):** 공식 문서는 이제 `interrupt_before`/`interrupt_after`를 **static interrupts**로 부르며 **HITL에는 비권장**한다(디버깅/breakpoint 및 LangSmith Studio 용도). HITL은 동적 `interrupt()` 함수를 쓴다. Source: `langgraph-docs-interrupts-2026-07-30`
 
-`compile()` 시점에 중단할 노드를 지정한다.
+### 정적 중단: interrupt_before / interrupt_after (= static interrupts, 디버깅용)
+
+`compile()` 시점(또는 runtime)에 중단할 노드를 지정한다. **HITL 워크플로에는 비권장** — 노드 단위로 step through 하는 breakpoint 용도다.
 
 ```python
 graph = builder.compile(
@@ -227,7 +304,7 @@ graph.invoke(None, {"configurable": {"thread_id": "1"}})
 
 ### 동적 중단: interrupt() 함수 (현재 권장)
 
-LangChain 공식 블로그 2024-12 기준 권장 방식. 노드 함수 내에서 조건부로 중단.
+노드 함수 내에서 조건부로 중단하는 방식. HITL의 권장 패턴이다.
 
 ```python
 from langgraph.types import interrupt, Command
@@ -249,6 +326,38 @@ graph.invoke(
 )
 ```
 
+#### 실행 API: `stream_events(version="v3")` (2026-07-30 문서 권장)
+
+*Source: `langgraph-docs-interrupts-2026-07-30`*
+
+**검증됨:** 위 `graph.invoke(...)`도 여전히 동작하며, 이 경우 interrupt는 `result["__interrupt__"]`로 노출된다. 다만 최신 공식 문서는 interrupt를 다루는 graph의 **권장 실행 방식으로 event streaming**을 제시한다. `graph.stream_events(..., version="v3")`는 typed projections를 제공한다.
+
+- `stream.interrupts` — interrupt payload 튜플 (각 `Interrupt`는 `.id`, `.value`)
+- `stream.interrupted` — 실행이 입력 대기로 멈췄으면 `True`
+- `stream.output` — 최종 상태
+- `stream.messages` / `stream.values` — 토큰 단위 메시지 / step별 상태 스냅샷
+
+```python
+config = {"configurable": {"thread_id": "thread-1"}}
+stream = graph.stream_events({"input": "data"}, config=config, version="v3")
+_ = stream.output                      # 스트림을 소진해 실행을 구동
+
+if stream.interrupted:
+    print(stream.interrupts)           # (Interrupt(value=..., id=...),)
+    resumed = graph.stream_events(
+        Command(resume=True), config=config, version="v3"
+    )
+    final = resumed.output
+```
+
+**검증됨:** 병렬 브랜치가 동시에 interrupt하면 `Command(resume={interrupt_id: value})` **맵**으로 한 번에 재개한다. Source: `langgraph-docs-interrupts-2026-07-30`
+
+**검증됨:** `Command(resume=...)`는 invoke/stream/stream_events **입력으로 쓰이는 유일한** Command 패턴이다. `Command(update=/goto=/graph=)`는 노드 반환 전용 — 멀티턴 대화 지속에는 일반 입력 dict를 쓴다. Source: `langgraph-docs-interrupts-2026-07-30`
+
+**검증됨 — 입력 검증 주의:** 노드 내 `while True` + `interrupt()` 루프는 금지다(재개 시 노드가 처음부터 재실행되어 지수적 재실행 발생). 노드당 `interrupt()`를 정확히 1회 호출하고, 무효 입력이면 재질문을 state에 저장한 뒤 **conditional edge로 노드에 되돌아오게** 한다. Source: `langgraph-docs-interrupts-2026-07-30`
+
+**검증됨 — rules of interrupts:** ① `interrupt`를 bare `try/except`로 감싸지 말 것(특수 예외를 삼켜 interrupt가 전달 안 됨), ② 노드 내 interrupt 호출 순서 고정·조건부 skip 금지(매칭은 index 기반), ③ 직렬화 가능한 값만 전달, ④ interrupt 앞 side effect는 idempotent해야 함(재실행으로 중복). Source: `langgraph-docs-interrupts-2026-07-30`
+
 **내부 구현 (`langgraph/types.py`):**
 ```python
 def interrupt(value: Any) -> Any:
@@ -269,13 +378,15 @@ def interrupt(value: Any) -> Any:
 
 ### interrupt_before/after vs interrupt() 비교
 
-| 구분 | interrupt_before/after | interrupt() |
+| 구분 | interrupt_before/after (static interrupts) | interrupt() |
 |------|----------------------|-------------|
-| 설정 위치 | compile() 시 | 노드 함수 내부 |
+| 설정 위치 | compile() 시 또는 runtime | 노드 함수 내부 |
 | 조건부 중단 | ❌ | ✅ |
 | 코드 변경 | ❌ | ✅ |
-| 도입 시기 | 초기 | 2024-12 신규 |
-| 현재 권장 | 구 방식 | ✅ **권장** |
+| 용도 | **디버깅/breakpoint** (LangSmith Studio 포함) | **HITL 워크플로** |
+| 현재 권장 (2026-07-30 문서) | HITL에는 비권장 | ✅ **권장** |
+
+*Source: `langgraph-docs-interrupts-2026-07-30`*
 
 ---
 
@@ -380,16 +491,26 @@ Source: `langgraph-tests-checkpoint-recovery-2026-05-23` (`libs/langgraph/tests/
 - `Pregel.validate()`는 정확히 어떤 구조 검사를 수행하는가? — Needs Source
 - pending writes recovery를 정의하는 canonical test는 어디에 있는가? — Needs Source
 - `_put_exit_delta_writes()` 검증 테스트 → `_checkpoint.py`에 없음, `_loop.py` 탐색 필요
-- `saver.get_delta_channel_history()` 메서드는 `BaseCheckpointSaver`에 언제 추가됐는가? — Needs Source
+- `saver.get_delta_channel_history()` 메서드는 `BaseCheckpointSaver`에 언제 추가됐는가? — Needs Source (문서에는 존재하나 도입 버전 미상, Source: `langgraph-docs-checkpointers-2026-07-30`)
 - checkpoint schema migration 대응은 공식적으로 어떻게 권장되는가? — Needs Source
+
+**신규 (2026-07-30 문서 기반):**
+- `stream_events(version="v3")`의 typed projection 객체(`stream.output`/`interrupts`/`interrupted`/`messages`/`values`) 소스 구현 위치는? — Needs Source (Source: `langgraph-docs-interrupts-2026-07-30`)
+- `EncryptedSerializer`/`JsonPlusSerializer(pickle_fallback=True)`의 소스 구현과 `pickle_fallback` 보안 경고 위치는? — Needs Source (Source: `langgraph-docs-checkpointers-2026-07-30`)
+- `langgraph-checkpoint-conformance`가 검증하는 base capability 전체 목록과 실패 기준은? — Needs Source
+- `CosmosDBSaver`(Azure)의 sync/async 클래스 차이와 Entra ID 인증 흐름 소스는? — Needs Source
 
 ## Sources
 
-- `langgraph-docs-persistence-2026-05-20`
-- `langgraph-docs-durable-execution-2026-05-20`
+- `langgraph-docs-checkpointers-2026-07-30`
+- `langgraph-docs-interrupts-2026-07-30`
+- `langgraph-docs-persistence-2026-07-30`
+- `langgraph-docs-persistence-2026-05-20` *(구조 변경 전 스냅샷 — [[#문서 구조 변경 안내 (2026-07-30 재확인)]] 참고)*
+- `langgraph-docs-durable-execution-2026-05-20` *(페이지 폐지, 308 → persistence)*
 - `langgraph-reference-stategraph-compile-2026-05-20`
 - `langgraph-reference-checkpoint-2026-05-20`
 - `langgraph-source-checkpoint-runtime-2026-05-20`
+- `langgraph-source-checkpoint-savers-2026-05-23`
 - `langgraph-source-pregel-interrupts-2026-05-23`
 - `langgraph-source-checkpoint-internals-2026-05-23`
 - `langgraph-tests-checkpoint-recovery-2026-05-23`

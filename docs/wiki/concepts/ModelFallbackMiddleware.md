@@ -4,8 +4,11 @@ framework:
   - LangChain
 status: verified
 confidence: high
-last_reviewed: 2026-05-26
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
+langchain_version: 1.3.14
 sources:
+  - langchain-source-1-3-14-2026-07-30
   - langchain-source-builtin-middleware-2026-05-25
 ---
 
@@ -20,6 +23,16 @@ sources:
 - Primary 모델(GPT-4o 등)이 다운되거나 Rate Limit에 걸릴 때 자동으로 더 저렴하거나 가용한 모델로 전환
 - 멀티 프로바이더 전략(OpenAI → Anthropic → Mistral 등) 구현 가능
 - 에이전트 코드 변경 없이 장애 대응
+
+## 1.3.14 provider cache marker 처리
+
+Anthropic prompt-caching middleware가 바깥쪽에서 request에 `cache_control`
+marker를 넣은 뒤 비-Anthropic fallback으로 전환하면 provider 호환 오류가 날
+수 있다. 1.3.14 구현은 fallback 모델의 `_llm_type`을 검사해 Anthropic 호환
+모델이면 marker를 보존하고, 다른 provider면 model settings, system message,
+messages, tools에서 marker를 제거한 새 request를 만든다.
+
+이 정리는 fallback 시도에만 적용되며 원본 request를 mutate하지 않는다.
 
 ## Key Concepts
 
@@ -148,6 +161,7 @@ agent = create_agent(
 
 ## Sources
 
+- `langchain-source-1-3-14-2026-07-30`
 - `langchain-source-builtin-middleware-2026-05-25`
 
 ## Verified

@@ -2,6 +2,9 @@
 
 LLM API key 없이 LangChain의 핵심 실행 모델을 이해하기 위한 작은 예제들이다.
 
+검증 기준: `langchain==1.3.14`, `langchain-core==1.5.2`,
+`langgraph==1.2.10` (`2026-07-30` 전 파일 실행 성공).
+
 ## Setup
 
 ```bash
@@ -16,6 +19,10 @@ python examples/langchain_core/01_lcel_chain.py
 python examples/langchain_core/02_tool_calling.py
 python examples/langchain_core/02b_bind_tools.py
 python examples/langchain_core/03_create_react_agent.py
+python examples/langchain_core/04_pii_middleware.py
+python examples/langchain_core/05_summarization_middleware.py
+python examples/langchain_core/06_tool_selector_middleware.py
+python examples/langchain_core/07_retry_fallback_middleware.py
 python examples/langchain_core/08_create_agent_fake_tool_loop.py
 ```
 

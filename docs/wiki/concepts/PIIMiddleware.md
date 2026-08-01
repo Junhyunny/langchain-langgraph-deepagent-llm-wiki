@@ -4,8 +4,11 @@ framework:
   - LangChain
 status: verified
 confidence: high
-last_reviewed: 2026-05-26
+last_reviewed: 2026-07-30
+updated_at: 2026-07-30
+langchain_version: 1.3.14
 sources:
+  - langchain-source-1-3-14-2026-07-30
   - langchain-source-builtin-middleware-2026-05-25
 ---
 
@@ -17,11 +20,28 @@ sources:
 에이전트 대화에서 **개인식별정보(PII)를 탐지하고 설정된 전략으로 처리**한다.
 이메일, 신용카드, IP, MAC 주소, URL 5가지 타입을 빌트인 지원하며, 커스텀 detector도 가능하다.
 
-핵심 메커니즘: `before_model`(입력 필터링) + `after_model`(출력 필터링) 훅 사용.
+핵심 메커니즘: `before_model`(입력 필터링) + `after_model`(출력 필터링)
+훅에 더해, 1.3.14에서는 stream transformer가 v3 event stream에서 노출되는
+텍스트·reasoning·tool 입출력·state snapshot도 처리한다.
 
 - 파일: `langchain/agents/middleware/pii.py` (376 lines)
 - 의존: `langchain/agents/middleware/_redaction.py` (454 lines)
 - 상속: `AgentMiddleware[AgentState[ResponseT], ContextT, ResponseT]`
+
+### 1.3.14 스트리밍 보호
+
+`PIIMiddleware.transformers`는 `_PIIStreamTransformer` factory를 등록한다.
+이 transformer는 built-in projection보다 먼저 실행되며 다음 surface를
+redact/mask/hash/block한다.
+
+- message의 text/reasoning delta
+- tool call argument와 tool output delta
+- tool error message
+- `values` stream의 message state snapshot
+
+경계에 걸친 이메일·URL 등이 일부 먼저 노출되지 않도록 기본 128자 lookback
+buffer를 사용한다. 이 동작은 graph state를 직접 바꾸지 않고 stream protocol
+event를 변환하며, 기존 `before_model`/`after_model` state-level 처리는 유지된다.
 
 ---
 
@@ -235,9 +255,9 @@ _redaction.py
 ## Source Code References
 
 - Repo: `langchain-ai/langchain`
-- Commit: UNKNOWN (.venv에서 읽음)
+- Commit: `185119f98e6286253a2326d7cf4f59592678023d`
 - Files:
-  - `langchain/agents/middleware/pii.py` (376 lines)
+  - `libs/langchain_v1/langchain/agents/middleware/pii.py`
     - `PIIMiddleware.__init__`: L100
     - `PIIMiddleware.name`: L156 (property)
     - `before_model` + `@hook_config(can_jump_to=["end"])`: L169
@@ -271,4 +291,5 @@ _redaction.py
 
 ## Sources
 
+- `langchain-source-1-3-14-2026-07-30`
 - `langchain-source-builtin-middleware-2026-05-25`

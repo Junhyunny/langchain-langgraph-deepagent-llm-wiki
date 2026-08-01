@@ -99,4 +99,7 @@ print()
 print("※ 메시지 흐름: HumanMessage → AIMessage(tool_call) → ToolMessage → AIMessage(final)")
 print("※ 3개 프레임워크 모두 동일한 4-메시지 루프 패턴 사용")
 print()
-print("⚠️  Deep Agents(04_deep_agents_stub.py)는 패키지 미설치로 제외됨")
+print(
+    "※ Deep Agents는 API 구조 검사 예제(04_deep_agents_stub.py)로 분리되어 "
+    "있어 이 동일-output 비교 표에서는 제외됨"
+)

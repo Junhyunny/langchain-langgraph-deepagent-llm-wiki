@@ -6,7 +6,8 @@ Reproduction: LangGraph pending writes resume behavior
 재개(resume) 시 성공한 노드는 재실행되지 않음을 검증한다.
 
 관련 테스트: libs/langgraph/tests/test_pregel.py::test_pending_writes_resume
-LangGraph 버전: 1.2.1
+최초 검증: LangGraph 1.2.1
+재검증: LangGraph 1.2.10 (2026-07-30)
 """
 
 import operator

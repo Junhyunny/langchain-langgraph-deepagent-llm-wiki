@@ -22,6 +22,11 @@
 ## LangChain
 
 - Custom stream transformer의 정확한 계약(contract)은 무엇인가? (required_stream_modes, push() 메서드?) — Needs Source
+- `ProviderToolSearchMiddleware`가 Anthropic/OpenAI에서 실제로 절감하는
+  tool-schema token과 검색 정확도는 어느 정도인가? — Needs Experiment
+- `ToolErrorMiddleware`와 `ToolRetryMiddleware(on_failure="error")`의
+  권장 ordering을 sync/async 경로 모두에서 고정하는 upstream 테스트가
+  충분한가? — Needs Source / Experiment
 - `ToolRuntime`(`_DirectlyInjectedToolArg` 상속)의 전체 필드 구성은? `state`, `config`, `store`, `stream_writer`, `tool_call_id` 외에 추가 필드가 있는가? — Needs Source
 - LCEL `.bind_tools([tool])` 방식과 `create_agent([tool])` 방식의 실행 경로 차이는? InjectedState 주입 여부 등 차이 정리 필요 — Needs Source
 

@@ -124,19 +124,75 @@ sources:
       - "docs/wiki/concepts/Memory.md"
       - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
       - "docs/wiki/codebase/LangGraph Code Map.md"
-    notes: "Official persistence documentation. Covers threads, checkpoints, super-steps, pending writes, StateSnapshot fields, state history, replay, update_state, and Store distinction."
+    superseded_by: langgraph-docs-persistence-2026-07-30
+    notes: "[2026-07-30 재확인] 페이지 구조가 대폭 변경됨. 이 2026-05-20 스냅샷이 담던 상세 내용(threads/checkpoints/super-steps/StateSnapshot 필드/state history/replay/update_state)은 신규 checkpointers 페이지(langgraph-docs-checkpointers-2026-07-30)로 이전됨. 현재 persistence 페이지 최신 스냅샷은 langgraph-docs-persistence-2026-07-30 참조. 원본 노트: Official persistence documentation covering threads, checkpoints, super-steps, pending writes, StateSnapshot fields, state history, replay, update_state, and Store distinction."
   - id: langgraph-docs-durable-execution-2026-05-20
-    title: "LangGraph — Durable execution"
+    title: "LangGraph — Durable execution (page removed / redirected)"
     type: official_docs
     framework: LangGraph
     url: "https://docs.langchain.com/oss/python/langgraph/durable-execution"
     retrieved_at: "2026-05-20"
-    status: current
+    status: outdated
+    superseded_by: langgraph-docs-checkpointers-2026-07-30
     used_by:
       - "docs/wiki/concepts/Checkpointing.md"
       - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
       - "docs/wiki/comparisons/LangChain vs LangGraph vs Deep Agents.md"
-    notes: "Official durable execution documentation. Used for resume semantics, deterministic replay, side-effect guidance, and durability modes (exit/async/sync)."
+    notes: "[2026-07-30 재확인] 이 URL은 이제 HTTP 308 영구 리다이렉트 → /langgraph/persistence. 독립 durable-execution 페이지가 폐지됨. durability modes(exit/async/sync)·deterministic replay·side-effect 가이드 내용은 신규 checkpointers 페이지(langgraph-docs-checkpointers-2026-07-30)로 흡수됨. 원본 노트: Official durable execution documentation, used for resume semantics, deterministic replay, side-effect guidance, and durability modes."
+  - id: langgraph-docs-persistence-2026-07-30
+    title: "LangGraph — Persistence (refreshed overview)"
+    type: official_docs
+    framework: LangGraph
+    url: "https://docs.langchain.com/oss/python/langgraph/persistence"
+    local_path: "docs/raw/official/langgraph/langgraph-docs-persistence-2026-07-30.md"
+    retrieved_at: "2026-07-30"
+    status: current
+    supersedes: langgraph-docs-persistence-2026-05-20
+    used_by:
+      - "docs/wiki/concepts/Checkpointing.md"
+    notes: "persistence 페이지의 2026-07-30 재수집본. 이제 개요 + Quickstart + Checkpointer vs Store 표 + Troubleshooting(포함: PostgresSaver thread_id 255자 제한, MemorySaver 재시작 비영속, checkpoint pruning, subgraph namespace) 만 담는 랜딩 페이지로 축소됨. 상세 내용은 checkpointers 페이지로 이전. durable-execution URL은 이 페이지로 308 리다이렉트."
+  - id: langgraph-docs-checkpointers-2026-07-30
+    title: "LangGraph — Checkpointers"
+    type: official_docs
+    framework: LangGraph
+    url: "https://docs.langchain.com/oss/python/langgraph/checkpointers"
+    local_path: "docs/raw/official/langgraph/langgraph-docs-checkpointers-2026-07-30.md"
+    retrieved_at: "2026-07-30"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Checkpointing.md"
+    notes: "신규 checkpointers 페이지. 구 persistence/durable-execution 상세 내용(threads/checkpoints/super-steps/StateSnapshot 필드/get_state/get_state_history/replay/update_state/durability modes)을 흡수. 추가 신규 내용: Serializer(JsonPlusSerializer, pickle_fallback), EncryptedSerializer(LANGGRAPH_AES_KEY), custom checkpointer 구현 가이드(put/put_writes/get_tuple/list/delete_thread), row key/index 설계, conformance suite(langgraph-checkpoint-conformance), Azure CosmosDB saver, DeltaChannel 지원, extended capabilities(adelete_for_runs/acopy_thread/aprune/aget_delta_channel_history)."
+  - id: langgraph-docs-interrupts-2026-07-30
+    title: "LangGraph — Interrupts"
+    type: official_docs
+    framework: LangGraph
+    url: "https://docs.langchain.com/oss/python/langgraph/interrupts"
+    local_path: "docs/raw/official/langgraph/langgraph-docs-interrupts-2026-07-30.md"
+    retrieved_at: "2026-07-30"
+    status: current
+    used_by:
+      - "docs/wiki/concepts/Checkpointing.md"
+    notes: "HITL interrupt() 전용 신규 페이지. 2026-05 대비 실행 API 개편: 권장 방식이 graph.stream_events(version='v3') + typed projections(stream.interrupts/interrupted/output/messages/values). 다중 interrupt는 Command(resume={id: value}) 맵. 입력 검증은 while True 금지·conditional edge 권장. interrupt_before/after는 static interrupts로 재명명(HITL 비권장, 디버깅용). rules of interrupts(try/except 금지, 순서 고정, 직렬화 가능 값, idempotent side effect) 포함."
+  - id: langgraph-docs-add-memory-2026-07-30
+    title: "LangGraph — Add memory (short-term & long-term)"
+    type: official_docs
+    framework: LangGraph
+    url: "https://docs.langchain.com/oss/python/langgraph/add-memory"
+    local_path: "docs/raw/official/langgraph/langgraph-docs-add-memory-2026-07-30.md"
+    retrieved_at: "2026-07-30"
+    status: current
+    used_by: []
+    notes: "short-term(checkpointer, thread-scoped) vs long-term(store, cross-thread) 메모리 대비. production saver 옵션(Postgres/MongoDB/Redis/Oracle), subgraph 자동 전파, semantic search store, 컨텍스트 관리(trim_messages/RemoveMessage/REMOVE_ALL_MESSAGES/langmem SummarizationNode), checkpoint 조회·delete_thread 포함. 주로 Memory 페이지에서 사용 예정."
+  - id: langchain-docs-short-term-memory-2026-07-30
+    title: "LangChain — Short-term memory"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/langchain/short-term-memory"
+    local_path: "docs/raw/official/langchain/langchain-docs-short-term-memory-2026-07-30.md"
+    retrieved_at: "2026-07-30"
+    status: current
+    used_by: []
+    notes: "LangChain create_agent 관점의 short-term memory. checkpointer= 로 thread-level persistence 활성화, AgentState 확장(state_schema), 컨텍스트 관리는 middleware(@before_model/@after_model/SummarizationMiddleware/@dynamic_prompt), tool 상태 접근은 ToolRuntime(runtime.state/context, Command(update=...)). create_agent 경로에서 checkpointing 노출 방식을 보여줌."
   - id: langgraph-reference-stategraph-compile-2026-05-20
     title: "LangGraph reference — StateGraph.compile"
     type: official_reference
@@ -631,7 +687,8 @@ sources:
       - "docs/wiki/codebase/LangGraph Code Map.md"
       - "docs/wiki/flows/LangGraph StateGraph compile invoke flow.md"
       - "docs/wiki/concepts/DeltaChannel.md"
-    notes: "PregelLoop 클래스 계층(Base/Sync/Async), status 라이프사이클, tick/after_tick/_first/_put_checkpoint/_checkpointer_put_after_previous/put_writes 흐름, durability='exit' 동작, DeltaChannel durability invariant, _reapply_writes_to_succeeded_nodes 메커니즘, SyncPregelLoop.__enter__ 전체 읽음 (lines 1~1690)."
+      - "docs/wiki/concepts/HumanInTheLoop.md"
+    notes: "PregelLoop 클래스 계층(Base/Sync/Async), status 라이프사이클, tick/after_tick/_first/_put_checkpoint/_checkpointer_put_after_previous/put_writes 흐름, durability='exit' 동작, DeltaChannel durability invariant, _reapply_writes_to_succeeded_nodes 메커니즘, SyncPregelLoop.__enter__ 전체 읽음 (lines 1~1690). is_resuming 감지, is_time_traveling, Command(resume=) 분기, versions_seen[INTERRUPT] 업데이트, _suppress_interrupt도 확인."
   - id: langgraph-tests-delta-migration-2026-05-24
     title: "LangGraph test_delta_channel_migration.py — BinaryOperatorAggregate→DeltaChannel migration 검증"
     type: test_code
@@ -692,18 +749,6 @@ sources:
     used_by:
       - "docs/wiki/concepts/HumanInTheLoop.md"
     notes: "interrupt() (line 801): GraphInterrupt 발생 / scratchpad.resume 반환. Interrupt dataclass (line 525): value + id(xxh3_128). Command dataclass (line 749): graph/update/resume/goto."
-  - id: langgraph-venv-loop-py-2026-05-24
-    title: "LangGraph pregel/_loop.py — is_resuming, Command(resume=) 처리, _suppress_interrupt"
-    type: source_code
-    framework: LangGraph
-    repo: "https://github.com/langchain-ai/langgraph"
-    commit: "UNKNOWN"
-    local_path: ".venv/lib/python3.14/site-packages/langgraph/pregel/_loop.py"
-    retrieved_at: "2026-05-24"
-    status: public
-    used_by:
-      - "docs/wiki/concepts/HumanInTheLoop.md"
-    notes: "is_resuming 감지 (line 839), is_time_traveling (line 857), Command(resume=) → resume_is_map 분기 (line 882), versions_seen[INTERRUPT] 업데이트 (line 925), _suppress_interrupt (line 1304)."
   - id: langgraph-test-pregel-interrupt-2026-05-25
     title: "test_pregel.py — interrupt/resume 관련 테스트 읽기"
     type: test_code
@@ -1079,3 +1124,98 @@ sources:
     used_by:
       - "docs/wiki/concepts/Tracing.md"
     notes: "LangSmith tracing 활성화 환경 변수(LANGSMITH_TRACING, LANGSMITH_API_KEY, LANGSMITH_PROJECT), run types(llm/chain/tool), @traceable 데코레이터, wrap_openai. WebFetch로 GitHub raw README 분석."
+  - id: langchain-pypi-1-3-14-2026-07-30
+    title: "langchain 1.3.14 package metadata and release history"
+    type: package_registry
+    framework: LangChain
+    url: "https://pypi.org/project/langchain/1.3.14/"
+    retrieved_at: "2026-07-30"
+    status: public
+    used_by:
+      - "docs/source_summaries/langchain-release-1.3.14-2026-07-30.md"
+      - "docs/wiki/frameworks/LangChain.md"
+    notes: "Latest stable LangChain release on 2026-07-30. Published 2026-07-16."
+  - id: langchain-source-1-3-14-2026-07-30
+    title: "LangChain 1.3.14 tagged source"
+    type: source_code
+    framework: LangChain
+    repo: "https://github.com/langchain-ai/langchain"
+    commit: "185119f98e6286253a2326d7cf4f59592678023d"
+    url: "https://github.com/langchain-ai/langchain/tree/langchain%3D%3D1.3.14"
+    retrieved_at: "2026-07-30"
+    status: public
+    used_by:
+      - "docs/source_summaries/langchain-release-1.3.14-2026-07-30.md"
+      - "docs/wiki/frameworks/LangChain.md"
+      - "docs/wiki/codebase/LangChain Code Map.md"
+      - "docs/wiki/flows/LangChain create_agent flow.md"
+      - "docs/wiki/concepts/SummarizationMiddleware.md"
+      - "docs/wiki/concepts/Memory.md"
+    notes: "Tag-to-tag comparison against langchain==1.3.1 and direct source/API validation."
+  - id: langchain-core-source-1-5-2-2026-07-30
+    title: "langchain-core 1.5.2 tagged source"
+    type: source_code
+    framework: LangChain
+    repo: "https://github.com/langchain-ai/langchain"
+    commit: "c1ab807b1f62ad04274c28f2b7d8c3141d8ba1f2"
+    url: "https://github.com/langchain-ai/langchain/tree/langchain-core%3D%3D1.5.2"
+    retrieved_at: "2026-07-30"
+    status: public
+    used_by:
+      - "docs/source_summaries/langchain-release-1.3.14-2026-07-30.md"
+      - "docs/wiki/frameworks/LangChain.md"
+      - "docs/wiki/codebase/LangChain Code Map.md"
+      - "docs/wiki/concepts/Runnable.md"
+      - "docs/wiki/concepts/Event Streaming.md"
+    notes: "Resolved core version for langchain==1.3.14 in this repository."
+  - id: langchain-docs-event-streaming-2026-07-30
+    title: "LangChain event streaming documentation"
+    type: official_docs
+    framework: LangChain
+    url: "https://docs.langchain.com/oss/python/langchain/event-streaming"
+    retrieved_at: "2026-07-30"
+    status: public
+    used_by:
+      - "docs/source_summaries/langchain-docs-event-streaming-2026-07-30.md"
+      - "docs/wiki/concepts/Event Streaming.md"
+      - "docs/wiki/frameworks/LangChain.md"
+    notes: "Current official recommendation for typed event streaming via stream_events(version='v3')."
+  - id: langchain-source-memory-api-2026-05-23
+    title: "LangChain memory API source reading"
+    type: source_code
+    framework: LangChain
+    repo: "https://github.com/langchain-ai/langchain"
+    commit: "UNKNOWN"
+    url: "https://github.com/langchain-ai/langchain/tree/master/libs"
+    local_path: "docs/source_summaries/langchain-source-memory-api-2026-05-23.md"
+    retrieved_at: "2026-05-23"
+    status: public
+    used_by:
+      - "docs/wiki/concepts/Memory.md"
+      - "docs/wiki/frameworks/LangChain.md"
+    notes: "Historical source reading for deprecated memory APIs. Rechecked for example syntax against LangChain 1.3.14 on 2026-07-30."
+  - id: deepagents-venv-read-2026-05-24
+    title: "Installed Deep Agents source and API reading"
+    type: source_code
+    framework: Deep Agents
+    repo: "https://github.com/langchain-ai/deepagents"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-05-24"
+    status: public
+    used_by:
+      - "docs/wiki/frameworks/Deep Agents.md"
+      - "docs/wiki/codebase/Deep Agents Code Map.md"
+    notes: "Local .venv source/API inspection. The current environment still resolves deepagents==0.6.3 on 2026-07-30."
+  - id: langgraph-test-pregel-raw-2026-05-25
+    title: "LangGraph test_pregel.py checkpoint and recovery tests"
+    type: test_code
+    framework: LangGraph
+    repo: "https://github.com/langchain-ai/langgraph"
+    commit: "UNKNOWN"
+    local_path: "NONE"
+    retrieved_at: "2026-05-25"
+    status: public
+    used_by:
+      - "docs/wiki/tests/test_pregel_checkpoint_map.md"
+    notes: "Historical local test-source reading covering pending writes, checkpoint metadata, and recovery."
